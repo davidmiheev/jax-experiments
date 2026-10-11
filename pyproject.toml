@@ -1,0 +1,39 @@
+[project]
+name = "jax-experiments"
+version = "0.1.0"
+description = "JAX experiments following up ml-ladder: reproductions, its open threads, and JAX-native studies."
+readme = "README.md"
+requires-python = ">=3.12"  # jax 0.11 needs 3.12+
+dependencies = [
+    "jax>=0.11",
+    "flax>=0.12",
+    "optax>=0.2.8",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# Kaggle / NVIDIA GPUs. Not installed locally: the cloud container has no GPU.
+cuda = ["jax[cuda12]>=0.11"]
+# Track R's parity checks against ml-ladder's PyTorch models (R1) and BPE data (O6).
+torch = ["torch>=2.2", "tokenizers>=0.19"]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jaxexp"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
