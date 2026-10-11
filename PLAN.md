@@ -185,6 +185,9 @@ and RoPE.
 
   On the T4, does XLA's bf16 behave like PyTorch's emulated path? On the TPU,
   bf16 is the native format. Repeat G2's speedup-vs-width curve.
+  Already measured by the probe: on a T4, XLA's bf16 matmul runs at fp32
+  speed (4.5 TFLOP/s, against fp16's 24.9), not slower as PyTorch's was. So
+  the T4 arm's open question is end-to-end training, not the matmul.
 
 ### O6. A scaling law on tokens *(GPU)*
 
@@ -273,16 +276,18 @@ and RoPE.
   - tokens/s against sequence length: associative scan, sequential scan, and
     attention.
 
-### N5. A fused RoPE / attention kernel in Pallas *(TPU first; GPU only where Pallas-Triton supports the card)*
+### N5. A fused RoPE / attention kernel in Pallas *(TPU; Kaggle's GPUs cannot run Pallas)*
 
 - **ml-ladder thread (§5).** RoPE cost 27% throughput because the rotation was
   recomputed unfused in fp32 in every layer. Is that inherent?
 - **How.** A Pallas kernel that applies the rotation inside the attention
   kernel, or that just fuses rotate-q/k. Compare with plain `jnp` under XLA,
   which may already fuse most of it.
-- **Check first.** Pallas's GPU backend (Triton) generally needs a recent GPU.
-  Whether a T4 (sm_75) is supported has to be verified before building on it.
-  On a TPU, Pallas (Mosaic) is the main path.
+- **Hardware (checked).** Pallas does not run on a T4. The default GPU
+  lowering refuses pre-Hopper cards, and the Triton backend needs sm_80+,
+  while the T4 is sm_75 (`tools/kaggle_probe/results/`). Develop with
+  `interpret=True` on CPU for correctness, and time the kernel on the TPU
+  (Mosaic). The XLA baseline can still be measured on the T4.
 - **Done when.** A RoPE throughput cost is measured with the fused kernel, and
   the plain-XLA result says whether the kernel was needed at all.
 

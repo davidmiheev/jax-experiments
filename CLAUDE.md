@@ -15,7 +15,8 @@ reproduce. This file is the practical brief for picking it up.
   `flax.nnx` API is available) and `optax` 0.2.8.
 - **Setup.** `uv sync` installs them; `uv run pytest` runs the smoke test
   (5 tests, passing at handover). JAX 0.11 needs **Python ≥ 3.12**, which
-  `pyproject.toml` and `.python-version` pin; Kaggle's image was on 3.12.
+  `pyproject.toml` and `.python-version` pin. Kaggle's GPU image runs 3.13,
+  which satisfies it (see Compute).
   There is no GPU in the cloud container; GPU work goes to Kaggle (below).
 
 ## The repo this builds on
@@ -44,36 +45,74 @@ Attach it to the session to read it. The files that matter most:
 
 ## Compute
 
+Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
+
 - **CPU, here.** Unit tests, R1, O1, O2, O7, N7 and small prototypes.
-- **Kaggle GPU (T4 ×2, 16 GB each, sm_75).** How ml-ladder ran its GPU work:
-  - **Credentials** live outside any repo, in `~/.kaggle/` (`access_token`,
-    `kaggle.json`) with mode 600. Never commit them. If the session has none,
-    ask the user.
-  - **Kernels.** Push with `kaggle kernels push -p DIR`, where `DIR` holds
-    `kernel-metadata.json` (`"enable_gpu": true`, `"is_private": true`).
-    Check progress with `kaggle kernels status` and download results with
-    `kaggle kernels output`.
-  - **Kernels are permanent** and the CLI cannot delete them, so pick names
-    deliberately.
-  - **Getting the code in.** The repos are private, so ml-ladder delivered its
-    source as a private Kaggle *dataset*: a `git archive` tarball,
-    `kaggle datasets version`, and `dataset_sources` in the kernel metadata.
-  - **Where files go.**
-    - Copy the source to `/kaggle/temp` and keep scratch files there.
-    - Write only result JSON and logs to `/kaggle/working`, which gets
-      published as kernel output.
-    - Fetch enwik8 once, before starting parallel jobs.
-  - **Use both GPUs.** Run two independent jobs at once, one per GPU, with
-    `CUDA_VISIBLE_DEVICES=0` and `1`.
-  - **Limits.** Two GPU kernels can run concurrently, and sessions last up to
-    12 h.
-  - **JAX on Kaggle has not been tested yet.** Do it first:
-    - check whether the image ships a CUDA-enabled `jax`;
-    - otherwise `pip install -U "jax[cuda12]"`;
-    - then run the smoke test there.
-- **TPU.** O5, N5 and N6 want one. Kaggle and Colab have offered TPU VMs, but
-  this was not verified from this account. Find out how (or whether) a TPU
-  kernel can be requested before scheduling M6.
+- **Weekly quota** (`kaggle quota`): **30 h GPU and 20 h TPU**, resetting each
+  week (the 2026-10-17 00:00 UTC refresh was the next one at handover). Other
+  sessions of this account share it, and use GPU heavily.
+- **Session limits** (from the server's push errors): at most **2 GPU** and
+  **1 TPU** batch sessions at a time, per account. A queued kernel already
+  holds its slot.
+- **Machine shapes.** Set `"machine_shape"` in `kernel-metadata.json`, or pass
+  `kaggle kernels push --accelerator`:
+  - `NvidiaTeslaT4` gives T4 ×2 (16 GB each, sm_75), the GPU ml-ladder used.
+  - `TpuV5E8` gives a TPU v5e-8, with `"enable_tpu": true`. This is the shape
+    every recently run public TPU notebook records. The SDK's docstring still
+    lists `Tpu1VmV38` (TPU v3-8), which is stale.
+  - **Wrong shape names are not rejected.** The server stores any string and
+    the kernel sits in `QUEUED` forever: this happened with `Tpu1VmV38` and
+    with a deliberately invalid name. If a kernel stays queued much longer
+    than expected, check the shape against a recent public notebook
+    (`kaggle kernels pull <ref> -p <dir> -m`) before assuming a hardware
+    queue.
+- **Kernels.** Push with `kaggle kernels push -p DIR`, check with
+  `kaggle kernels status`, and download with `kaggle kernels output`.
+  `kaggle kernels logs` is available too. `kaggle kernels delete -y <ref>`
+  removes a kernel (CLI 2.2.4); earlier CLI versions had no delete.
+- **Credentials** live outside any repo, in `~/.kaggle/` (`access_token`,
+  `kaggle.json`) with mode 600. Never commit them. If the session has none,
+  ask the user.
+- **Getting the code in.** The repos are private, so ml-ladder delivered its
+  source as a private Kaggle *dataset*: a `git archive` tarball,
+  `kaggle datasets version`, and `dataset_sources` in the kernel metadata.
+- **Where files go.**
+  - Copy the source to `/kaggle/temp` and keep scratch files there.
+  - Write only result JSON and logs to `/kaggle/working`, which gets
+    published as kernel output.
+  - Fetch enwik8 once, before starting parallel jobs.
+- **Use both GPUs.** On T4 ×2, run two independent jobs at once with
+  `CUDA_VISIBLE_DEVICES=0` and `1`. GPU sessions last up to 12 h.
+- **JAX on Kaggle.** `tools/kaggle_probe/` checks an image end to end:
+  versions, devices, dtypes, scan, NNX/Optax, `vmap`, Pallas and sharding.
+  **Results on the T4 image** (`results/jax-probe-gpu.json` and
+  `results/jax-probe-pallas-gpu.json`, run on 2026-10-11):
+  - **JAX is preinstalled and CUDA-enabled.** The image has Python **3.13**,
+    `jax` / `jaxlib` 0.11.1 with `jax-cuda12-plugin`, `flax` 0.12.10, `optax`
+    0.2.8, `torch` 2.11 (cu128) and TensorFlow 2.20. `jax.devices()` shows
+    `cuda:0` and `cuda:1`. Nothing needs installing, but note the version
+    skew: locally the lock pins 0.11.2 on Python 3.12.
+  - **Matmul, 4096², one T4.** fp32 4.5 TFLOP/s, **fp16 24.9** (5.5×), and
+    **bf16 4.5**, the same as fp32: no tensor-core path. PyTorch's bf16 on this
+    card ran at 0.77× fp32 (ml-ladder G2), so XLA's bf16 is no slower than
+    fp32 here, and no faster either. For speed on a T4 use fp16 with loss
+    scaling.
+  - **Scans.** `lax.associative_scan` 5.3 ms against sequential `lax.scan`
+    23.8 ms on a 1024 × 64 × 512 recurrence (N4's premise holds).
+  - **`vmap` over model copies.** K = 8 costs 4.4× K = 1 (N1's premise holds).
+  - **Working:** NNX + Optax training steps, and `jax.sharding` across both
+    GPUs.
+  - **Pallas does not run on a T4 at all.** The default GPU lowering refuses
+    pre-Hopper cards ("emit_pipeline on pre-Hopper GPUs only supports
+    input-only pipelines"), and the Triton backend
+    (`compiler_params=pallas.triton.CompilerParams(...)`) needs compute
+    capability 8.0+, while the T4 is 7.5. Kaggle's other GPU, the P100, is
+    older still. So N5 runs on the TPU, or with `interpret=True` for
+    correctness only.
+**TPU v5e-8: quota confirmed, hardware not yet obtained.** The probe
+  (`jax-probe-tpu`, shape `TpuV5E8`) was queued from 16:23 UTC on 2026-10-11
+  and still waiting at handover. Kaggle's v5e queue can take hours. Run it
+  first when M6 approaches.
 
 ## Standards (from ml-ladder)
 

@@ -1,0 +1,11 @@
+{
+  "jax": "0.11.1",
+  "devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "add_default_error": "NotImplementedError('emit_pipeline on pre-Hopper GPUs only supports input-only pipelines')",
+  "add_triton_error": "JaxRuntimeError('FAILED_PRECONDITION: Triton support is only enabled for Ampere GPUs (compute capability 8.0) and up, but got compute capability 7.5.')",
+  "matmul_triton_error": "JaxRuntimeError('FAILED_PRECONDITION: Triton support is only enabled for Ampere GPUs (compute capability 8.0) and up, but got compute capability 7.5.')",
+  "blocked_error": "JaxRuntimeError('FAILED_PRECONDITION: Triton support is only enabled for Ampere GPUs (compute capability 8.0) and up, but got compute capability 7.5.')"
+}
