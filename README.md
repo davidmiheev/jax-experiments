@@ -19,7 +19,8 @@ experiment. The plan has three tracks:
   - Pallas kernels;
   - sharding;
   - the empirical NTK;
-  - diffusion samplers.
+  - diffusion samplers;
+  - LoRA and QLoRA built from scratch (NF4 included).
 
 - [`PLAN.md`](PLAN.md): the experiments, the reference numbers, and the order
   of work.

@@ -323,6 +323,73 @@ and RoPE.
   sampling run compiles to one program. Measure ms per sample against step
   count.
 
+### N9. LoRA and QLoRA from scratch *(GPU; the real-model arm on GPU or TPU)*
+
+- **ml-ladder context.** Part C ran DeepSeek-V2-Lite and Gemma-4 in 4-bit NF4
+  through bitsandbytes for inference only. Along the way it found that `numel`
+  on a 4-bit checkpoint under-counts parameters by exactly 2×, because two
+  weights are packed per byte. D3 and H4 both list "fine-tune instead of
+  freeze" as an open thread. Nothing in the ladder adapted a pretrained model
+  with a low-rank update, or trained through a quantized base.
+- **The idea.**
+  - **LoRA** freezes a pretrained weight $W$ and learns
+    $W + \tfrac{\alpha}{r} BA$, where $A$ is $r \times d_\text{in}$ and $B$ is
+    $d_\text{out} \times r$. $B$ starts at zero, so training starts exactly at
+    the pretrained model.
+  - **QLoRA** also stores the frozen $W$ in 4-bit **NF4**: 16 levels at the
+    quantiles of a normal distribution, one absmax scale per block of 64
+    weights, and the scales themselves quantized to 8 bits ("double
+    quantization"). The weights are dequantized on the fly in the forward
+    pass, and gradients flow only into $A$ and $B$.
+- **Build, in Flax NNX.**
+  - A `LoRALinear` wrapper with a merge-for-inference method. Merged and
+    unmerged outputs must agree to fp32 precision; test this.
+  - NF4 quantize/dequantize in `jnp`, with double quantization. Check the
+    codebook and the dequantization error against bitsandbytes on the T4,
+    ml-ladder's reference implementation.
+  - A parameter count that reports packed and logical sizes separately, so
+    the 2× trap can't recur.
+- **Arm 1, fully measurable: domain adaptation of our own model.**
+  - Start from R2's 25M RoPE transformer trained on enwik8, and adapt it to
+    tiny-Shakespeare: bytes, a clear domain shift, and the text is already in
+    ml-ladder. Arms:
+    - frozen (no adaptation);
+    - full fine-tuning;
+    - LoRA at r = 1, 2, 4, 8, 16, 64 on attention only, and on attention + MLP;
+    - QLoRA (NF4 base) at the best LoRA rank;
+    - NF4 base without adaptation, to separate quantization damage from what
+      the adapter recovers.
+  - Each arm's learning rate is swept with N1. LoRA's best LR is usually much
+    higher than full fine-tuning's, and an unswept comparison would be
+    meaningless (ml-ladder §7).
+  - **Measures.**
+    - Bits/byte on held-out Shakespeare (gain).
+    - Bits/byte on enwik8 validation, before and after (forgetting): LoRA is
+      reported to "learn less and forget less", which this tests.
+    - Trainable parameters, peak memory and step time.
+    - The singular-value spectrum of full fine-tuning's $\Delta W$, which says
+      what rank the update actually needed.
+- **Arm 2, a real pretrained model.** QLoRA on a small open LM, with a short
+  supervised fine-tune and a held-out loss. Check first which models have a
+  maintained JAX implementation from this account. Google DeepMind's `gemma`
+  library ships LoRA and quantized checkpoints for Gemma in JAX; HF
+  transformers' Flax models may no longer be maintained. On a T4 (16 GB,
+  fp16, no bf16 speed), 4-bit is what lets a model of a few billion
+  parameters fit with room for activations. On the TPU v5e-8 it is about
+  throughput, not fitting.
+  - **Measures.** Memory with and without NF4, loss against the bf16/fp16
+    LoRA baseline, and tokens/s.
+- **JAX angle: many adapters at once.** `vmap` over K LoRA adapters that share
+  one frozen base, for different ranks, learning rates or tasks in one
+  program. This is N1's sweep trick applied where it is most natural, and the
+  training-side twin of batched multi-adapter serving.
+- **Done when.**
+  - Arm 1 gives a curve of gain and forgetting against rank, with the
+    quantization cost separated out.
+  - NF4 matches bitsandbytes' codebook and error.
+  - Arm 2 reports memory, loss and speed for at least one real model, or
+    says plainly why it couldn't run.
+
 ---
 
 ## Order of work
@@ -339,6 +406,7 @@ Each milestone is small enough to finish and write up on its own.
 | M5 | O7 mel parity (CPU), N7 NTK (CPU) | CPU | 1 day |
 | M6 | O5 precision, N5 Pallas, N6 sharding | TPU (+T4 contrast) | depends on TPU access |
 | M7 | O6 scaling law on BPE, N3 hypergradients, N8 diffusion | Kaggle T4 | ~8 GPU-hours |
+| M8 | N9 LoRA / QLoRA: arm 1 any time after M2 + N1, then the real-model arm | Kaggle T4, TPU optional | ~4 GPU-hours for arm 1; arm 2 depends on the model |
 
 Start with M0 → M1 → M2. M2's GRU and transformer are the baselines nearly
 everything after them compares against. If M2 cannot reproduce the reference

@@ -1,0 +1,16 @@
+{
+ "id": "davidmiheev/jax-probe-tpu-nb",
+ "title": "jax-probe-tpu-nb",
+ "code_file": "jax-probe-tpu-nb.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": true,
+ "enable_gpu": false,
+ "enable_tpu": true,
+ "machine_shape": "TpuV5E8",
+ "enable_internet": true,
+ "docker_image": "gcr.io/kaggle-private-byod/python-tpuvm@sha256:a2111cb9be558ea4bc187754bb95d7b65e90d8259434f1eb0e0ab1193ff498c0",
+ "dataset_sources": [],
+ "competition_sources": [],
+ "kernel_sources": []
+}

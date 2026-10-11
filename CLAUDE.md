@@ -109,16 +109,20 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
     capability 8.0+, while the T4 is 7.5. Kaggle's other GPU, the P100, is
     older still. So N5 runs on the TPU, or with `interpret=True` for
     correctness only.
-**TPU v5e-8: quota confirmed, hardware not yet obtained.** The probe
-  (`jax-probe-tpu`, shape `TpuV5E8`) was queued from 16:23 UTC on 2026-10-11
-  and still waiting at handover. Kaggle's v5e queue can take hours. Run it
-  first when M6 approaches. The kernel was left queued: check it with
-  `kaggle kernels status davidmiheev/jax-probe-tpu`, and when it reports
-  COMPLETE, collect it with
-  `kaggle kernels output davidmiheev/jax-probe-tpu -p tools/kaggle_probe/results/`.
-  While queued it holds the account's single TPU slot, so delete it
-  (`kaggle kernels delete -y davidmiheev/jax-probe-tpu`) before pushing a
-  different TPU kernel.
+**TPU v5e-8: quota confirmed, hardware not yet obtained.** A *script*
+  kernel with `TpuV5E8` on the default image sat in `QUEUED` for 4.5 h
+  (16:23–20:48 UTC, 2026-10-11) without consuming any TPU quota. Every public
+  TPU notebook checked is a *notebook* kernel, and some pin the TPU-VM image
+  `gcr.io/kaggle-private-byod/python-tpuvm@sha256:a2111cb9…`. So the probe was
+  re-pushed in that form, as `davidmiheev/jax-probe-tpu-nb` (notebook,
+  `TpuV5E8`, that image; full digest in `tools/kaggle_probe/tpu_notebook/`).
+  It was still queued at handover. Whether the script kernel was the problem
+  or Kaggle simply had no v5e capacity is **not known yet**.
+  - **Collect it.** Check `kaggle kernels status davidmiheev/jax-probe-tpu-nb`.
+    When it reports COMPLETE, run
+    `kaggle kernels output davidmiheev/jax-probe-tpu-nb -p tools/kaggle_probe/results/`.
+  - **It holds the slot.** While queued it holds the account's single TPU
+    slot, so delete it before pushing a different TPU kernel.
 
 ## Standards (from ml-ladder)
 
