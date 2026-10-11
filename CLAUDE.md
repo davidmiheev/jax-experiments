@@ -112,7 +112,13 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
 **TPU v5e-8: quota confirmed, hardware not yet obtained.** The probe
   (`jax-probe-tpu`, shape `TpuV5E8`) was queued from 16:23 UTC on 2026-10-11
   and still waiting at handover. Kaggle's v5e queue can take hours. Run it
-  first when M6 approaches.
+  first when M6 approaches. The kernel was left queued: check it with
+  `kaggle kernels status davidmiheev/jax-probe-tpu`, and when it reports
+  COMPLETE, collect it with
+  `kaggle kernels output davidmiheev/jax-probe-tpu -p tools/kaggle_probe/results/`.
+  While queued it holds the account's single TPU slot, so delete it
+  (`kaggle kernels delete -y davidmiheev/jax-probe-tpu`) before pushing a
+  different TPU kernel.
 
 ## Standards (from ml-ladder)
 
