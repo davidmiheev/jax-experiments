@@ -109,7 +109,7 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
     capability 8.0+, while the T4 is 7.5. Kaggle's other GPU, the P100, is
     older still. So N5 runs on the TPU, or with `interpret=True` for
     correctness only.
-**TPU v5e-8: quota confirmed, hardware not yet obtained.** A *script*
+- **TPU v5e-8: quota confirmed, hardware not yet obtained.** A *script*
   kernel with `TpuV5E8` on the default image sat in `QUEUED` for 4.5 h
   (16:23–20:48 UTC, 2026-10-11) without consuming any TPU quota. Every public
   TPU notebook checked is a *notebook* kernel, and some pin the TPU-VM image
@@ -121,9 +121,9 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   0.00 h of TPU quota used**. The cause is unknown: there may be no v5e
   capacity for batch kernels, or this account may not be eligible for batch
   (non-interactive) TPU sessions. Things to try:
-  - start a TPU notebook interactively in the Kaggle web UI, which tells the
-    two cases apart;
-  - use Colab's TPU as a fallback for O5, N5 and N6.
+    - start a TPU notebook interactively in the Kaggle web UI, which tells
+      the two cases apart;
+    - use Colab's TPU as a fallback for O5, N5 and N6.
 
   Until a TPU session has actually run, treat M6 as unscheduled.
   - **Collect it.** Check `kaggle kernels status davidmiheev/jax-probe-tpu-nb`.
