@@ -116,8 +116,16 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   `gcr.io/kaggle-private-byod/python-tpuvm@sha256:a2111cb9…`. So the probe was
   re-pushed in that form, as `davidmiheev/jax-probe-tpu-nb` (notebook,
   `TpuV5E8`, that image; full digest in `tools/kaggle_probe/tpu_notebook/`).
-  It was still queued at handover. Whether the script kernel was the problem
-  or Kaggle simply had no v5e capacity is **not known yet**.
+  It was still queued at 01:14 UTC on 2026-10-12, 4.5 h later. Together with
+  the script version, that is **about 9 h with no TPU session started and
+  0.00 h of TPU quota used**. The cause is unknown: there may be no v5e
+  capacity for batch kernels, or this account may not be eligible for batch
+  (non-interactive) TPU sessions. Things to try:
+  - start a TPU notebook interactively in the Kaggle web UI, which tells the
+    two cases apart;
+  - use Colab's TPU as a fallback for O5, N5 and N6.
+
+  Until a TPU session has actually run, treat M6 as unscheduled.
   - **Collect it.** Check `kaggle kernels status davidmiheev/jax-probe-tpu-nb`.
     When it reports COMPLETE, run
     `kaggle kernels output davidmiheev/jax-probe-tpu-nb -p tools/kaggle_probe/results/`.
