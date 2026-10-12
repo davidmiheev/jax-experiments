@@ -18,6 +18,8 @@ reproduce. This file is the practical brief for picking it up.
   `pyproject.toml` and `.python-version` pin. Kaggle's GPU image runs 3.13,
   which satisfies it (see Compute).
   There is no GPU in the cloud container; GPU work goes to Kaggle (below).
+  `uv sync --extra torch` adds torch for R1's parity checks, pinned to the
+  CPU wheel index (torch 2.14.1+cpu on 2026-10-12, against Kaggle's 2.11).
 
 ## The repo this builds on
 

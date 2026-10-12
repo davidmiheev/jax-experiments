@@ -29,5 +29,6 @@ experiment. The plan has three tracks:
 
 ```
 uv sync          # jax 0.11, flax 0.12 (nnx), optax 0.2; Python >= 3.12
+uv sync --extra torch   # + CPU torch, for the PyTorch parity checks (R1)
 uv run pytest    # smoke tests: jit, grad, jvp, vmap, scan, an NNX + Optax step
 ```
