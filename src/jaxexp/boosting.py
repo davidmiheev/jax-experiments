@@ -145,12 +145,13 @@ class Booster:
     base_margin: float = 0.0
     hessian: str = "exact"  # "ones": first-order boosting; "leaves": first-order trees, Newton leaves
     float32_gradients: bool = True  # XGBoost stores gradient pairs in float32
+    float32_margin: bool = True  # and its running predictions (bst_float), which g and h are computed from
     trees: list[Tree] = field(default_factory=list)
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Booster:
         X = np.asarray(X, np.float32)
         derivs = derivatives(self.loss)
-        margin = np.full(len(X), self.base_margin, np.float64)
+        margin = np.full(len(X), self.base_margin, np.float32 if self.float32_margin else np.float64)
         y64 = jnp.asarray(y, jnp.float64 if jax.config.jax_enable_x64 else jnp.float32)
         self.trees = []
         for _ in range(self.rounds):
@@ -170,7 +171,7 @@ class Booster:
                 min_child_weight=self.min_child_weight,
             )
             self.trees.append(tree)
-            margin += tree.predict(X)
+            margin += tree.predict(X).astype(margin.dtype)
         return self
 
     def margin(self, X: np.ndarray, rounds: int | None = None) -> np.ndarray:

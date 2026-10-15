@@ -367,7 +367,9 @@ def run_boosting(ladder: str) -> None:
     report["parity"] = parity_rows
 
     # (2) Does the Newton step pay? Friedman #1 at its median, train / validation / test.
-    etas, rounds = (0.03, 0.1, 0.3, 1.0), 300
+    # A4's grid (0.03-1) left first-order on its edge (eta 1, 293 of 300 rounds): its leaves
+    # are mean(y - p), at most 1, where Newton divides by mean p(1-p) <= 1/4. Widened both ways.
+    etas, rounds = (0.03, 0.1, 0.3, 1.0, 2.0, 4.0, 8.0), 1000
     arms = {"first-order": "ones", "first-order trees, Newton leaves": "leaves", "Newton (XGBoost-style)": "exact"}
     results = {arm: [] for arm in arms}
     for seed in SEEDS:
@@ -377,6 +379,11 @@ def run_boosting(ladder: str) -> None:
         cut = np.median(ytr)
         ytr, yva, yte = ((a > cut).astype(np.float64) for a in (ytr, yva, yte))
         for arm, hessian in arms.items():
+            cache = ROOT / "runs" / "o2-boosting" / f"seed{seed}-{hessian}.json"
+            if cache.exists():
+                results[arm].append(json.loads(cache.read_text()))
+                print(f"[boosting] seed {seed} {arm:<34} cached", flush=True)
+                continue
             curves, best = {}, None
             for eta in etas:
                 model = B.Booster(B.log_loss, rounds=rounds, eta=eta, hessian=hessian).fit(Xtr, ytr)
@@ -395,8 +402,11 @@ def run_boosting(ladder: str) -> None:
                     "test_log_loss": log_loss_np(yte, margin),
                     "test_accuracy": float(np.mean((margin > 0) == (yte > 0.5))),
                     "val_curves": {str(e): c for e, c in curves.items()},
+                    "on_grid_edge": eta in (etas[0], etas[-1]) or r == rounds,
                 }
             )
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps(results[arm][-1]))
             print(
                 f"[boosting] seed {seed} {arm:<34} eta {eta:<5} rounds {r:>3}  "
                 f"test log-loss {results[arm][-1]['test_log_loss']:.4f}  acc {results[arm][-1]['test_accuracy']:.4f}",
@@ -414,6 +424,7 @@ def run_boosting(ladder: str) -> None:
                 "val_log_loss": summarise([r["val_log_loss"] for r in rows]),
                 "chosen_eta": [r["eta"] for r in rows],
                 "chosen_rounds": [r["rounds"] for r in rows],
+                "any_choice_on_grid_edge": any(r["on_grid_edge"] for r in rows),
                 "val_curves_seed0": rows[0]["val_curves"],
             }
             for arm, rows in results.items()
