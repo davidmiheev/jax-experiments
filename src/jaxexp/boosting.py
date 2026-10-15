@@ -145,7 +145,10 @@ class Booster:
     base_margin: float = 0.0
     hessian: str = "exact"  # "ones": first-order boosting; "leaves": first-order trees, Newton leaves
     float32_gradients: bool = True  # XGBoost stores gradient pairs in float32
-    float32_margin: bool = True  # and its running predictions (bst_float), which g and h are computed from
+    # XGBoost also keeps predictions in float32, but computes built-in g, h in float32 arithmetic,
+    # which this does not reproduce either way. Measured over 900 trees, float64 margins matched
+    # more (899 vs 894 identical), so float64 is the default.
+    float32_margin: bool = False
     trees: list[Tree] = field(default_factory=list)
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> Booster:
