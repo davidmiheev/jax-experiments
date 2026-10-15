@@ -154,22 +154,22 @@ def lbfgs(loss: Callable, w0: jax.Array, *, tol: float = 1e-8, max_iter: int = 1
 
 
 def gradient_descent(loss: Callable, w0: jax.Array, lr: float, *, tol: float = 1e-8, max_iter: int = 100_000):
-    grad = jax.grad(loss)
-    g0n = jnp.linalg.norm(grad(w0))
+    f0, g0 = jax.value_and_grad(loss)(w0)
+    g0n = jnp.linalg.norm(g0)
 
     def cond(s):
-        w, k, gn, hist = s
+        w, g, k, gn, hist = s
         return (gn > tol * g0n) & (k < max_iter) & jnp.isfinite(gn)
 
     def body(s):
-        w, k, _, hist = s
-        w = w - lr * grad(w)
-        f, g = jax.value_and_grad(loss)(w)
-        return w, k + 1, jnp.linalg.norm(g), hist.at[k + 1].set(f)
+        w, g, k, _, hist = s
+        w = w - lr * g
+        f, g = jax.value_and_grad(loss)(w)  # one gradient per step, carried to the next
+        return w, g, k + 1, jnp.linalg.norm(g), hist.at[k + 1].set(f)
 
-    hist = _history(max_iter, w0.dtype).at[0].set(loss(w0))
-    w, k, gn, hist = jax.lax.while_loop(cond, body, (w0, 0, g0n, hist))
-    return Result(w, k, gn / g0n, 2 * k + 1, jnp.asarray(0), jnp.asarray(0), hist)
+    hist = _history(max_iter, w0.dtype).at[0].set(f0)
+    w, _, k, gn, hist = jax.lax.while_loop(cond, body, (w0, g0, 0, g0n, hist))
+    return Result(w, k, gn / g0n, k + 1, jnp.asarray(0), jnp.asarray(0), hist)
 
 
 def logistic_loss(X: jax.Array, y: jax.Array, l2: float = 0.0) -> Callable[[jax.Array], jax.Array]:

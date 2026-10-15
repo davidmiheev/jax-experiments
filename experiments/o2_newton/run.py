@@ -103,9 +103,10 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
         "L-BFGS": lambda w: N.lbfgs(loss, w, tol=TOL, max_iter=5000),
     }
     if lr_scale is None:  # tune: the scale c in lr = c / L that converges in the fewest steps
-        best = None
-        for c in (1, 2, 4, 8, 16, 32, 64):
-            r = jax.jit(lambda w, c=c: N.gradient_descent(loss, w, c / L, tol=TOL, max_iter=max_gd))(w0)
+        best = None  # (c, iterations); later candidates are capped at the best count so far
+        for c in (64, 32, 16, 8, 4, 2, 1):
+            cap = best[1] if best else max_gd
+            r = jax.jit(lambda w, c=c, cap=cap: N.gradient_descent(loss, w, c / L, tol=TOL, max_iter=cap))(w0)
             ok = bool(r.grad_norm <= TOL)
             print(
                 f"[logistic]   GD tune c={c:>2}: {int(r.iterations):>6} its, grad {float(r.grad_norm):.1e}", flush=True
@@ -120,7 +121,9 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
         started = time.perf_counter()
         r = jax.block_until_ready(compiled(w0))
         first = time.perf_counter() - started
-        seconds = time_call(compiled, w0, min_reps=3, max_reps=10, budget_s=2.0)["median"]
+        # One timed re-run when the first took over a second; otherwise a median of several.
+        reps = 1 if first > 1.0 else 3
+        seconds = time_call(compiled, w0, min_reps=reps, max_reps=max(reps, 10), budget_s=2.0)["median"]
         hist = np.asarray(r.history)
         rows[name] = {
             "iterations": int(r.iterations),
