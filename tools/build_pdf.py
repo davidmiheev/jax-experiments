@@ -38,7 +38,8 @@ PREAMBLE = r"""
 \usepackage{caption}
 % Keep each rung's figures inside its own section instead of drifting forward.
 \usepackage[section]{placeins}
-\setkeys{Gin}{width=0.62\linewidth,keepaspectratio}
+% Full width: this repo's figures are two-panel and wide (ml-ladder used 0.62).
+\setkeys{Gin}{width=\linewidth,keepaspectratio}
 \captionsetup{font=small,labelfont=bf,skip=4pt}
 \floatplacement{figure}{htbp}
 \renewcommand{\topfraction}{0.9}

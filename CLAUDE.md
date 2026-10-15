@@ -13,7 +13,17 @@ reproduce. This file is the practical brief for picking it up.
   the 25M RoPE model at T=1024, and 4.9e-07 for gradients
   (`docs/m0-r1-parity.md`). **Use `jaxexp.transformer.TORCH` numerics:**
   `jax.nn.gelu` defaults to tanh, and `nnx.LayerNorm` defaults to ε=1e-6 with
-  fast variance, which is not PyTorch's function. Next is M1 (O1, O2).
+  fast variance, which is not PyTorch's function.
+- **M1: O1 is done** (`docs/m1-autodiff-and-newton.md`); **O2 is next**. Two
+  findings that bind R2:
+  - **R2 needs remat.** The 25M RoPE step (16 × 1024 tokens, fp32, explicit
+    attention) compiles to 19.7 GiB of temp memory, more than a T4's 16 GB.
+    Per-block remat (`model(ids, remat=True,
+    policy=jax.checkpoint_policies.dots_with_no_batch_dims_saveable)`) needs
+    3.9 GiB at 1.10× the FLOPs. Confirm with `jaxexp.bench.compiled_stats` on
+    the T4 first.
+  - **Memory comes from `compiled_stats`, not the jaxpr.** Use `temp_bytes`;
+    `peak_memory_in_bytes` excludes temp on CPU.
 - **Prior JAX use.** None. JAX was not installed in any environment of the
   originating session, and no repo of this account had imported it before.
 - **Verified versions.** On 2026-10-11 these installed from PyPI and passed

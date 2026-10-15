@@ -156,13 +156,22 @@ class CharTransformer(nnx.Module):
         self.norm = layer_norm(width, numerics, rngs)
         self.head = nnx.Linear(width, vocab_size, use_bias=False, rngs=rngs)
 
-    def __call__(self, ids: jax.Array) -> jax.Array:
+    def __call__(self, ids: jax.Array, *, remat: bool = False, policy=None) -> jax.Array:
+        """Logits for ``ids``. ``remat=True`` checkpoints each block (``nnx.remat``):
+        the backward pass recomputes what ``policy`` (a ``jax.checkpoint_policies``
+        entry; None saves nothing) does not keep."""
         length = ids.shape[-1]
         x = self.token_embedding(ids)
         if self.positional == "learned":
             x = x + self.position_embedding(jnp.arange(length))
         elif self.positional == "sinusoidal":
             x = x + sinusoidal_encoding(self.block_size, x.shape[-1])[:length]
+
+        def apply(block: Block, x: jax.Array) -> jax.Array:
+            return block(x)
+
+        if remat:
+            apply = nnx.remat(apply, policy=policy)
         for block in self.blocks:
-            x = block(x)
+            x = apply(block, x)
         return self.head(self.norm(x))

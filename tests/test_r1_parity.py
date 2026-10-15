@@ -129,3 +129,21 @@ def test_model_parity_4m(ladder, positional):
     with torch.no_grad():
         reference = reference_model(ids)[0].numpy()
     assert relative(reference, ported(jnp.asarray(ids.numpy()))) < 1e-6
+
+
+@pytest.mark.parametrize("policy", [None, jax.checkpoint_policies.dots_with_no_batch_dims_saveable])
+def test_remat_does_not_change_the_gradient(policy):
+    """Per-block remat (O1, needed by R2) recomputes; it must not change the function or its gradient."""
+    import optax
+
+    model = T.CharTransformer(256, 64, 4, 2, 32, positional="rope", rngs=nnx.Rngs(0))
+    graphdef, state = nnx.split(model)
+    ids = jax.random.randint(jax.random.key(0), (2, 33), 0, 256)
+
+    def loss(state, remat):
+        logits = nnx.merge(graphdef, state)(ids[:, :-1], remat=remat, policy=policy)
+        return optax.softmax_cross_entropy_with_integer_labels(logits, ids[:, 1:]).mean()
+
+    plain, remat = jax.grad(loss)(state, False), jax.grad(loss)(state, True)
+    for a, b in zip(jax.tree.leaves(plain), jax.tree.leaves(remat), strict=True):
+        np.testing.assert_allclose(np.asarray(a), np.asarray(b), rtol=1e-6, atol=1e-7)
