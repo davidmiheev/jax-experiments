@@ -156,6 +156,12 @@ def run_logistic(ladder: str) -> None:
     for label, spec in configs:
         per_seed = []
         for seed in SEEDS:
+            # Checkpoint per (config, seed) in runs/ (gitignored): a container restart resumes.
+            cache = ROOT / "runs" / "o2-logistic" / f"{label.split(' (')[0].replace(' ', '')}-seed{seed}.json"
+            if cache.exists():
+                per_seed.append(json.loads(cache.read_text()))
+                print(f"[logistic] {label:<34} seed {seed}: cached", flush=True)
+                continue
             if spec is None:
                 rng = np.random.default_rng(seed)
                 X, y, _ = datasets.make_blobs(600, centers=2, cluster_std=2.2, center_box=(-3.0, 3.0), rng=rng)
@@ -186,6 +192,9 @@ def run_logistic(ladder: str) -> None:
                 "irls_s": time_call(irls, w, budget_s=1.0)["median"],
                 "max_abs_difference": float(jnp.abs(jax.hessian(loss)(w) - irls(w)).max()),
             }
+            rows["_shape"] = {"n": int(X.shape[0]), "d": int(X.shape[1])}
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps(rows))
             per_seed.append(rows)
             print(
                 f"[logistic] {label:<34} seed {seed}: "
@@ -196,9 +205,9 @@ def run_logistic(ladder: str) -> None:
             )
         names = [k for k in per_seed[0] if k[0] != "_"]
         report["configs"][label] = {
-            "n": int(X.shape[0]),
-            "d": int(X.shape[1]),
-            "l2": l2,
+            "n": per_seed[0]["_shape"]["n"],
+            "d": per_seed[0]["_shape"]["d"],
+            "l2": 0.0 if spec is None else 1e-4,
             "gd_lr_scale_over_L_per_seed": [r["_gd_tuning"]["chosen_c"] for r in per_seed],
             "gd_tuning_per_seed": [r["_gd_tuning"]["candidates"] for r in per_seed],
             "solvers": {
