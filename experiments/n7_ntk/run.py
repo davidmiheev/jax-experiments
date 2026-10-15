@@ -346,21 +346,25 @@ def run_plot() -> None:
     style()
     kern = json.loads((DATA / "n7-kernel.json").read_text())
     train = json.loads((DATA / "n7-train.json").read_text())
-    alpha = json.loads((DATA / "n7-alpha.json").read_text())
+    relu = json.loads((DATA / "n7-alpha.json").read_text())
+    gelu = json.loads((DATA / "n7-alpha-gelu.json").read_text())
+    tasks = (("moons", SERIES[0]), ("mnist", SERIES[1]))
+    guide = {"color": INK_SECONDARY, "linestyle": (0, (3, 3)), "linewidth": 1}
 
-    fig, (left, mid, right) = plt.subplots(1, 3, figsize=(12, 3.7))
+    fig, axes = plt.subplots(2, 3, figsize=(13, 7.6))
+    (k_ax, step_ax, width_ax), (gap_ax, drift_ax, acc_ax) = axes
+
     widths = kern["widths"]
-    for task, color in zip(("moons", "mnist"), SERIES, strict=False):
+    for task, color in tasks:
         r = kern["tasks"][task]["frobenius_relative_error"]
-        med = [r[str(w)]["median"] for w in widths]
-        left.plot(
+        k_ax.plot(
             widths,
-            med,
+            [r[str(w)]["median"] for w in widths],
             marker="o",
             color=color,
             label=f"{task} (slope {kern['tasks'][task]['loglog_slope_width_256_up']:.2f})",
         )
-        left.fill_between(
+        k_ax.fill_between(
             widths,
             [r[str(w)]["min"] for w in widths],
             [r[str(w)]["max"] for w in widths],
@@ -369,32 +373,42 @@ def run_plot() -> None:
             linewidth=0,
         )
     ref = np.asarray(widths, float)
-    left.plot(
-        ref,
-        0.5 * kern["tasks"]["mnist"]["frobenius_relative_error"]["256"]["median"] * np.sqrt(256 / ref) * 2,
-        color=INK_SECONDARY,
-        linestyle=(0, (3, 3)),
-        linewidth=1,
-        label="width$^{-1/2}$",
+    k_ax.plot(ref, 0.1 * np.sqrt(512 / ref), label="width$^{-1/2}$", **guide)
+    k_ax.set(
+        xscale="log", yscale="log", xlabel="width", ylabel="‖Θ_emp − Θ_∞‖ / ‖Θ_∞‖", title="Kernel at initialisation"
     )
-    left.set_xscale("log", base=2)
-    left.set_yscale("log")
-    left.set_xlabel("width")
-    left.set_ylabel("‖Θ_emp − Θ_∞‖ / ‖Θ_∞‖ at init")
-    left.set_title("Kernel at initialisation")
-    left.legend(fontsize=7.5)
+    k_ax.set_xscale("log", base=2)
+    k_ax.legend(fontsize=7.5)
 
     tw = train["widths"]
-    for task, color in zip(("moons", "mnist"), SERIES, strict=False):
+    for w, color in zip(tw, SERIES, strict=False):
+        curve = [c for c in train["tasks"]["mnist"][str(w)]["curves"] if c["step"] > 0]
+        step_ax.plot(
+            [c["step"] for c in curve],
+            [c["net_vs_linearised_test"] for c in curve],
+            marker="o",
+            color=color,
+            label=f"width {w}",
+        )
+    step_ax.set(
+        xscale="log",
+        yscale="log",
+        xlabel="GD step (MNIST, α = 1, seed 0)",
+        ylabel="‖g_net − g_lin‖ / ‖g_lin‖ (test)",
+        title="Linearisation holds for a while",
+    )
+    step_ax.legend(fontsize=7.5)
+
+    for task, color in tasks:
         t = train["tasks"][task]
-        mid.plot(
+        width_ax.plot(
             tw,
             [t[str(w)]["net_vs_linearised_test"]["median"] for w in tw],
             marker="o",
             color=color,
             label=f"{task}: net vs linearised",
         )
-        mid.plot(
+        width_ax.plot(
             tw,
             [t[str(w)]["kernel_drift"]["median"] for w in tw],
             marker="s",
@@ -402,38 +416,61 @@ def run_plot() -> None:
             linestyle=(0, (4, 2)),
             label=f"{task}: kernel drift",
         )
-    mid.set_xscale("log", base=2)
-    mid.set_yscale("log")
-    mid.set_xlabel("width   (α = 1, end of training)")
-    mid.set_ylabel("relative difference")
-    mid.set_title("Lazy as width grows")
-    mid.legend(fontsize=7)
+    width_ax.set(
+        xscale="log",
+        yscale="log",
+        xlabel="width (α = 1, end of training)",
+        ylabel="relative change",
+        title="Lazier as width grows",
+    )
+    width_ax.set_xscale("log", base=2)
+    width_ax.legend(fontsize=7)
 
-    al = alpha["alphas"]
-    for task, color in zip(("moons", "mnist"), SERIES, strict=False):
-        t = alpha["tasks"][task]
-        ok = [a for a in al if "net_vs_linearised_test" in t[str(a)]]
-        right.plot(
-            ok,
-            [t[str(a)]["net_vs_linearised_test"]["median"] for a in ok],
-            marker="o",
-            color=color,
-            label=f"{task}: net vs linearised",
-        )
-        okd = [a for a in al if "kernel_drift" in t[str(a)]]
-        right.plot(
-            okd,
-            [t[str(a)]["kernel_drift"]["median"] for a in okd],
-            marker="s",
-            color=color,
-            linestyle=(0, (4, 2)),
-            label=f"{task}: kernel drift",
-        )
-    right.set_xscale("log")
-    right.set_yscale("log")
-    right.set_xlabel("α   (width 512)")
-    right.set_title("Lazy as α grows")
-    right.legend(fontsize=7)
+    def alpha_panel(ax, key, title, ylabel):
+        for task, color in tasks:
+            for report, ls, name in ((relu, "-", "ReLU"), (gelu, (0, (4, 2)), "GELU")):
+                t = report["tasks"][task]
+                al = [a for a in report["alphas"] if key in t[str(a)]]
+                ax.plot(
+                    al,
+                    [t[str(a)][key]["median"] for a in al],
+                    marker="o" if name == "ReLU" else "s",
+                    color=color,
+                    linestyle=ls,
+                    label=f"{task}, {name}",
+                )
+        al = np.asarray(relu["alphas"], float)
+        anchor = relu["tasks"]["mnist"]["1.0"][key]["median"]
+        ax.plot(al, anchor / al, label="α$^{-1}$", **guide)
+        ax.plot(al, anchor / np.sqrt(al), label="α$^{-1/2}$", color=INK_SECONDARY, linestyle=(0, (1, 2)), linewidth=1)
+        ax.set(xscale="log", yscale="log", xlabel="α (width 512)", ylabel=ylabel, title=title)
+        ax.legend(fontsize=6.5, ncol=2)
+
+    alpha_panel(gap_ax, "net_vs_linearised_test", "Distance from the linearised model", "relative (test, end)")
+    alpha_panel(drift_ax, "kernel_drift", "Kernel drift", "‖Θ_T − Θ_0‖ / ‖Θ_0‖")
+
+    for task, color in tasks:
+        for report, ls, name in ((relu, "-", "ReLU"), (gelu, (0, (4, 2)), "GELU")):
+            t = report["tasks"][task]
+            al = report["alphas"]
+            acc_ax.plot(
+                al,
+                [t[str(a)]["test_accuracy"]["median"] for a in al],
+                marker="o",
+                color=color,
+                linestyle=ls,
+                label=f"{task}, {name}",
+            )
+        ntk_acc = relu["tasks"][task]["1.0"]["infinite_test_accuracy"]["median"]
+        acc_ax.axhline(ntk_acc, color=color, linewidth=1, alpha=0.6, linestyle=(0, (1, 2)))
+    acc_ax.set(
+        xscale="log",
+        xlabel="α (width 512)",
+        ylabel="test accuracy (end of training)",
+        title="Accuracy: dotted = ∞-width NTK (ReLU)",
+    )
+    acc_ax.legend(fontsize=7)
+    fig.tight_layout()
     save(fig, FIGURES / "n7_ntk.png")
     print("figures written", flush=True)
 
