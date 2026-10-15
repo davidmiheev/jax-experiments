@@ -14,8 +14,12 @@ reproduce. This file is the practical brief for picking it up.
   (`docs/m0-r1-parity.md`). **Use `jaxexp.transformer.TORCH` numerics:**
   `jax.nn.gelu` defaults to tanh, and `nnx.LayerNorm` defaults to ε=1e-6 with
   fast variance, which is not PyTorch's function.
-- **M1: O1 is done** (`docs/m1-autodiff-and-newton.md`); **O2 is next**. Two
-  findings that bind R2:
+- **M1 is done** (O1 and O2, `docs/m1-autodiff-and-newton.md`). O2 added
+  `jaxexp.newton` (Newton, Newton-CG, L-BFGS, gradient descent as compiled
+  loops) and `jaxexp.boosting` (autodiff Newton-leaf boosting that reproduces
+  XGBoost's exact updater tree for tree; `uv sync --extra boost` installs
+  `xgboost-cpu`). Next in the CPU queue: N7 (empirical NTK), then CPU groundwork
+  for M2. Two O1 findings bind R2:
   - **R2 needs remat.** The 25M RoPE step (16 × 1024 tokens, fp32, explicit
     attention) compiles to 19.7 GiB of temp memory, more than a T4's 16 GB.
     Per-block remat (`model(ids, remat=True,

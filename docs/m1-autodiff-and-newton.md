@@ -1,9 +1,9 @@
 # M1 — Autodiff internals and Newton's method
 
-> **Status:** O1 done; O2 (Newton / IRLS, autodiff boosting) next ·
+> **Status:** O1 and O2 done; M1 complete ·
 > **Hardware:** CPU, 4 cores, x86_64. No GPU was used, and every wall-clock number is from this CPU ·
-> **Data:** [`data/o1-jacobian.json`](data/o1-jacobian.json), [`data/o1-hvp.json`](data/o1-hvp.json), [`data/o1-remat.json`](data/o1-remat.json) ·
-> **Reproduce:** `uv run python experiments/o1_autodiff/run.py jacobian hvp remat plot` (about 4 minutes)
+> **Data:** [`data/o1-jacobian.json`](data/o1-jacobian.json), [`data/o1-hvp.json`](data/o1-hvp.json), [`data/o1-remat.json`](data/o1-remat.json), [`data/o2-logistic.json`](data/o2-logistic.json), [`data/o2-boosting.json`](data/o2-boosting.json) ·
+> **Reproduce:** `uv run python experiments/o1_autodiff/run.py jacobian hvp remat plot` (about 4 minutes); `uv sync --extra boost && uv run python experiments/o2_newton/run.py logistic boosting plot` (about 45 minutes; needs `../ml-ladder` for A1's and A4's data generators)
 
 ## O1 — Forward vs reverse mode, Hessian-vector products, rematerialisation
 
@@ -343,3 +343,296 @@ plus outputs only, and was identical for every remat arm. The numbers above use
 - **Remat speedups on GPU.** Whether the CPU's "remat is faster" survives on
   the T4, where activations live in 300 GB/s HBM rather than in a CPU's
   memory system.
+
+## O2 — Newton's method where ml-ladder used first order
+
+### Question
+
+ml-ladder left two Newton steps unbuilt.
+- **A1** trained logistic regression by gradient descent only. Its open
+  threads proposed IRLS, "to watch second-order information pay off".
+- **A4** matched XGBoost to $6\times10^{-6}$ on squared loss, where $h\equiv1$
+  and the Newton leaf is just the mean residual. It left "the Newton step for a
+  loss where $h \not\equiv 1$, e.g. log-loss" as the point "at which the
+  second-order version stops being equivalent and starts being better".
+
+With `jax.hessian`, both are a few lines. Does second-order information pay
+off, in iterations, wall-clock, and held-out loss? And can autodiff supply
+XGBoost's $g$ and $h$ for any loss, exactly?
+
+### The idea
+
+**Logistic regression.** Newton's step $w \leftarrow w - H^{-1}\nabla L$ uses
+the curvature to rescale every direction. It converges quadratically near the
+optimum, and its iteration count does not depend on how badly the problem is
+conditioned. Gradient descent's count grows with the condition number $\kappa$.
+The price is the Hessian: $O(nd^2)$ to form and $O(d^3)$ to solve.
+
+Two methods sit between the extremes:
+- **Truncated Newton-CG** solves $Hp=-g$ by conjugate gradients, on O1's
+  Hessian-vector products. It never forms $H$, and pays $O(nd)$ per
+  inner step.
+- **L-BFGS** builds a curvature estimate from recent gradient differences.
+
+**Boosting.** Each round fits a tree to a second-order expansion of the loss
+around the current scores, using per-sample $g_i = \partial_F \ell$ and
+$h_i = \partial_F^2 \ell$. The leaf value is then the Newton step for that
+leaf. The splits are chosen by the same quadratic's gain.
+
+Nothing in the tree depends on which loss it was. So if autodiff provides $g$
+and $h$, one implementation serves every smooth loss.
+
+### The math
+
+**Logistic regression.** With $p = \sigma(Xw)$ and $S = \operatorname{diag}(p(1-p))$:
+
+$$L(w) = \tfrac{1}{n}\sum_i \big(\log(1+e^{x_i^\top w}) - y_i x_i^\top w\big) + \tfrac{\lambda}{2}\lVert w\rVert^2,
+\qquad \nabla L = \tfrac{1}{n}X^\top(p-y) + \lambda w, \qquad H = \tfrac{1}{n}X^\top S X + \lambda I .$$
+
+The textbook calls the Newton iteration on this IRLS. Gradient descent with
+step $c/L$, where $L \ge \lambda_{\max}(H)$, needs
+$O(\kappa \log(1/\epsilon))$ iterations. L-BFGS behaves roughly like
+$O(\sqrt{\kappa})$ in practice, and Newton like $O(\log\log(1/\epsilon))$ once
+close.
+
+**Newton boosting** (as in O1's notation and XGBoost's paper). For a leaf $j$
+with samples $I_j$:
+
+$$w_j^\star = -\eta\,\frac{\sum_{i\in I_j} g_i}{\sum_{i\in I_j} h_i + \lambda},
+\qquad \text{gain} = \frac{G_L^2}{H_L+\lambda} + \frac{G_R^2}{H_R+\lambda} - \frac{G^2}{H+\lambda}.$$
+
+Three arms differ only in which $h$ goes where:
+- **first-order**: $h\equiv1$ everywhere. Least squares on $-g$, leaves at the
+  mean negative gradient.
+- **first-order trees with Newton leaves**: $h\equiv1$ to choose splits, the
+  true $h$ in the leaves.
+- **full Newton**: the true $h$ in both, as XGBoost does.
+
+For log-loss, $g = p - y$ and $h = p(1-p) \le \tfrac14$. A first-order leaf is
+therefore at most 1 in size. A Newton leaf divides by at most $\tfrac14$, so it
+takes steps at least 4× larger at the same $\eta$.
+
+### What we measure and why
+
+- **Logistic regression** (float64, tolerance $\lVert\nabla L\rVert \le 10^{-8}\lVert\nabla L_0\rVert$).
+  - **Data:**
+    - A1's data generator and settings: two blobs, 600 samples, std 2.2,
+      box $(-3,3)$, standardised, with 450 used for training and $\lambda=0$.
+      This is a fresh draw per seed. A1's exact draw came from an RNG stream
+      its regression half had already consumed, so it is not reproducible
+      separately.
+    - A synthetic sweep: $n = 10{,}000$ Gaussian features with condition
+      number $\kappa\in\{10, 1000\}$ (random rotation),
+      $d\in\{10, 100, 1000\}$, labels from a logistic model, $\lambda = 10^{-4}$.
+  - **Measured:** iterations; wall-clock of the compiled solver (the first run,
+    which includes compilation, is recorded separately); gradients, Hessians
+    and HVPs used; final suboptimality.
+  - **Also:** the cost of one `jax.hessian` against the hand-written
+    $X^\top SX$.
+  - **Gradient descent is tuned per seed.** Its step $c/L$ uses the best
+    $c \in \{1,2,4,\dots,64\}$. A step tuned on one seed sat on another seed's
+    stability edge: it never converged on seeds 1 and 2 of A1.
+- **Boosting.**
+  - **(1) Parity with XGBoost 3.4.1**: exact updater, depth 3, $\eta=0.3$,
+    $\lambda=1$, `min_child_weight` 1, 100 rounds, one thread. Data: A4's
+    Friedman #1, 2,000 samples (1,500 train). Three losses:
+    - log-loss on the median-binarised target, against XGBoost's own
+      `binary:logistic`;
+    - pseudo-Huber with $\delta = 1$, against `reg:pseudohubererror`;
+    - log-cosh, which XGBoost has no formula for, passed to it as a custom
+      objective computed by the same autodiff.
+
+    Compared: the tree structure (feature and threshold of every split), leaf
+    values, and held-out margins.
+  - **(2) Does the Newton step pay?** Log-loss on Friedman #1 binarised at the
+    training median, 5,000 samples split 2,812 / 938 / 1,250.
+    - $\eta \in \{0.03, 0.1, 0.3, 1, 2, 4, 8\}$ and the number of rounds (up to
+      1,000) are chosen on the validation split for each arm and seed.
+    - A4's original grid (0.03–1, 300 rounds) left first-order on its edge, so
+      it was widened. No choice lands on the edge of the final grid.
+    - $\lambda$ and `min_child_weight` stay at XGBoost's defaults (1 and 1) for
+      every arm.
+
+### What I built
+
+- **`src/jaxexp/newton.py`**: four solvers, each one `lax.while_loop`
+  compiled whole:
+  - Newton: `jax.hessian`, Cholesky solve, Armijo backtracking;
+  - Newton-CG: CG on `jvp(grad)` HVPs, with the Eisenstat–Walker forcing term;
+  - L-BFGS: `optax.lbfgs` with its zoom line search;
+  - gradient descent.
+
+  Each returns its iterate, its work counts and its loss history.
+- **`src/jaxexp/boosting.py`**: `derivatives(loss)` gives per-sample $g, h$
+  from `jax.grad` applied twice and vmapped. The tree grower follows XGBoost's
+  exact updater:
+  - float32 gradient pairs summed in float64;
+  - float32 features, with splits at the float32 midpoint and `x < threshold`
+    going left;
+  - `min_child_weight` on Hessian sums;
+  - a minimum gain of $10^{-6}$;
+  - the lower feature index wins ties.
+
+  `hessian="ones"` and `"leaves"` give the other two arms. Tree growth is
+  NumPy, not JAX: it is discrete and data-dependent.
+- **`experiments/o2_newton/run.py`**: both experiments and the figures. It
+  checkpoints each (configuration, seed) in `runs/`, after a container restart
+  killed one run partway.
+- **`tests/test_o2_newton.py`**, 7 tests:
+  - `jax.hessian` equals IRLS;
+  - all four solvers reach the same optimum;
+  - autodiff $g, h$ match closed forms for three losses;
+  - squared loss gives a regression tree, ml-ladder A4's identity;
+  - 10 rounds match XGBoost to $10^{-5}$.
+
+### Results
+
+**Logistic regression, iterations to tolerance** (median and range over seeds;
+all 84 runs converged):
+
+| problem | Newton | Newton-CG (HVPs) | L-BFGS | gradient descent |
+| --- | --- | --- | --- | --- |
+| A1 blobs, $d=2$ | 5 (4–6) | 5 (9 HVPs) | 10 (8–11) | 23 (20–27) |
+| $d=10$, $\kappa=10$ | 5 (5–6) | 6 (30) | 23 (22–23) | 162 (108–175) |
+| $d=100$, $\kappa=10$ | 5 (5–6) | 6 (38) | 32 (30–33) | 192 (157–206) |
+| $d=1000$, $\kappa=10$ | 6 | 7 (64) | 41 (40–42) | 296 (291–297) |
+| $d=10$, $\kappa=1000$ | 5 | 6 (46) | 99 (94–109) | 6,839 (5,790–7,533) |
+| $d=100$, $\kappa=1000$ | 5 | 6 (194) | 230 (228–234) | 7,072 (6,592–7,092) |
+| $d=1000$, $\kappa=1000$ | 5 | 7 (364) | 259 (256–260) | 8,170 (8,139–8,212) |
+
+**Wall-clock to tolerance** (ms, median and range; compiled, excluding compilation):
+
+| problem | Newton | Newton-CG | L-BFGS | gradient descent |
+| --- | --- | --- | --- | --- |
+| A1 blobs, $d=2$ | 0.5 (0.3–0.6) | 0.3 (0.3–0.5) | 0.7 (0.7–0.8) | 0.7 (0.7–0.8) |
+| $d=10$, $\kappa=10$ | **6.3** (6.1–7.3) | 7.4 (6.8–7.4) | 9.5 (9.0–10.4) | 40.2 (32.1–43.9) |
+| $d=100$, $\kappa=10$ | 34.6 (33.4–38.0) | **27.6** (26.7–30.7) | 28.9 (27.4–29.4) | 121 (104–131) |
+| $d=1000$, $\kappa=10$ | 1,965 (1,932–2,056) | 251 (235–254) | **133** (131–149) | 722 (643–792) |
+| $d=10$, $\kappa=1000$ | **6.1** (5.7–6.8) | 7.7 (7.2–9.7) | 39.4 (37.7–39.5) | 1,686 (1,416–1,943) |
+| $d=100$, $\kappa=1000$ | **32.5** (31.4–32.6) | 90.4 (84.0–118) | 181 (179–189) | 4,699 (4,646–4,753) |
+| $d=1000$, $\kappa=1000$ | 1,730 (1,595–1,740) | 803 (793–816) | **632** (600–638) | 18,112 (18,098–18,486) |
+
+Notes on these tables:
+- **Same optimum.** Every solver reached the same loss to within
+  $6\times10^{-15}$.
+- **Tuned step.** Gradient descent's best step was $2/L$ on every synthetic
+  problem. On A1 it was $4/L$, $1/L$ and $2/L$ for the three seeds.
+- **One Hessian costs:** about 0.34 s at $d = 1000$. `jax.hessian` matches the
+  hand-written $X^\top SX$ to $3\times10^{-16}$. It spends 2.0–2.75× its FLOPs
+  and 1.2–1.8× its time, because forward-over-reverse does not exploit
+  symmetry.
+
+![Logistic regression: loss minus best loss against iteration for the four solvers at d = 100, kappa = 1000; and wall-clock to tolerance against dimension at both condition numbers.](figures/o2_logistic.png)
+
+**Boosting: parity with XGBoost** (100 rounds × 3 seeds per loss; median and range):
+
+| loss | trees identical in structure | max leaf difference | max held-out margin difference | margins up to |
+| --- | --- | --- | --- | --- |
+| log-loss (`binary:logistic`) | **300 / 300** | $6.5\times10^{-8}$ (5.9e-8–8.2e-8) | $6.0\times10^{-6}$ (4.9e-6–6.4e-6) | 14.6 |
+| pseudo-Huber (`reg:pseudohubererror`) | **300 / 300** | $4.3\times10^{-6}$ (3.7e-6–1.3e-5) | $1.3\times10^{-5}$ (1.0e-5–1.4e-5) | 26.7 |
+| log-cosh (custom objective) | **299 / 300** | $1.4\times10^{-5}$ (4.1e-6–8.7e-5) | $6.0\times10^{-5}$ (1.2e-5–0.25) | 27.5 |
+
+- **The one log-cosh tree that differs** is tree 92 of seed 0. One node splits
+  on the same feature at a different threshold: 0.3676 here, 0.3777 in XGBoost.
+  The two thresholds' gains are equal to $4.4\times10^{-11}$ relative, so it is
+  a tie that the two summation orders break differently. Every later tree
+  inherits the difference, which is where seed 0's 0.25 comes from.
+- **Speed:** my NumPy grower takes 0.76–0.85 s per 100 trees. That is 6.9×
+  XGBoost's C++ on the built-in objectives, and 3.1× when XGBoost has to call
+  back into Python for a custom objective.
+
+**Boosting: does the Newton step pay?** (log-loss; $\eta$ and rounds tuned per
+arm and seed on validation)
+
+| arm | test log-loss | per seed, vs first-order | test accuracy | tuned $\eta$ | rounds |
+| --- | --- | --- | --- | --- | --- |
+| first-order | 0.1933 (0.1876–0.2102) | — | 0.910 (0.907–0.911) | 1, 1, 1 | 629, 631, 445 |
+| first-order trees, Newton leaves | **0.1840** (0.1835–0.1935) | −0.0168, −0.0098, −0.0036 | 0.910 (0.910–0.914) | 0.1, 0.1, 0.3 | 653, 628, 159 |
+| full Newton (XGBoost-style) | 0.1976 (0.1884–0.1976) | −0.0126, +0.0043, +0.0008 | 0.910 (0.907–0.914) | 0.1, 0.3, 0.3 | 460, 111, 100 |
+
+**What the boosting table shows:**
+- **Accuracy can't separate the arms.** Every arm is within 0.007 of every
+  other, less than one standard error on 1,250 test samples (0.008).
+- **Newton leaves win on every seed.** They beat first-order on log-loss by
+  0.004 to 0.017.
+- **Full Newton does not.** It beats first-order on seed 0 only, and is worse
+  on seeds 1 and 2.
+
+![Validation log-loss by round for the three boosting arms at their tuned learning rates (seed 0), and held-out test log-loss per seed.](figures/o2_boosting.png)
+
+**Where the second-order claims hold, and where they don't:**
+- **"Newton's iteration count does not depend on conditioning": holds
+  exactly.**
+  - Newton takes 4–6 iterations on every problem, from $\kappa=10$ to 1,000
+    and $d=2$ to 1,000.
+  - Gradient descent's count grows 28–42× with $\kappa$; L-BFGS's grows 4–7×.
+  - Newton-CG's outer count stays at 6–7. Conditioning moves into its inner
+    CG instead: 30 → 46, 38 → 194 and 64 → 364 HVPs as $\kappa$ rises.
+- **"…so it is faster": holds until the Hessian costs more than the
+  iterations it saves.**
+  - Up to $d=100$, full Newton is fastest or close to it: up to **278×**
+    faster than tuned gradient descent at $d=10$, $\kappa=1000$, and 145× at
+    $d=100$.
+  - At $d=1000$, each Hessian costs about 0.34 s. L-BFGS is fastest there
+    (2.7–15× ahead of Newton), and Newton-CG second.
+  - Gradient descent is never fastest, and at $d=1000$, $\kappa=1000$ it is
+    29× slower than L-BFGS.
+- **"Newton leaves pay off where $h\not\equiv1$" (A4's thread): holds for the
+  leaves.** Newton leaves on first-order trees beat tuned first-order boosting
+  on all three seeds (median 0.1840 against 0.1933).
+- **The Hessian-weighted *split* criterion did not help here.** Full
+  XGBoost-style Newton (median 0.1976) was no better than first-order. It does
+  reach its best validation loss in fewer rounds (100–460, against 445–631),
+  and then overfits faster (see the figure).
+
+### What surprised me
+
+**Second-order split choice hurt, though second-order leaves helped.**
+- The split gain weights each sample by $h_i = p_i(1-p_i)$.
+- With `min_child_weight` = 1 counted in $h$, a leaf needs at least 4 samples
+  when $p=\tfrac12$, and far more where the model is confident.
+- So the Newton tree spends its splits on samples that are still uncertain,
+  and its leaves take larger steps there.
+- That fits the fast-then-overfit curve. It is a hypothesis, not a
+  measurement: $\lambda$ and `min_child_weight` were held at XGBoost's
+  defaults, and a fair test tunes them per arm.
+
+**Autodiff reproduces a C++ library's trees to the threshold.**
+- XGBoost's hand-written log-loss and pseudo-Huber derivatives, and its
+  split search, came out identical in 600 of 600 trees, from `jax.grad`
+  applied twice and 100 lines of NumPy.
+- It took conventions no paper states:
+  - float32 gradient pairs summed in float64;
+  - float32 midpoints for thresholds;
+  - `min_child_weight` counted in Hessian units;
+  - XGBoost's reported gain has no factor of ½.
+
+**Matching float32 *margins* made parity worse, not better.**
+- XGBoost keeps its running predictions in float32. Doing the same here
+  dropped pseudo-Huber parity from 300/300 to 295/300.
+- XGBoost computes its built-in $g, h$ in float32 arithmetic, and neither
+  margin precision reproduces that. Near-ties break by rounding either way.
+- float64 margins match more trees (899 against 894 of 900), so they are the
+  default.
+
+**A tuned baseline can be tuned onto a cliff.**
+- Gradient descent's best step on A1 seed 0 was $2/L$, the edge of stability
+  for the worst-case curvature bound.
+- It converged on that seed (23 iterations), and oscillated for 100,000
+  iterations on seeds 1 and 2.
+- Tuning per seed fixed it: the best steps were $4/L$, $1/L$ and $2/L$.
+- Also, steps that are too large oscillate rather than diverge, so a tuning
+  sweep should try small steps first and cap the rest.
+
+### Open threads
+
+- **Tune $\lambda$ and `min_child_weight` per boosting arm.** The test of the
+  hypothesis above is whether full Newton catches up once its regularisation
+  is tuned, or whether Hessian-weighted splits really are worse on this data.
+- **Exploit symmetry in `jax.hessian`.** It spends 2× the FLOPs of
+  $X^\top SX$. A symmetric Hessian, or a Gauss–Newton form via
+  `jax.linearize`, is the obvious fix at large $d$.
+- **Precondition Newton-CG**, for example with the diagonal of $H$. Its HVP
+  count is the only part that grows with $\kappa$.
+- **Histogram-binned boosting in JAX**, so tree growth itself compiles. This
+  would also answer A4's other thread, about where XGBoost's speed comes from.

@@ -484,27 +484,33 @@ def run_plot() -> None:
     left.set_xlabel("boosting round")
     left.set_ylabel("validation log-loss")
     left.set_title("Seed 0, each arm at its tuned η")
-    left.set_ylim(None, 0.5)
+    left.set_ylim(0.17, 0.30)
     left.legend(loc="upper right", fontsize=7.5)
+    # Dots, not bars: the differences are 0.01 on values near 0.19, and bars must start at 0.
     ys = np.arange(len(arms))
-    med = [row["test_log_loss"]["median"] for row in arms.values()]
-    lo_ = [row["test_log_loss"]["median"] - row["test_log_loss"]["min"] for row in arms.values()]
-    hi_ = [row["test_log_loss"]["max"] - row["test_log_loss"]["median"] for row in arms.values()]
-    right.barh(
-        ys,
-        med,
-        xerr=[lo_, hi_],
-        color=SERIES[: len(arms)],
-        height=0.55,
-        edgecolor="white",
-        error_kw={"ecolor": INK_SECONDARY, "elinewidth": 1, "capsize": 3},
-    )
-    for y_, m in zip(ys, med, strict=True):
-        right.text(m * 0.02, y_, f"{m:.4f}", va="center", ha="left", color="white", fontsize=8, fontweight="bold")
-    right.set_yticks(ys, [a.replace(", ", ",\n") for a in arms], fontsize=8)
-    right.invert_yaxis()
-    right.set_xlabel("test log-loss (median, min–max over seeds)")
-    right.set_title("Held-out log-loss")
+    for y_, (row, color) in enumerate(zip(arms.values(), SERIES, strict=False)):
+        tl = row["test_log_loss"]
+        right.plot([tl["min"], tl["max"]], [y_, y_], color=color, linewidth=2, alpha=0.5)
+        right.scatter(tl["per_seed"], [y_] * len(tl["per_seed"]), s=22, color=color, alpha=0.6, zorder=3)
+        right.scatter([tl["median"]], [y_], s=70, color=color, edgecolor="white", linewidth=1.5, zorder=4)
+        right.annotate(
+            f"{tl['median']:.4f}",
+            (tl["median"], y_),
+            xytext=(0, 9),
+            textcoords="offset points",
+            ha="center",
+            fontsize=8,
+            color=INK_SECONDARY,
+        )
+    labels = {
+        "first-order": "first-order",
+        "first-order trees, Newton leaves": "first-order trees,\nNewton leaves",
+        "Newton (XGBoost-style)": "Newton\n(XGBoost-style)",
+    }
+    right.set_yticks(ys, [labels.get(a, a) for a in arms], fontsize=8)
+    right.set_ylim(len(arms) - 0.5, -0.6)
+    right.set_xlabel("test log-loss: median (large), seeds (small)")
+    right.set_title("Held-out log-loss, 3 seeds")
     right.grid(axis="y", visible=False)
     save(fig, FIGURES / "o2_boosting.png")
     print("figures written", flush=True)
