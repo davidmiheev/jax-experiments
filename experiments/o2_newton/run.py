@@ -105,7 +105,10 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
     tuning = {}
     if lr_scale is None:  # tune: the scale c in lr = c / L that converges in the fewest steps
         best = None  # (c, iterations); later candidates are capped at the best count so far
-        for c in (64, 32, 16, 8, 4, 2, 1):
+        # Smallest step first: 1/L is safe and converges, and its count caps every larger
+        # candidate. (Too-large steps oscillate rather than diverge, so uncapped they run
+        # to max_gd.)
+        for c in (1, 2, 4, 8, 16, 32, 64):
             cap = best[1] if best else max_gd
             r = jax.jit(lambda w, c=c, cap=cap: N.gradient_descent(loss, w, c / L, tol=TOL, max_iter=cap))(w0)
             ok = bool(r.grad_norm <= TOL)
@@ -113,7 +116,7 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
             print(
                 f"[logistic]   GD tune c={c:>2}: {int(r.iterations):>6} its, grad {float(r.grad_norm):.1e}", flush=True
             )
-            if ok and (best is None or int(r.iterations) < best[1]):
+            if ok and (best is None or int(r.iterations) <= best[1]):
                 best = (c, int(r.iterations))
         lr_scale = best[0] if best else 1.0
     solvers["gradient descent"] = lambda w: N.gradient_descent(loss, w, lr_scale / L, tol=TOL, max_iter=max_gd)
