@@ -6,8 +6,14 @@ reproduce. This file is the practical brief for picking it up.
 
 ## Where things stand (handed over 2026-10-11)
 
-- **Code.** Only the scaffold exists: `pyproject.toml`, the `jaxexp` package
-  and a smoke test. No experiment has been run yet. Start at milestone M0.
+- **Code.** M0 is done (2026-10-15). `jaxexp.transformer` is C3's transformer in
+  Flax NNX (learned, sinusoidal or RoPE positions; explicit or fused attention),
+  and `jaxexp.torch_port` loads PyTorch weights into it. R1 shows it matches
+  ml-ladder's PyTorch models to fp32 round-off: 7.7e-08 per block, 6.1e-07 for
+  the 25M RoPE model at T=1024, and 4.9e-07 for gradients
+  (`docs/m0-r1-parity.md`). **Use `jaxexp.transformer.TORCH` numerics:**
+  `jax.nn.gelu` defaults to tanh, and `nnx.LayerNorm` defaults to ε=1e-6 with
+  fast variance, which is not PyTorch's function. Next is M1 (O1, O2).
 - **Prior JAX use.** None. JAX was not installed in any environment of the
   originating session, and no repo of this account had imported it before.
 - **Verified versions.** On 2026-10-11 these installed from PyPI and passed
@@ -162,7 +168,10 @@ PLAN.md            the experiment plan (work order)
 CLAUDE.md          this brief
 pyproject.toml     uv project: jax, flax, optax; optional [cuda] extra
 src/jaxexp/        shared code (models, training loop, data) as it is written
-tests/             pytest; test_smoke.py checks jit/grad/vmap and the Flax/Optax APIs
+tests/             pytest; test_smoke.py checks jit/grad/vmap and the Flax/Optax APIs;
+                   test_r1_parity.py (torch tests need `--extra torch` and ../ml-ladder or $ML_LADDER)
+experiments/       one directory per experiment (r1_parity/)
+docs/              writeups per milestone; data/ holds their JSON
 ```
 
 As milestones land, add `experiments/<id>_<name>/` for each experiment's
