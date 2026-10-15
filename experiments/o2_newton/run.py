@@ -102,12 +102,14 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
         "Newton-CG": lambda w: N.newton_cg(loss, w, tol=TOL),
         "L-BFGS": lambda w: N.lbfgs(loss, w, tol=TOL, max_iter=5000),
     }
+    tuning = {}
     if lr_scale is None:  # tune: the scale c in lr = c / L that converges in the fewest steps
         best = None  # (c, iterations); later candidates are capped at the best count so far
         for c in (64, 32, 16, 8, 4, 2, 1):
             cap = best[1] if best else max_gd
             r = jax.jit(lambda w, c=c, cap=cap: N.gradient_descent(loss, w, c / L, tol=TOL, max_iter=cap))(w0)
             ok = bool(r.grad_norm <= TOL)
+            tuning[str(c)] = {"iterations": int(r.iterations), "converged": ok, "cap": cap}
             print(
                 f"[logistic]   GD tune c={c:>2}: {int(r.iterations):>6} its, grad {float(r.grad_norm):.1e}", flush=True
             )
@@ -137,6 +139,7 @@ def solve_all(loss, d: int, lr_scale: float | None, L: float, *, max_gd: int):
             "compile_and_first_run_s": first,
             "history": hist[~np.isnan(hist)].tolist(),
         }
+    rows["_gd_tuning"] = {"chosen_c": lr_scale, "candidates": tuning}
     return rows, lr_scale
 
 
@@ -148,7 +151,7 @@ def run_logistic(ladder: str) -> None:
         (f"d={d}, kappa={k:g}", (d, k)) for k in (10.0, 1000.0) for d in (10, 100, 1000)
     ]
     for label, spec in configs:
-        per_seed, scale = [], None
+        per_seed = []
         for seed in SEEDS:
             if spec is None:
                 rng = np.random.default_rng(seed)
@@ -162,9 +165,11 @@ def run_logistic(ladder: str) -> None:
             loss = N.logistic_loss(X, y, l2)
             Xb = jnp.concatenate([X, jnp.ones((X.shape[0], 1))], axis=1)
             L = float(jnp.linalg.eigvalsh(Xb.T @ Xb)[-1]) / (4 * X.shape[0]) + l2  # Hessian bound
-            rows, scale = solve_all(loss, X.shape[1], scale, L, max_gd=100_000)
-            best = min(r["loss"] for r in rows.values())
-            for r in rows.values():
+            # Tuned per seed: a step tuned on one seed can sit on another seed's stability edge.
+            rows, _ = solve_all(loss, X.shape[1], None, L, max_gd=100_000)
+            solved = [r for k, r in rows.items() if k[0] != "_"]
+            best = min(r["loss"] for r in solved)
+            for r in solved:
                 r["suboptimality"] = r["loss"] - best
             # Cost of one Hessian: jax.hessian against the hand-written IRLS X^T S X.
             w = jnp.full(X.shape[1] + 1, 0.01)
@@ -191,7 +196,8 @@ def run_logistic(ladder: str) -> None:
             "n": int(X.shape[0]),
             "d": int(X.shape[1]),
             "l2": l2,
-            "gd_lr_scale_over_L": scale,
+            "gd_lr_scale_over_L_per_seed": [r["_gd_tuning"]["chosen_c"] for r in per_seed],
+            "gd_tuning_per_seed": [r["_gd_tuning"]["candidates"] for r in per_seed],
             "solvers": {
                 name: {
                     "iterations": summarise([r[name]["iterations"] for r in per_seed]),
