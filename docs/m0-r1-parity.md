@@ -28,10 +28,10 @@ $$\varepsilon_{\text{rel}} = \frac{\lVert F_{\text{jax}}(x) - F_{\text{torch}}(x
 
 As in G3, the size of the gap diagnoses its cause:
 
-- **About 10⁻⁷ in fp32** means the same arithmetic done in a different order.
-- **10⁻⁶ to 10⁻³** means a different function: a swapped approximation or a
+- **About $10^{-7}$ in fp32** means the same arithmetic done in a different order.
+- **$10^{-6}$ to $10^{-3}$** means a different function: a swapped approximation or a
   different epsilon.
-- **Order 10⁻¹** means a layout error.
+- **Order $10^{-1}$** means a layout error.
 
 ## What we measure and why
 
@@ -47,7 +47,7 @@ layout bugs can hide at batch 1. The arms:
   to something different from PyTorch, none of which raises an error:
   - `jax.nn.gelu` is the **tanh approximation** (`approximate=True`), while
     `torch.nn.GELU()` is exact;
-  - `nnx.LayerNorm` uses **ε = 10⁻⁶**, while PyTorch uses 10⁻⁵;
+  - `nnx.LayerNorm` uses **ε = $10^{-6}$**, while PyTorch uses $10^{-5}$;
   - `nnx.LayerNorm` computes **fast variance** E[x²] − E[x]², while PyTorch
     subtracts the mean first.
 
@@ -94,9 +94,9 @@ backward pass agrees too.
   - **Always run (JAX only)**: the causal mask does not leak, for every
     position type × attention path; the RoPE score depends only on offset;
     the loader is strict.
-  - **Need torch and ml-ladder**: block parity < 10⁻⁶ at batch 1 and 4, with
-    both attention paths; 4M model parity < 10⁻⁶ with learned and RoPE
-    positions; and a check that the harness *does* flag tanh GELU, ε = 10⁻⁶,
+  - **Need torch and ml-ladder**: block parity < $10^{-6}$ at batch 1 and 4, with
+    both attention paths; 4M model parity < $10^{-6}$ with learned and RoPE
+    positions; and a check that the harness *does* flag tanh GELU, ε = $10^{-6}$,
     and the untransposed projection. Without that last check, a passing
     parity test would prove nothing.
 
@@ -118,7 +118,7 @@ with min–max in parentheses.
 | all three Flax/JAX defaults | 3.52e-05 (3.52e-05–3.66e-05) | 3.86e-05 (3.79e-05–3.89e-05) | 1.40e-04 | 501× |
 | matched, input +100 | 3.77e-08 (3.70e-08–4.06e-08) | 3.27e-08 (3.20e-08–3.58e-08) | 1.53e-05 | 0.43× |
 | fast variance, input +100 | 2.79e-06 (2.57e-06–3.27e-06) | 1.37e-06 (1.25e-06–1.38e-06) | 8.16e-04 | 17.8× |
-| projection untransposed | 2.34e-01 (1.99e-01–2.54e-01) | 2.40e-01 (2.01e-01–2.41e-01) | 1.60e+00 | 3.1×10⁶ |
+| projection untransposed | 2.34e-01 (1.99e-01–2.54e-01) | 2.40e-01 (2.01e-01–2.41e-01) | 1.60e+00 | $3.1\times10^{6}$ |
 | matmul precision "highest" | 7.86e-08 (identical) | 7.69e-08 (identical) | 4.77e-07 | 1× |
 
 For scale, PyTorch disagrees with *itself* by more than that. Its own
@@ -152,7 +152,7 @@ Gradient check (4M model, learned positions, T = 256, batch 4):
   for one block, for whole models up to 25M parameters at T = 1024, and for
   the backward pass.
 - The error grows with depth: 7.7e-08 for one block, 3.4e-07 for 5 layers,
-  6.1e-07 for 8 layers at 4× the context. It stays under the 10⁻⁶ the tests
+  6.1e-07 for 8 layers at 4× the context. It stays under the $10^{-6}$ the tests
   assert.
 
 ## What surprised me
@@ -160,7 +160,7 @@ Gradient check (4M model, learned positions, T = 256, batch 4):
 **The tanh-GELU error is a property of the function, not of the port.**
 - JAX's number matches Candle's from G3 almost exactly: the same median, min
   and max to three significant figures, from two unrelated implementations.
-- At 3.6×10⁻⁵ the approximation error is about 500× round-off, so it
+- At $3.6\times10^{-5}$ the approximation error is about 500× round-off, so it
   dominates everything else.
 - So G3's "470× worse" and this "510× worse" are not two measurements of
   different bugs. They are one fact about $\tanh$ against $\Phi$ at these
@@ -173,15 +173,15 @@ raises nothing. Flax's two LayerNorm defaults both differ from PyTorch too.
 
 **Fast variance costs nothing until the mean is large.**
 - On zero-mean inputs it is indistinguishable from the two-pass form (1.01×).
-- Shift the input by +100 and it is 18× worse: 1.4×10⁻⁶ relative, 8×10⁻⁴ in
+- Shift the input by +100 and it is 18× worse: $1.4\times10^{-6}$ relative, $8\times10^{-4}$ in
   absolute terms.
 - Trained residual streams do develop large-magnitude channels. So matching
   PyTorch's two-pass form is the safe default for R2, even though random-init
   parity can't tell them apart.
 
 **PyTorch's SDPA is further from PyTorch's explicit attention than JAX is.**
-Different kernels in one framework disagree by 1.3×10⁻⁷. The cross-framework
-port disagrees by 7.7×10⁻⁸. Round-off has no allegiance to a framework.
+Different kernels in one framework disagree by $1.3\times10^{-7}$. The cross-framework
+port disagrees by $7.7\times10^{-8}$. Round-off has no allegiance to a framework.
 
 **Two checks were void on this hardware**, which is a result in itself.
 - On CPU, `jax.nn.dot_product_attention` lowers to the same XLA computation as
