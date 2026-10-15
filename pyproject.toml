@@ -17,6 +17,8 @@ dependencies = [
 cuda = ["jax[cuda12]>=0.11"]
 # Track R's parity checks against ml-ladder's PyTorch models (R1) and BPE data (O6).
 torch = ["torch>=2.2", "tokenizers>=0.19"]
+# O2: XGBoost as the reference for autodiff Newton leaves (ml-ladder A4 used it too).
+boost = ["xgboost-cpu>=2.0"]  # the CPU wheel: no NCCL/CUDA libraries
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.6"]
