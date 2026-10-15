@@ -55,41 +55,42 @@ def init(key, d: int, width: int, depth: int, dtype=jnp.float32) -> dict:
     }
 
 
-def apply(params: dict, x: jax.Array, eps: list | None = None, *, s_w2=S_W2, s_b2=S_B2) -> jax.Array:
+def apply(params: dict, x: jax.Array, eps: list | None = None, *, s_w2=S_W2, s_b2=S_B2, act=jax.nn.relu) -> jax.Array:
     """Scalar output for one input x [d]. ``eps`` (optional) is added to each pre-activation h_l,
-    so grad w.r.t. eps gives delta_l = df/dh_l."""
+    so grad w.r.t. eps gives delta_l = df/dh_l. ``act`` may be any activation for the empirical
+    kernel; ``analytic_ntk`` is ReLU only."""
     s_w, s_b = math.sqrt(s_w2), math.sqrt(s_b2)
     a = x
     for i, (W, b) in enumerate(zip(params["W"], params["b"], strict=True)):
         h = s_w * (W @ a) / math.sqrt(a.shape[0]) + s_b * b
         if eps is not None:
             h = h + eps[i]
-        a = jax.nn.relu(h)
+        a = act(h)
     return s_w * (params["w_out"] @ a) / math.sqrt(a.shape[0]) + s_b * params["b_out"]
 
 
-def features(params: dict, X: jax.Array, *, s_w2=S_W2, s_b2=S_B2):
+def features(params: dict, X: jax.Array, *, s_w2=S_W2, s_b2=S_B2, act=jax.nn.relu):
     """Per-layer inputs A_0..A_L [N, fan] and backprop vectors Delta_1..Delta_L [N, width]."""
     depth = len(params["W"])
     width = params["W"][0].shape[0]
     eps0 = [jnp.zeros(width, params["w_out"].dtype) for _ in range(depth)]
 
     def one(x):
-        deltas = jax.grad(lambda e: apply(params, x, e, s_w2=s_w2, s_b2=s_b2))(eps0)
+        deltas = jax.grad(lambda e: apply(params, x, e, s_w2=s_w2, s_b2=s_b2, act=act))(eps0)
         s_w, s_b = math.sqrt(s_w2), math.sqrt(s_b2)
         acts, a = [x], x
         for W, b in zip(params["W"], params["b"], strict=True):
-            a = jax.nn.relu(s_w * (W @ a) / math.sqrt(a.shape[0]) + s_b * b)
+            a = act(s_w * (W @ a) / math.sqrt(a.shape[0]) + s_b * b)
             acts.append(a)
         return acts, deltas
 
     return jax.vmap(one)(X)
 
 
-def empirical_ntk(params: dict, X1: jax.Array, X2: jax.Array, *, s_w2=S_W2, s_b2=S_B2) -> jax.Array:
+def empirical_ntk(params: dict, X1: jax.Array, X2: jax.Array, *, s_w2=S_W2, s_b2=S_B2, act=jax.nn.relu) -> jax.Array:
     """Theta [N1, N2] by the per-layer outer-product identity (no Jacobian formed)."""
-    A1, D1 = features(params, X1, s_w2=s_w2, s_b2=s_b2)
-    A2, D2 = features(params, X2, s_w2=s_w2, s_b2=s_b2)
+    A1, D1 = features(params, X1, s_w2=s_w2, s_b2=s_b2, act=act)
+    A2, D2 = features(params, X2, s_w2=s_w2, s_b2=s_b2, act=act)
     theta = 0.0
     for layer in range(len(params["W"])):
         fan = A1[layer].shape[1]

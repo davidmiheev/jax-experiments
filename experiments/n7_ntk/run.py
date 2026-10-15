@@ -147,7 +147,12 @@ def run_kernel(ladder: str) -> None:
 # ---------------------------------------------------------------- training
 
 
-def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], ladder: str) -> dict:
+ACTIVATIONS = {"relu": jax.nn.relu, "gelu": lambda h: jax.nn.gelu(h, approximate=False)}
+
+
+def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], ladder: str, act: str = "relu") -> dict:
+    """``act`` other than relu is compared only with its own linearisation (the analytic kernel is ReLU's)."""
+    activation = ACTIVATIONS[act]
     Xtr, ytr, Xte, yte = load_task(task, seed, ladder)
     n = len(Xtr)
     X64, Xte64 = jnp.asarray(Xtr, jnp.float64), jnp.asarray(Xte, jnp.float64)
@@ -156,13 +161,13 @@ def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], 
     lr = float(n / jnp.linalg.eigvalsh(th_inf)[-1])  # lr * lambda_max / n = 1 for the infinite-width kernel
 
     params0 = K.init(jax.random.key(seed), Xtr.shape[1], width, DEPTH)
-    th0 = jnp.asarray(K.empirical_ntk(params0, Xtr, Xtr), jnp.float64)
-    th0_te = jnp.asarray(K.empirical_ntk(params0, Xte, Xtr), jnp.float64)
+    th0 = jnp.asarray(K.empirical_ntk(params0, Xtr, Xtr, act=activation), jnp.float64)
+    th0_te = jnp.asarray(K.empirical_ntk(params0, Xte, Xtr, act=activation), jnp.float64)
     y = jnp.asarray(ytr, jnp.float64)
     lin_tr, lin_te = K.kernel_regression_path(th0, th0_te, y, lr, steps)
     inf_tr, inf_te = K.kernel_regression_path(th_inf, th_inf_te, y, lr, steps)
 
-    f = jax.vmap(K.apply, (None, 0))
+    f = jax.vmap(lambda p, x: K.apply(p, x, act=activation), (None, 0))
     f0_tr, f0_te = f(params0, Xtr), f(params0, Xte)
 
     def g(params, X, f0):
@@ -179,7 +184,7 @@ def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], 
 
         return jax.lax.fori_loop(0, k, body, params)
 
-    out = {"lr": lr, "alpha": alpha, "width": width, "steps": steps, "checkpoints": []}
+    out = {"lr": lr, "alpha": alpha, "width": width, "activation": act, "steps": steps, "checkpoints": []}
     params, done = params0, 0
     started = time.perf_counter()
     for i, t in enumerate(steps):
@@ -205,7 +210,7 @@ def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], 
     out["train_seconds"] = time.perf_counter() - started
     # How far the kernel moved: empirical NTK on the training set, at the end vs at init.
     if np.all(np.isfinite(np.asarray(jax.tree.leaves(params)[0]))):
-        thT = jnp.asarray(K.empirical_ntk(params, Xtr, Xtr), jnp.float64)
+        thT = jnp.asarray(K.empirical_ntk(params, Xtr, Xtr, act=activation), jnp.float64)
         out["kernel_drift"] = rel(thT, th0)
     else:
         out["kernel_drift"] = None
@@ -292,11 +297,13 @@ def run_train(ladder: str) -> None:
     print("wrote docs/data/n7-train.json", flush=True)
 
 
-def run_alpha(ladder: str) -> None:
-    alphas = [0.03, 0.1, 0.3, 1.0, 3.0, 10.0]
+def run_alpha(ladder: str, act: str = "relu") -> None:
+    """ReLU (the default) and, as the control for ReLU's kinks, exact-erf GELU."""
+    alphas = [0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0]
     width = 512
     report = {
-        "experiment": "N7 lazy vs feature learning: alpha sweep at width 512",
+        "experiment": f"N7 lazy vs feature learning: alpha sweep at width 512, {act}",
+        "activation": act,
         "environment": environment(),
         "depth": DEPTH,
         "width": width,
@@ -309,8 +316,8 @@ def run_alpha(ladder: str) -> None:
         for a in alphas:
             runs = [
                 cached(
-                    f"alpha-{task}-w{width}-a{a}-s{s}",
-                    lambda s=s, a=a, task=task: train_run(task, width, a, s, STEPS[task], ladder),
+                    f"alpha-{task}-w{width}-a{a}-s{s}" + ("" if act == "relu" else f"-{act}"),
+                    lambda s=s, a=a, task=task: train_run(task, width, a, s, STEPS[task], ladder, act),
                 )
                 for s in SEEDS
             ]
@@ -319,12 +326,13 @@ def run_alpha(ladder: str) -> None:
             lin = summary.get("net_vs_linearised_test", {}).get("median", float("nan"))
             drift = summary.get("kernel_drift", {}).get("median", float("nan"))
             print(
-                f"[alpha] {task} alpha {a:>5}: net vs linearised {lin:.3e}  drift {drift:.3e}  "
+                f"[alpha-{act}] {task} alpha {a:>5}: net vs linearised {lin:.3e}  drift {drift:.3e}  "
                 f"test acc {summary['test_accuracy']['median']:.3f}  diverged {summary['diverged_seeds']}",
                 flush=True,
             )
-    (DATA / "n7-alpha.json").write_text(json.dumps(report, indent=2) + "\n")
-    print("wrote docs/data/n7-alpha.json", flush=True)
+    name = "n7-alpha.json" if act == "relu" else f"n7-alpha-{act}.json"
+    (DATA / name).write_text(json.dumps(report, indent=2) + "\n")
+    print(f"wrote docs/data/{name}", flush=True)
 
 
 # ---------------------------------------------------------------- plot
@@ -432,7 +440,7 @@ def run_plot() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("parts", nargs="+", choices=["kernel", "train", "alpha", "plot"])
+    parser.add_argument("parts", nargs="+", choices=["kernel", "train", "alpha", "alpha-gelu", "plot"])
     parser.add_argument("--ml-ladder", default=str(ROOT.parent / "ml-ladder"))
     args = parser.parse_args()
     for part in args.parts:
@@ -440,7 +448,12 @@ def main() -> None:
         if part == "plot":
             run_plot()
         else:
-            {"kernel": run_kernel, "train": run_train, "alpha": run_alpha}[part](args.ml_ladder)
+            {
+                "kernel": run_kernel,
+                "train": run_train,
+                "alpha": run_alpha,
+                "alpha-gelu": lambda ladder: run_alpha(ladder, "gelu"),
+            }[part](args.ml_ladder)
         print(f"[{part}] {time.time() - started:.0f} s", flush=True)
 
 
