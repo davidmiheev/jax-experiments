@@ -1,0 +1,6 @@
+  [copy transformer-4M n=512 s1] step     0 loss 3.6330 (10s)
+  [copy transformer-4M n=512 s1] step   375 loss 3.4681 (69s)
+  [copy transformer-4M n=512 s1] step   750 loss 2.8469 (126s)
+  [copy transformer-4M n=512 s1] step  1125 loss 1.7499 (184s)
+  [copy transformer-4M n=512 s1] step  1499 loss 1.7316 (241s)
+[copy] s1 n=512  transformer-4M  second-half acc 1.000
