@@ -476,6 +476,75 @@ def run_decode(args) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------
+# controls: candle's conventions as waveform transforms, through transformers' own front end
+
+CONTROLS = {
+    # Uncentred frame i covers samples [160 i, 160 i + 400): the centred frame i of the audio advanced by 200.
+    "advance-200": lambda x: x[200:],
+    # Doubling bins 1..199 doubles every mel energy (the filters are zero at DC and Nyquist): a sqrt(2) gain.
+    "gain-sqrt2": lambda x: x * np.float32(np.sqrt(2)),
+    "advance-200+gain-sqrt2": lambda x: x[200:] * np.float32(np.sqrt(2)),
+    # Perturbations a recogniser should also shrug off, to calibrate how fragile these clips are.
+    "delay-160": lambda x: np.concatenate([np.zeros(160, np.float32), x]),
+    "delay-80": lambda x: np.concatenate([np.zeros(80, np.float32), x]),
+    "advance-80": lambda x: x[80:],
+    "gain-1/sqrt2": lambda x: x / np.float32(np.sqrt(2)),
+}
+
+
+def run_controls(args) -> dict:
+    import torch
+    from transformers import WhisperFeatureExtractor, WhisperForConditionalGeneration, WhisperProcessor
+
+    torch.set_num_threads(os.cpu_count() or 4)
+    fe = WhisperFeatureExtractor.from_pretrained(MODEL)
+    processor = WhisperProcessor.from_pretrained(MODEL)
+    model = WhisperForConditionalGeneration.from_pretrained(MODEL).eval()
+    store = np.load(ROOT / "runs" / "o7-features.npz")
+    decode = json.loads((OUT / "o7-decode.json").read_text())
+    ref = {r["clip"]: r for r in decode["arms"]["transformers"]["rows"]}
+    candle = {r["clip"]: r for r in decode["arms"]["candle"]["rows"]}
+    all_clips = clips()
+    arms, equivalence, started = {}, {}, time.time()
+    for name, transform in CONTROLS.items():
+        rows, gaps = [], []
+        for c in all_clips:
+            feats = fe(transform(c["audio"]), sampling_rate=M.SAMPLE_RATE, return_tensors="np").input_features
+            if name in ("advance-200", "advance-200+gain-sqrt2"):
+                # Same features as candle's convention from frame 2 on (frames 0 and 1 reach into the reflect padding).
+                twin = store[f"{c['name']}|{'no-center' if name == 'advance-200' else 'replica'}"]
+                n = min(M.N_FRAMES, -(-len(c["audio"]) // M.HOP)) - 2
+                gaps.append(float(np.abs(feats[0][:, 2:n] - twin[:, 2:n]).max()))
+            with torch.no_grad():
+                ids = model.generate(torch.from_numpy(feats), return_timestamps=True, max_new_tokens=200)
+            text = processor.decode(ids[0], skip_special_tokens=True).strip()
+            rows.append({"clip": c["name"], "kind": c["kind"], "words": c["words"], "text": text})
+        differ = [r["clip"] for r in rows if words_of(r["text"]) != words_of(ref[r["clip"]]["text"])]
+        like_candle = [r["clip"] for r in rows if words_of(r["text"]) == words_of(candle[r["clip"]]["text"])]
+        arms[name] = {
+            "scores": scores(rows),
+            "words_equal_to_transformers": 61 - len(differ),
+            "words_differ_from_transformers": differ,
+            "words_equal_to_transformers_on_candle_features": len(like_candle),
+            "rows": rows,
+        }
+        if gaps:
+            equivalence[name] = {"max_abs_frames_2_to_speech_end": max(gaps)}
+        print(name, arms[name]["words_equal_to_transformers"], len(like_candle), json.dumps(arms[name]["scores"]),
+              equivalence.get(name, ""), f"{time.time() - started:.0f}s", flush=True)
+    report = {
+        "what": "candle's two conventions applied to the waveform instead (advance 200 samples; sqrt(2) gain), and "
+        "nearby perturbations, through transformers' own extractor and tiny.en generate (as in o7-decode.json)",
+        "env": _env(),
+        "seconds": round(time.time() - started, 1),
+        "equivalence_with_candle_conventions": equivalence,
+        "arms": arms,
+    }
+    _write(OUT / "o7-controls.json", report)
+    return report
+
+
+# ---------------------------------------------------------------------------------------------
 
 
 def run_plot(args) -> None:
@@ -527,21 +596,26 @@ def run_plot(args) -> None:
         return float(np.median(vals))
 
     agree = [decode["comparisons"][n]["vs_this_run_transformers"]["words"] for n in order]
-    fig, ax = plt.subplots(1, 2, figsize=(12, 3.8), constrained_layout=True)
+    controls = json.loads((OUT / "o7-controls.json").read_text())["arms"]
+    cnames = list(controls)
+    fig, ax = plt.subplots(1, 2, figsize=(13, 4.2), constrained_layout=True, gridspec_kw={"width_ratios": [1, 1.6]})
     x = np.arange(len(order))
-    ax[0].bar(x, [max(mean_abs(n), 1e-9) for n in order], color="tab:blue")
+    ax[0].bar(x[1:], [mean_abs(n) for n in order[1:]], color="tab:blue")
     ax[0].set_yscale("log")
-    ax[0].set_xticks(x, order, rotation=35, ha="right")
-    ax[0].set_ylabel("median over clips of mean |features - transformers|\n(speech frames)")
+    ax[0].set_xticks(x[1:], order[1:], rotation=35, ha="right")
+    ax[0].set_ylabel("mean |features - transformers|\n(speech frames, median over 61 clips)")
     ax[0].set_title("Feature distance from transformers")
-    ax[1].bar(x, agree, color="tab:green")
-    ax[1].axhline(decode["candle_example_vs_mlladder_transformers"]["prompt+pair-greedy"]["words"], color="k", ls="--", lw=1)
-    ax[1].text(len(order) - 0.5, decode["candle_example_vs_mlladder_transformers"]["prompt+pair-greedy"]["words"] + 0.8,
-               "candle's own decoder on candle's features", ha="right", fontsize=8)
-    ax[1].set_xticks(x, order, rotation=35, ha="right")
-    ax[1].set_ylim(0, 63)
+    labels = order + cnames
+    vals = agree + [controls[n]["words_equal_to_transformers"] for n in cnames]
+    colors = ["tab:green"] * len(order) + ["tab:gray"] * len(cnames)
+    xs = np.arange(len(labels))
+    ax[1].bar(xs, vals, color=colors)
+    for xi, v in zip(xs, vals):
+        ax[1].text(xi, v + 0.6, str(v), ha="center", fontsize=8)
+    ax[1].set_xticks(xs, labels, rotation=40, ha="right")
+    ax[1].set_ylim(0, 66)
     ax[1].set_ylabel("transcripts equal to transformers' (of 61)")
-    ax[1].set_title("Same decoder (transformers), front end swapped")
+    ax[1].set_title("tiny.en decode: front ends (green), waveform perturbations (grey)")
     fig.savefig(FIG / "o7-front-end-to-transcripts.png", dpi=130)
     print("wrote figures")
 
@@ -578,11 +652,11 @@ def _write(path: Path, obj) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("parts", nargs="+", choices=["stages", "decode", "plot"])
+    parser.add_argument("parts", nargs="+", choices=["stages", "decode", "controls", "plot"])
     args = parser.parse_args()
     (ROOT / "runs").mkdir(exist_ok=True)
     for part in args.parts:
-        {"stages": run_stages, "decode": run_decode, "plot": run_plot}[part](args)
+        {"stages": run_stages, "decode": run_decode, "controls": run_controls, "plot": run_plot}[part](args)
 
 
 if __name__ == "__main__":
