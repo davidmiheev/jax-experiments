@@ -18,8 +18,17 @@ reproduce. This file is the practical brief for picking it up.
   `jaxexp.newton` (Newton, Newton-CG, L-BFGS, gradient descent as compiled
   loops) and `jaxexp.boosting` (autodiff Newton-leaf boosting that reproduces
   XGBoost's exact updater tree for tree; `uv sync --extra boost` installs
-  `xgboost-cpu`). Next in the CPU queue: N7 (empirical NTK), then CPU groundwork
-  for M2. Two O1 findings bind R2:
+  `xgboost-cpu`). Two O1 findings bind R2 (below).
+- **N7 is done** (`docs/m5-mel-and-ntk.md`; O7, the rest of M5, is not started).
+  - `jaxexp.ntk` has the analytic NTK, matching neural-tangents 0.6.5 to 1e-8 in
+    float64; compute it in float64, because float32 arccos is off by 7e-4 on the
+    diagonal.
+  - It also has an empirical NTK that works for any activation without forming
+    the Jacobian.
+  - `jaxexp.data.mnist()` downloads and verifies MNIST into `data/`.
+  - Next in the CPU queue: groundwork for M2 (the enwik8 pipeline, the GRU via
+    `lax.scan`, the copy task), or O7.
+- **Two O1 findings bind R2:**
   - **R2 needs remat.** The 25M RoPE step (16 × 1024 tokens, fp32, explicit
     attention) compiles to 19.7 GiB of temp memory, more than a T4's 16 GB.
     Per-block remat (`model(ids, remat=True,

@@ -1,0 +1,75 @@
+{
+  "experiment": "N7 precision floor at large alpha",
+  "environment": {
+    "python": "3.12.3",
+    "jax": "0.11.2",
+    "device": "cpu:0",
+    "cpu_count": 4
+  },
+  "runs": [
+    {
+      "activation": "relu",
+      "alpha": 30.0,
+      "dtype": "float32",
+      "net_vs_linearised_test": 0.028679448948046055,
+      "kernel_drift": 0.007061209773966395,
+      "weight_relative_change": 0.00029911796445958316
+    },
+    {
+      "activation": "relu",
+      "alpha": 30.0,
+      "dtype": "float64",
+      "net_vs_linearised_test": 0.032337512262728504,
+      "kernel_drift": 0.006888809910733527,
+      "weight_relative_change": 0.00030583994449132166
+    },
+    {
+      "activation": "relu",
+      "alpha": 100.0,
+      "dtype": "float32",
+      "net_vs_linearised_test": 0.017742089116117053,
+      "kernel_drift": 0.003378444340943597,
+      "weight_relative_change": 8.95923440111801e-05
+    },
+    {
+      "activation": "relu",
+      "alpha": 100.0,
+      "dtype": "float64",
+      "net_vs_linearised_test": 0.01725828692703108,
+      "kernel_drift": 0.003281031011304679,
+      "weight_relative_change": 9.223158001022746e-05
+    },
+    {
+      "activation": "gelu",
+      "alpha": 30.0,
+      "dtype": "float32",
+      "net_vs_linearised_test": 0.0005742355996339937,
+      "kernel_drift": 0.0008047734937769185,
+      "weight_relative_change": 0.0003002967278007418
+    },
+    {
+      "activation": "gelu",
+      "alpha": 30.0,
+      "dtype": "float64",
+      "net_vs_linearised_test": 0.0006651709296717436,
+      "kernel_drift": 0.0007352654309586268,
+      "weight_relative_change": 0.000296157991704539
+    },
+    {
+      "activation": "gelu",
+      "alpha": 100.0,
+      "dtype": "float32",
+      "net_vs_linearised_test": 0.002405568165113947,
+      "kernel_drift": 0.00024966553544028867,
+      "weight_relative_change": 8.991923095891252e-05
+    },
+    {
+      "activation": "gelu",
+      "alpha": 100.0,
+      "dtype": "float64",
+      "net_vs_linearised_test": 0.0002014327645134023,
+      "kernel_drift": 0.00022047698378163284,
+      "weight_relative_change": 8.887514050910316e-05
+    }
+  ]
+}

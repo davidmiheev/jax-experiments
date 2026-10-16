@@ -150,7 +150,9 @@ def run_kernel(ladder: str) -> None:
 ACTIVATIONS = {"relu": jax.nn.relu, "gelu": lambda h: jax.nn.gelu(h, approximate=False)}
 
 
-def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], ladder: str, act: str = "relu") -> dict:
+def train_run(
+    task: str, width: int, alpha: float, seed: int, steps: list[int], ladder: str, act: str = "relu", dtype=jnp.float32
+) -> dict:
     """``act`` other than relu is compared only with its own linearisation (the analytic kernel is ReLU's)."""
     activation = ACTIVATIONS[act]
     Xtr, ytr, Xte, yte = load_task(task, seed, ladder)
@@ -160,7 +162,7 @@ def train_run(task: str, width: int, alpha: float, seed: int, steps: list[int], 
     th_inf_te, _ = K.analytic_ntk(Xte64, X64, DEPTH)
     lr = float(n / jnp.linalg.eigvalsh(th_inf)[-1])  # lr * lambda_max / n = 1 for the infinite-width kernel
 
-    params0 = K.init(jax.random.key(seed), Xtr.shape[1], width, DEPTH)
+    params0 = K.init(jax.random.key(seed), Xtr.shape[1], width, DEPTH, dtype)
     th0 = jnp.asarray(K.empirical_ntk(params0, Xtr, Xtr, act=activation), jnp.float64)
     th0_te = jnp.asarray(K.empirical_ntk(params0, Xte, Xtr, act=activation), jnp.float64)
     y = jnp.asarray(ytr, jnp.float64)
@@ -338,6 +340,83 @@ def run_alpha(ladder: str, act: str = "relu") -> None:
 # ---------------------------------------------------------------- plot
 
 
+def run_converged(ladder: str) -> None:
+    """Control for the alpha sweep's accuracy: infinite-width kernel regression trained further.
+
+    Small-alpha networks reach a much lower training loss in the same number of steps (their
+    kernel grows as features move), so their accuracy gain could be "further along" rather
+    than "better features". This runs the same kernel model to 10x, 100x steps and to
+    convergence (the interpolant), on the same data draws."""
+    report = {"experiment": "N7 kernel regression trained to convergence", "environment": environment(), "tasks": {}}
+    for task in ("moons", "mnist"):
+        rows = []
+        for seed in SEEDS:
+            Xtr, ytr, Xte, yte = load_task(task, seed, ladder)
+            X64, Xte64 = jnp.asarray(Xtr, jnp.float64), jnp.asarray(Xte, jnp.float64)
+            th, _ = K.analytic_ntk(X64, X64, DEPTH)
+            th_te, _ = K.analytic_ntk(Xte64, X64, DEPTH)
+            lr = float(len(Xtr) / jnp.linalg.eigvalsh(th)[-1])
+            t0 = STEPS[task][-1]
+            steps = [t0, 10 * t0, 100 * t0, 10**12]
+            tr, te = K.kernel_regression_path(th, th_te, jnp.asarray(ytr, jnp.float64), lr, steps)
+            rows.append(
+                {
+                    str(t): {
+                        "train_mse": float(np.mean((np.asarray(tr[i]) - ytr) ** 2)),
+                        "test_mse": float(np.mean((np.asarray(te[i]) - yte) ** 2)),
+                        "test_accuracy": float(np.mean(np.sign(np.asarray(te[i])) == yte)),
+                    }
+                    for i, t in enumerate(steps)
+                }
+            )
+        report["tasks"][task] = {
+            t: {k: summarise([r[t][k] for r in rows]) for k in ("train_mse", "test_mse", "test_accuracy")}
+            for t in rows[0]
+        }
+        print(
+            f"[converged] {task}: "
+            + "  ".join(
+                f"t={t}: acc {v['test_accuracy']['median']:.3f} train mse {v['train_mse']['median']:.3g}"
+                for t, v in report["tasks"][task].items()
+            ),
+            flush=True,
+        )
+    (DATA / "n7-converged.json").write_text(json.dumps(report, indent=2) + "\n")
+    print("wrote docs/data/n7-converged.json", flush=True)
+
+
+def run_floor(ladder: str) -> None:
+    """Is the upturn at large alpha float32? Moons, width 512, seed 0, float32 vs float64 params."""
+    report = {"experiment": "N7 precision floor at large alpha", "environment": environment(), "runs": []}
+    for act in ("relu", "gelu"):
+        for alpha in (30.0, 100.0):
+            for name, dtype in (("float32", jnp.float32), ("float64", jnp.float64)):
+                r = cached(
+                    f"floor-moons-w512-a{alpha}-s0-{act}-{name}",
+                    lambda act=act, alpha=alpha, dtype=dtype: train_run(
+                        "moons", 512, alpha, 0, STEPS["moons"], ladder, act, dtype
+                    ),
+                )
+                end = r["checkpoints"][-1]
+                report["runs"].append(
+                    {
+                        "activation": act,
+                        "alpha": alpha,
+                        "dtype": name,
+                        "net_vs_linearised_test": end["net_vs_linearised_test"],
+                        "kernel_drift": r["kernel_drift"],
+                        "weight_relative_change": r["weight_relative_change"],
+                    }
+                )
+                print(
+                    f"[floor] {act} alpha {alpha:>5} {name}: net vs linearised "
+                    f"{end['net_vs_linearised_test']:.2e}  drift {r['kernel_drift']:.2e}",
+                    flush=True,
+                )
+    (DATA / "n7-floor.json").write_text(json.dumps(report, indent=2) + "\n")
+    print("wrote docs/data/n7-floor.json", flush=True)
+
+
 def run_plot() -> None:
     import matplotlib.pyplot as plt
 
@@ -348,6 +427,7 @@ def run_plot() -> None:
     train = json.loads((DATA / "n7-train.json").read_text())
     relu = json.loads((DATA / "n7-alpha.json").read_text())
     gelu = json.loads((DATA / "n7-alpha-gelu.json").read_text())
+    converged = json.loads((DATA / "n7-converged.json").read_text())
     tasks = (("moons", SERIES[0]), ("mnist", SERIES[1]))
     guide = {"color": INK_SECONDARY, "linestyle": (0, (3, 3)), "linewidth": 1}
 
@@ -463,11 +543,13 @@ def run_plot() -> None:
             )
         ntk_acc = relu["tasks"][task]["1.0"]["infinite_test_accuracy"]["median"]
         acc_ax.axhline(ntk_acc, color=color, linewidth=1, alpha=0.6, linestyle=(0, (1, 2)))
+        conv_acc = converged["tasks"][task]["1000000000000"]["test_accuracy"]["median"]
+        acc_ax.axhline(conv_acc, color=color, linewidth=1.2, alpha=0.8, linestyle=(0, (6, 2, 1, 2)))
     acc_ax.set(
         xscale="log",
         xlabel="α (width 512)",
         ylabel="test accuracy (end of training)",
-        title="Accuracy: dotted = ∞-width NTK (ReLU)",
+        title="Test accuracy",
     )
     acc_ax.legend(fontsize=7)
     fig.tight_layout()
@@ -477,7 +559,9 @@ def run_plot() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("parts", nargs="+", choices=["kernel", "train", "alpha", "alpha-gelu", "plot"])
+    parser.add_argument(
+        "parts", nargs="+", choices=["kernel", "train", "alpha", "alpha-gelu", "converged", "floor", "plot"]
+    )
     parser.add_argument("--ml-ladder", default=str(ROOT.parent / "ml-ladder"))
     args = parser.parse_args()
     for part in args.parts:
@@ -490,6 +574,8 @@ def main() -> None:
                 "train": run_train,
                 "alpha": run_alpha,
                 "alpha-gelu": lambda ladder: run_alpha(ladder, "gelu"),
+                "converged": run_converged,
+                "floor": run_floor,
             }[part](args.ml_ladder)
         print(f"[{part}] {time.time() - started:.0f} s", flush=True)
 
