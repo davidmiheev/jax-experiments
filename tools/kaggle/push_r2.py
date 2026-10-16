@@ -20,6 +20,11 @@ Presets (each is two job lists, one per GPU):
 - ``r2-gru`` / ``r2-rope``: R2's main arms, 12,000 steps, seeds 0-2, T=1024.
 - ``r2-4m``: the 4M transformer at lr 2e-3, T=1024 (target 1.544).
 - ``r3``: the copy task.
+- ``calibrate-fused``: GPU memory and 300-step throughput with fused attention (ml-ladder's
+  SDPA protocol; the default from 2026-10-16), which keeps fp32 scores.
+- ``r2-fused``: R2's transformer arms with fused attention, seeds 0-2. ``r2`` ran them with
+  explicit attention whose fp16 scores were rounded before the softmax (fixed since).
+- ``r3-fused``: R3's transformer arm with fused attention.
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -40,8 +45,8 @@ COMMON = ["--data-dir", "/kaggle/temp/data/text", "--ml-ladder", "/kaggle/temp/s
 
 
 
-def _r2(model: str, seed: int, *extra: str) -> list[str]:
-    tag = {"transformer-25M-rope": "rope", "gru": "gru", "transformer-4M": "4m"}[model]
+def _r2(model: str, seed: int, *extra: str, tag: str | None = None) -> list[str]:
+    tag = tag or {"transformer-25M-rope": "rope", "gru": "gru", "transformer-4M": "4m"}[model]
     return ["--studies", "enwik8", "--models", model, "--contexts", "1024", "--seeds", str(seed), "--amp",
             *extra, "--out", f"r2-{tag}-s{seed}.json"]
 
@@ -52,6 +57,34 @@ def _r3s1(tag: str, *extra: str, seed: int = 1) -> list[str]:
 
 
 PRESETS = {
+    "calibrate-fused": [
+        [
+            ["--studies", "memory", "--models", "transformer-25M-rope", "transformer-4M", "--contexts", "1024",
+             "--amp", "--attention", "fused", "--out", "memory-fp16-fused.json"],
+            ["--studies", "memory", "--models", "transformer-25M-rope", "--contexts", "1024", "--amp",
+             "--attention", "fused", "--remat", "dots", "--out", "memory-fp16-fused-dots.json"],
+            ["--studies", "enwik8", "--models", "transformer-4M", "--contexts", "1024", "--seeds", "0", "--amp",
+             "--attention", "fused", "--peak-lr", "2e-3", "--enwik8-steps", "300", "--log-every", "50",
+             "--out", "calibrate-4m-fused.json"],
+        ],
+        [
+            ["--studies", "enwik8", "--models", "transformer-25M-rope", "--contexts", "1024", "--seeds", "0",
+             "--amp", "--attention", "fused", "--enwik8-steps", "300", "--log-every", "50",
+             "--out", "calibrate-rope-fused.json"],
+        ],
+    ],
+    "r2-fused": [
+        [_r2("transformer-25M-rope", 0, "--attention", "fused", tag="rope-fused"),
+         _r2("transformer-25M-rope", 2, "--attention", "fused", tag="rope-fused")],
+        [_r2("transformer-25M-rope", 1, "--attention", "fused", tag="rope-fused")]
+        + [_r2("transformer-4M", s, "--peak-lr", "2e-3", "--attention", "fused", tag="4m-fused") for s in (0, 1, 2)],
+    ],
+    "r3-fused": [
+        [["--studies", "copy", "--copy-models", "transformer-4M", "--seeds", "0", "1", "--amp", "--attention", "fused",
+          "--out", "r3-transformer-fused-a.json"]],
+        [["--studies", "copy", "--copy-models", "transformer-4M", "--seeds", "2", "--amp", "--attention", "fused",
+          "--out", "r3-transformer-fused-b.json"]],
+    ],
     "r3-s1b": [
         [_r3s1("fp32-b"), _r3s1("fp32-c")],
         [_r3s1("fused-b", "--amp", "--attention", "fused"), _r3s1("fused-c", "--amp", "--attention", "fused"),

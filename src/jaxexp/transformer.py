@@ -95,10 +95,14 @@ class MultiHeadSelfAttention(nnx.Module):
         if self.numerics.attention == "fused":
             out = jax.nn.dot_product_attention(q, k, v, is_causal=True)
         elif self.numerics.attention == "explicit":
-            scores = jnp.einsum("bqhd,bkhd->bhqk", q, k) / math.sqrt(self.head_width)
+            # Scores accumulate and stay in fp32 even for fp16 inputs, as in SDPA and in
+            # jax.nn.dot_product_attention: rounding them to fp16 before the softmax delayed the
+            # copy task's escape from its plateau in every run (R3, seed 1 at n=512).
+            scores = jnp.einsum("bqhd,bkhd->bhqk", q, k, preferred_element_type=jnp.float32)
+            scores = scores / math.sqrt(self.head_width)
             mask = jnp.tril(jnp.ones((length, length), dtype=bool))
             scores = jnp.where(mask, scores, -jnp.inf)
-            weights = jax.nn.softmax(scores.astype(jnp.float32), axis=-1).astype(v.dtype)  # softmax in fp32
+            weights = jax.nn.softmax(scores, axis=-1).astype(v.dtype)  # softmax in fp32
             out = jnp.einsum("bhqk,bkhd->bqhd", weights, v)
         else:
             raise ValueError(f"unknown attention {self.numerics.attention!r}")

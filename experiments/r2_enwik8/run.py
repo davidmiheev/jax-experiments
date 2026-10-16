@@ -295,7 +295,8 @@ def main() -> None:
     parser.add_argument("--peak-lr", type=float, default=None)
     parser.add_argument("--amp", action="store_true", help="fp16 matmuls + dynamic loss scaling (as autocast)")
     parser.add_argument("--remat", choices=["none", "nothing", "dots"], default="none")
-    parser.add_argument("--attention", choices=["explicit", "fused"], default="explicit")
+    # ml-ladder routes attention through SDPA (fused, fp32 score accumulation).
+    parser.add_argument("--attention", choices=["explicit", "fused"], default="fused")
     parser.add_argument("--log-every", type=int, default=250)
     args = parser.parse_args()
 

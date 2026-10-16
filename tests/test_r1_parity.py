@@ -46,6 +46,20 @@ def test_causal_mask_does_not_leak(positional, attention):
     assert not jnp.allclose(before[:, t], after[:, t])
 
 
+def test_explicit_attention_keeps_fp16_scores_in_fp32():
+    """With fp16 compute, explicit attention must match the fused path (fp32 score accumulation, as
+    SDPA). Rounding scores to fp16 first changed R3's copy-task training; sharp attention shows it."""
+    ids = jax.random.randint(jax.random.key(1), (2, 256), 0, 256)
+    out = {}
+    for attention in ("explicit", "fused"):
+        numerics = T.Numerics(attention=attention, compute_dtype=jnp.float16)
+        model = T.CharTransformer(256, 128, 4, 2, 256, positional="rope", numerics=numerics, rngs=nnx.Rngs(0))
+        for block in model.blocks:  # large query/key weights: scores of order 10-100, where fp16 rounds by ~0.03
+            block.attention.qkv.kernel.value = block.attention.qkv.kernel.value * 6.0
+        out[attention] = np.asarray(model(ids), np.float64)
+    assert relative(out["fused"], out["explicit"]) < 1e-5
+
+
 def test_rope_score_depends_only_on_offset():
     """Same q and k at every position: score(p, r) must be a function of p - r."""
     dim, length = 32, 64
