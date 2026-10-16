@@ -1,0 +1,11 @@
+# O7 runs in its own environment so the project venv keeps torch 2.14.1 (R1's recorded version):
+# torchaudio's newest CPU wheel is 2.11, which pins torch 2.11 (also Kaggle's version).
+#   uv run --isolated --no-project --python 3.12 --index https://download.pytorch.org/whl/cpu \
+#       --index-strategy unsafe-best-match --with-requirements experiments/o7_mel/requirements.txt \
+#       --with-editable . python experiments/o7_mel/run.py ...
+jax[cpu]==0.11.2
+numpy
+scipy
+torch==2.11.0+cpu
+torchaudio==2.11.0+cpu
+transformers

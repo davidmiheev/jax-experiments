@@ -1,0 +1,14 @@
+# Runs candle's own Whisper front end (whisper/audio.rs, vendored verbatim; see vendor/README.md)
+# from davidmiheev/candle at the commit ml-ladder's I-part Whisper runs used (9aa02f10).
+[package]
+name = "candle-mel"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+candle = { package = "candle-core", git = "https://github.com/davidmiheev/candle", rev = "9aa02f1069b7fd9ad018bd12cdca1024dcede579", default-features = false }
+num-traits = "0.2.15"
+anyhow = "1"
+
+[workspace]
