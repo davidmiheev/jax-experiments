@@ -13,6 +13,10 @@ Presets (each is two job lists, one per GPU):
 - ``calibrate``: the compile-only memory study (fp32 / fp16, remat none / dots),
   then 300-step fp16 runs of the GRU and the 25M RoPE transformer at T=1024, to
   measure throughput, compile time and fp16 stability before spending hours.
+- ``r2``: all of R2 in one kernel: the 25M RoPE transformer, the GRU and the 4M
+  transformer at lr 2e-3, seeds 0-2, 12,000 steps at T=1024, one seed per job (so
+  each result is written as it finishes), lanes balanced to ~4 h. No remat: the
+  calibration measured 6.85 GiB of temp memory for the 25M step in fp16 on a T4.
 - ``r2-gru`` / ``r2-rope``: R2's main arms, 12,000 steps, seeds 0-2, T=1024.
 - ``r2-4m``: the 4M transformer at lr 2e-3, T=1024 (target 1.544).
 - ``r3``: the copy task.
@@ -30,7 +34,20 @@ ROOT = Path(__file__).resolve().parents[2]
 RUN = "experiments/r2_enwik8/run.py"
 COMMON = ["--data-dir", "/kaggle/temp/data/text", "--ml-ladder", "/kaggle/temp/src/ml-ladder"]
 
+
+
+def _r2(model: str, seed: int, *extra: str) -> list[str]:
+    tag = {"transformer-25M-rope": "rope", "gru": "gru", "transformer-4M": "4m"}[model]
+    return ["--studies", "enwik8", "--models", model, "--contexts", "1024", "--seeds", str(seed), "--amp",
+            *extra, "--out", f"r2-{tag}-s{seed}.json"]
+
+
 PRESETS = {
+    "r2": [
+        [_r2("transformer-25M-rope", 0), _r2("transformer-25M-rope", 2), _r2("gru", 2)],
+        [_r2("transformer-25M-rope", 1), _r2("gru", 0), _r2("gru", 1)]
+        + [_r2("transformer-4M", s, "--peak-lr", "2e-3") for s in (0, 1, 2)],
+    ],
     "calibrate": [
         [
             [
