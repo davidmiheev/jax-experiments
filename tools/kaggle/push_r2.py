@@ -20,6 +20,8 @@ Presets (each is two job lists, one per GPU):
 - ``r2-gru`` / ``r2-rope``: R2's main arms, 12,000 steps, seeds 0-2, T=1024.
 - ``r2-4m``: the 4M transformer at lr 2e-3, T=1024 (target 1.544).
 - ``r3``: the copy task.
+- ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
+  as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 """
 
 from __future__ import annotations
@@ -42,7 +44,16 @@ def _r2(model: str, seed: int, *extra: str) -> list[str]:
             *extra, "--out", f"r2-{tag}-s{seed}.json"]
 
 
+def _r3s1(tag: str, *extra: str) -> list[str]:
+    return ["--studies", "copy", "--copy-models", "transformer-4M", "--copy-lengths", "512", "--seeds", "1",
+            *extra, "--out", f"r3-s1-{tag}.json"]
+
+
 PRESETS = {
+    "r3-s1": [
+        [_r3s1("repeat-a", "--amp"), _r3s1("fp32")],
+        [_r3s1("repeat-b", "--amp"), _r3s1("fused", "--amp", "--attention", "fused")],
+    ],
     "r2": [
         [_r2("transformer-25M-rope", 0), _r2("transformer-25M-rope", 2), _r2("gru", 2)],
         [_r2("transformer-25M-rope", 1), _r2("gru", 0), _r2("gru", 1)]
