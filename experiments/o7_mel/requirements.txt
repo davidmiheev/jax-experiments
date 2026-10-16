@@ -9,3 +9,4 @@ scipy
 torch==2.11.0+cpu
 torchaudio==2.11.0+cpu
 transformers
+matplotlib
