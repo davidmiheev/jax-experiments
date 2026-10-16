@@ -50,12 +50,12 @@ reproduce. This file is the practical brief for picking it up.
     dataset. **Nothing has been pushed:** start with `calibrate`, after the user
     agrees to spend GPU quota.
 - **Two O1 findings bind R2:**
-  - **R2 needs remat.** The 25M RoPE step (16 × 1024 tokens, fp32, explicit
-    attention) compiles to 19.7 GiB of temp memory, more than a T4's 16 GB.
-    Per-block remat (`model(ids, remat=True,
-    policy=jax.checkpoint_policies.dots_with_no_batch_dims_saveable)`) needs
-    3.9 GiB at 1.10× the FLOPs. Confirm with `jaxexp.bench.compiled_stats` on
-    the T4 first.
+  - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
+    RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
+    of temp memory. On the T4, XLA's GPU compiler needs 10.13 GiB in fp32,
+    6.85 GiB with fp16 matmuls, and 2.28 GiB with per-block remat (`dots`)
+    (`docs/data/r2-calibrate/`). So R2 runs without remat. CPU memory numbers
+    do not transfer to the GPU; measure on the target.
   - **Memory comes from `compiled_stats`, not the jaxpr.** Use `temp_bytes`;
     `peak_memory_in_bytes` excludes temp on CPU.
 - **Prior JAX use.** None. JAX was not installed in any environment of the

@@ -1,0 +1,3 @@
+[memory] transformer-25M-rope   T=1024  amp=False remat=none  temp  10.13 GiB  args  0.09 GiB  compile 6.0s
+[memory] transformer-4M         T=1024  amp=False remat=none  temp   4.13 GiB  args  0.02 GiB  compile 4.1s
+[memory] gru                    T=1024  amp=False remat=none  temp   1.03 GiB  args  0.02 GiB  compile 3.1s
