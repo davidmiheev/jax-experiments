@@ -36,6 +36,9 @@ class Numerics:
     ln_epsilon: float = 1e-5  # torch nn.LayerNorm
     ln_fast_variance: bool = False  # torch: two-pass variance
     attention: str = "explicit"  # "explicit" softmax(QK^T/sqrt(d) + M)V, or "fused" (jax.nn.dot_product_attention)
+    # Matmul dtype, as PyTorch's fp16 autocast: Linear layers and attention run in it;
+    # LayerNorm, softmax, RoPE, the residual stream and the loss stay float32. None = float32.
+    compute_dtype: object = None
 
 
 TORCH = Numerics()
@@ -79,8 +82,8 @@ class MultiHeadSelfAttention(nnx.Module):
             raise ValueError(f"width {width} must divide into {heads} heads")
         self.heads, self.head_width = heads, width // heads
         self.rope, self.numerics = rope, numerics
-        self.qkv = nnx.Linear(width, 3 * width, rngs=rngs)
-        self.projection = nnx.Linear(width, width, rngs=rngs)
+        self.qkv = nnx.Linear(width, 3 * width, dtype=numerics.compute_dtype, rngs=rngs)
+        self.projection = nnx.Linear(width, width, dtype=numerics.compute_dtype, rngs=rngs)
 
     def __call__(self, x: jax.Array) -> jax.Array:
         batch, length, width = x.shape
@@ -95,7 +98,8 @@ class MultiHeadSelfAttention(nnx.Module):
             scores = jnp.einsum("bqhd,bkhd->bhqk", q, k) / math.sqrt(self.head_width)
             mask = jnp.tril(jnp.ones((length, length), dtype=bool))
             scores = jnp.where(mask, scores, -jnp.inf)
-            out = jnp.einsum("bhqk,bkhd->bqhd", jax.nn.softmax(scores, axis=-1), v)
+            weights = jax.nn.softmax(scores.astype(jnp.float32), axis=-1).astype(v.dtype)  # softmax in fp32
+            out = jnp.einsum("bhqk,bkhd->bqhd", weights, v)
         else:
             raise ValueError(f"unknown attention {self.numerics.attention!r}")
         return self.projection(out.reshape(batch, length, width))
@@ -103,8 +107,8 @@ class MultiHeadSelfAttention(nnx.Module):
 
 class MLP(nnx.Module):
     def __init__(self, width: int, numerics: Numerics, rngs: nnx.Rngs) -> None:
-        self.up = nnx.Linear(width, 4 * width, rngs=rngs)
-        self.down = nnx.Linear(4 * width, width, rngs=rngs)
+        self.up = nnx.Linear(width, 4 * width, dtype=numerics.compute_dtype, rngs=rngs)
+        self.down = nnx.Linear(4 * width, width, dtype=numerics.compute_dtype, rngs=rngs)
         self.gelu_approximate = numerics.gelu_approximate
 
     def __call__(self, x: jax.Array) -> jax.Array:
@@ -154,7 +158,7 @@ class CharTransformer(nnx.Module):
             [Block(width, heads, rope=positional == "rope", numerics=numerics, rngs=rngs) for _ in range(depth)]
         )
         self.norm = layer_norm(width, numerics, rngs)
-        self.head = nnx.Linear(width, vocab_size, use_bias=False, rngs=rngs)
+        self.head = nnx.Linear(width, vocab_size, use_bias=False, dtype=numerics.compute_dtype, rngs=rngs)
 
     def __call__(self, ids: jax.Array, *, remat: bool = False, policy=None) -> jax.Array:
         """Logits for ``ids``. ``remat=True`` checkpoints each block (``nnx.remat``):
