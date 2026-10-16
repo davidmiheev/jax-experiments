@@ -241,8 +241,14 @@ def study_copy(args, report) -> None:
                     log_every=max(args.copy_steps // 4, 1),
                     label=f"copy {name} n={n} s{seed}",
                 )
+                # ml-ladder's 512 evaluation sequences, scored 32 at a time: all 512 at once
+                # needs 8.6 GB of attention scores at n=512 and runs out of memory on a T4.
                 inputs, targets = batches(512)
-                correct = np.asarray(jnp.argmax(apply(result.params, jnp.asarray(inputs)), -1)) == targets
+                predict = jax.jit(lambda p, x: jnp.argmax(apply(p, x), -1))
+                preds = np.concatenate(
+                    [np.asarray(predict(result.params, jnp.asarray(inputs[i : i + 32]))) for i in range(0, len(inputs), 32)]
+                )
+                correct = preds == targets
                 rows.append(
                     {
                         "seed": seed,
