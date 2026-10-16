@@ -262,12 +262,20 @@ from pathlib import Path
 JOBS = {jobs}
 SRC, DATA, OUT = Path("/kaggle/temp/src"), Path("/kaggle/temp/data/text"), Path("/kaggle/working")
 SRC.mkdir(parents=True, exist_ok=True); DATA.mkdir(parents=True, exist_ok=True)
-inputs = [p for p in Path("/kaggle/input").rglob("*.tar")]
-for tar in inputs:
-    with tarfile.open(tar) as t:
-        t.extractall(SRC)
+import shutil
+# Kaggle unpacks uploaded tarballs, so each repo arrives as a directory (or, failing that, a .tar).
+MARKERS = {{"jax-experiments": "experiments/r2_enwik8/run.py", "ml-ladder": "tools/gpu/c_context_scaling.py"}}
+for name, marker in MARKERS.items():
+    found = next((p for p in Path("/kaggle/input").rglob(marker) if p.parents[marker.count("/")].name == name), None)
+    if found is not None:
+        shutil.copytree(found.parents[marker.count("/")], SRC / name, dirs_exist_ok=True)
+    else:
+        tar = next(Path("/kaggle/input").rglob(name + ".tar"))
+        with tarfile.open(tar) as t:
+            t.extractall(SRC)
+    assert (SRC / name / marker).exists(), name
 commits = next(Path("/kaggle/input").rglob("COMMITS"), None)
-print("source:", [p.name for p in inputs], commits.read_text() if commits else "no COMMITS file", flush=True)
+print("source:", sorted(p.name for p in SRC.iterdir()), commits.read_text() if commits else "no COMMITS file", flush=True)
 pip = [sys.executable, "-m", "pip", "install", "--no-deps", "-q", "-e", str(SRC / "jax-experiments")]
 subprocess.run(pip, check=True)
 if not (DATA / "enwik8").exists():  # once, before the parallel jobs
