@@ -22,6 +22,8 @@ Presets (each is two job lists, one per GPU):
 - ``r3``: the copy task.
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
+- ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
+  fp16 with explicit attention, to tell a systematic lag from run-to-run nondeterminism.
 """
 
 from __future__ import annotations
@@ -44,12 +46,17 @@ def _r2(model: str, seed: int, *extra: str) -> list[str]:
             *extra, "--out", f"r2-{tag}-s{seed}.json"]
 
 
-def _r3s1(tag: str, *extra: str) -> list[str]:
-    return ["--studies", "copy", "--copy-models", "transformer-4M", "--copy-lengths", "512", "--seeds", "1",
-            *extra, "--out", f"r3-s1-{tag}.json"]
+def _r3s1(tag: str, *extra: str, seed: int = 1) -> list[str]:
+    return ["--studies", "copy", "--copy-models", "transformer-4M", "--copy-lengths", "512", "--seeds", str(seed),
+            *extra, "--out", f"r3-s{seed}-{tag}.json"]
 
 
 PRESETS = {
+    "r3-s1b": [
+        [_r3s1("fp32-b"), _r3s1("fp32-c")],
+        [_r3s1("fused-b", "--amp", "--attention", "fused"), _r3s1("fused-c", "--amp", "--attention", "fused"),
+         _r3s1("repeat-a", "--amp", seed=0)],
+    ],
     "r3-s1": [
         [_r3s1("repeat-a", "--amp"), _r3s1("fp32")],
         [_r3s1("repeat-b", "--amp"), _r3s1("fused", "--amp", "--attention", "fused")],
