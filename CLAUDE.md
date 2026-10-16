@@ -19,15 +19,36 @@ reproduce. This file is the practical brief for picking it up.
   loops) and `jaxexp.boosting` (autodiff Newton-leaf boosting that reproduces
   XGBoost's exact updater tree for tree; `uv sync --extra boost` installs
   `xgboost-cpu`). Two O1 findings bind R2 (below).
-- **N7 is done** (`docs/m5-mel-and-ntk.md`; O7, the rest of M5, is not started).
+- **M5 is done** (N7 and O7, `docs/m5-mel-and-ntk.md`).
   - `jaxexp.ntk` has the analytic NTK, matching neural-tangents 0.6.5 to 1e-8 in
     float64; compute it in float64, because float32 arccos is off by 7e-4 on the
     diagonal.
   - It also has an empirical NTK that works for any activation without forming
     the Jacobian.
   - `jaxexp.data.mnist()` downloads and verifies MNIST into `data/`.
-  - Next in the CPU queue: groundwork for M2 (the enwik8 pipeline, the GRU via
-    `lax.scan`, the copy task), or O7.
+  - O7: `jaxexp.mel` is Whisper's log-mel in `jnp` (5e-5 from transformers).
+    `tools/candle_mel` runs candle's `audio.rs` verbatim (the fork's
+    `candle-transformers` does not build without CUDA). candle's `pcm_to_mel` is
+    Whisper's front end on audio advanced 200 samples with a √2 gain
+    (`center=False, double_bins=True` reproduce it to 1.5e-4). Under one
+    decoder it accounts for 15 of the 17 tiny.en transcripts where candle and
+    transformers disagree. But a one-frame delay flips 15 of 61 by itself, and
+    accuracy does not change.
+    O7 runs in its own uv environment (torchaudio needs torch 2.11); the
+    command is in `experiments/o7_mel/run.py`.
+- **M2 groundwork is done; M2 itself waits on Kaggle.**
+  - `jaxexp.text`: enwik8 (SHA-256 checked) with the 90M/5M split, and
+    ml-ladder's batch sampler and copy task, byte-identical batches.
+  - `jaxexp.recurrent`: GRU/LSTM/RNN as `lax.scan` in PyTorch's equations, with
+    `state_dict` names.
+  - `jaxexp.train`: ml-ladder's schedule, AdamW and clipping, plus fp16 compute
+    with GradScaler-style loss scaling.
+  - Parity against ml-ladder's own `train()`: loss to 5.9e-7 and validation
+    bits/byte to 7 digits (`docs/data/r2-parity.json`).
+  - `tools/kaggle/push_r2.py` writes T4×2 kernels (presets `calibrate`, `r2-gru`,
+    `r2-rope`, `r2-4m`, `r3`); `tools/kaggle/package_source.sh` builds the source
+    dataset. **Nothing has been pushed:** start with `calibrate`, after the user
+    agrees to spend GPU quota.
 - **Two O1 findings bind R2:**
   - **R2 needs remat.** The 25M RoPE step (16 × 1024 tokens, fp32, explicit
     attention) compiles to 19.7 GiB of temp memory, more than a T4's 16 GB.
