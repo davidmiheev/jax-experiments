@@ -1,0 +1,80 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/kaggle/working/memory-fp16-fused.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "memory"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "contexts": [
+   1024
+  ],
+  "models": [
+   "transformer-25M-rope",
+   "transformer-4M"
+  ],
+  "copy_models": [
+   "lstm",
+   "transformer-4M"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32,
+   128,
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": true,
+  "remat": "none",
+  "attention": "fused",
+  "log_every": 250
+ },
+ "memory": [
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 16,
+   "parameters": 25482240,
+   "amp": true,
+   "remat": "none",
+   "attention": "fused",
+   "flops": 60656517120.0,
+   "peak_bytes": 9871270688,
+   "temp_bytes": 9667476512,
+   "argument_bytes": 101928960,
+   "output_bytes": 101929760,
+   "compile_s": 8.433584088000003
+  },
+  {
+   "model": "transformer-4M",
+   "context": 1024,
+   "batch": 16,
+   "parameters": 4342528,
+   "amp": true,
+   "remat": "none",
+   "attention": "fused",
+   "flops": 18511966208.0,
+   "peak_bytes": 3111721480,
+   "temp_bytes": 3077021472,
+   "argument_bytes": 17370112,
+   "output_bytes": 17370632,
+   "compile_s": 7.651497940000013
+  }
+ ],
+ "finished": "2026-10-16 21:03:52",
+ "wall_seconds": 25.657213926315308
+}

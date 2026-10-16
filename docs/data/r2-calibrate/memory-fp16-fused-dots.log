@@ -1,0 +1,1 @@
+[memory] transformer-25M-rope   T=1024  amp=True remat=dots  temp   3.03 GiB  args  0.09 GiB  compile 7.5s
