@@ -30,6 +30,9 @@ Presets (each is two job lists, one per GPU):
 - ``n1``: ml-ladder's §7 sweep (4M, T=1024, 6 LRs x seeds 0-2, 3,000 steps) as vmapped
   groups of 3 copies (no remat; K=4 is the memory limit), plus a throughput scan of
   smaller transformers to find where vmapping copies starts to pay.
+- ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
+  two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
+  run-to-run nondeterminism at an unstable learning rate.
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -74,7 +77,17 @@ def _n1_size(size: str) -> list[str]:
 
 LOW, HIGH = ["3e-4", "6e-4", "1e-3"], ["2e-3", "4e-3", "8e-3"]
 
+def _seq4m(tag: str) -> list[str]:
+    return ["--studies", "enwik8", "--models", "transformer-4M", "--contexts", "1024", "--seeds", "2", "--amp",
+            "--peak-lr", "4e-3", "--enwik8-steps", "3000", "--log-every", "50", "--out", f"n1-fork-sequential-{tag}.json"]
+
+
 PRESETS = {
+    "n1-fork": [
+        [_seq4m("a"), _seq4m("b")],
+        [[N1, "--studies", "sweep", "--seeds", "2", "--lrs", "2e-3", "4e-3", "8e-3", "--group", "3", "--log-every", "50",
+          "--out", "n1-fork-vmapped.json"]],
+    ],
     "n1": [
         [_n1(0, LOW + HIGH, "s0"), _n1(2, LOW, "s2-low"), _n1_size("64,2,4")],
         [_n1(1, LOW + HIGH, "s1"), _n1(2, HIGH, "s2-high"), _n1_size("128,2,4")],
