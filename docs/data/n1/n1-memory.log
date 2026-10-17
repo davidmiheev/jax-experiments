@@ -1,0 +1,14 @@
+[memory] K=1   remat=none  temp   2.87 GiB ( 2.87 per copy)  args  0.05 GiB  compile 15.2s
+[memory] K=2   remat=none  temp   5.97 GiB ( 2.99 per copy)  args  0.10 GiB  compile 11.1s
+[memory] K=4   remat=none  temp  12.00 GiB ( 3.00 per copy)  args  0.19 GiB  compile 11.1s
+[memory] K=6   remat=none  temp  15.01 GiB ( 2.50 per copy)  args  0.29 GiB  compile 12.7s
+[memory] K=8   remat=none  temp  16.88 GiB ( 2.11 per copy)  args  0.39 GiB  compile 15.9s
+[memory] K=12  remat=none  temp  25.14 GiB ( 2.09 per copy)  args  0.58 GiB  compile 14.0s
+[memory] K=18  remat=none  temp  39.96 GiB ( 2.22 per copy)  args  0.88 GiB  compile 16.1s
+[memory] K=1   remat=dots  temp   1.28 GiB ( 1.28 per copy)  args  0.05 GiB  compile 10.1s
+[memory] K=2   remat=dots  temp   2.52 GiB ( 1.26 per copy)  args  0.10 GiB  compile 10.1s
+[memory] K=4   remat=dots  temp   5.04 GiB ( 1.26 per copy)  args  0.19 GiB  compile 14.5s
+[memory] K=6   remat=dots  temp   7.55 GiB ( 1.26 per copy)  args  0.29 GiB  compile 11.4s
+[memory] K=8   remat=dots  temp  10.07 GiB ( 1.26 per copy)  args  0.39 GiB  compile 10.4s
+[memory] K=12  remat=dots  temp  15.11 GiB ( 1.26 per copy)  args  0.58 GiB  compile 10.2s
+[memory] K=18  remat=dots  temp  22.66 GiB ( 1.26 per copy)  args  0.88 GiB  compile 10.5s

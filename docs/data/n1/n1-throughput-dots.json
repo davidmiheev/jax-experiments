@@ -1,0 +1,92 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "studies": [
+   "throughput"
+  ],
+  "out": "/kaggle/working/n1-throughput-dots.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "context": 1024,
+  "tokens_per_step": 16384,
+  "ks": [
+   1,
+   2,
+   4,
+   8,
+   12
+  ],
+  "remats": [
+   "dots"
+  ],
+  "throughput_steps": 200,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "lrs": [
+   0.0003,
+   0.0006,
+   0.001,
+   0.002,
+   0.004,
+   0.008
+  ],
+  "group": 6,
+  "steps": 3000,
+  "eval_tokens": 262144,
+  "log_every": 250,
+  "remat": "none",
+  "attention": "fused",
+  "amp": true
+ },
+ "throughput": [
+  {
+   "k": 1,
+   "remat": "dots",
+   "steps": 200,
+   "compile_seconds": 16.228466272354126,
+   "steady_seconds": 31.605432748794556,
+   "tokens_per_second": 103159.98600349345,
+   "peak_memory_mb": 1430.316650390625
+  },
+  {
+   "k": 2,
+   "remat": "dots",
+   "steps": 200,
+   "compile_seconds": 15.452649116516113,
+   "steady_seconds": 62.445815324783325,
+   "tokens_per_second": 104423.84275207037,
+   "peak_memory_mb": 2801.73046875
+  },
+  {
+   "k": 4,
+   "remat": "dots",
+   "steps": 200,
+   "compile_seconds": 16.629385709762573,
+   "steady_seconds": 122.87627983093262,
+   "tokens_per_second": 106136.54659747372,
+   "peak_memory_mb": 5589.19775390625
+  },
+  {
+   "k": 8,
+   "remat": "dots",
+   "steps": 200,
+   "compile_seconds": 14.076963663101196,
+   "steady_seconds": 242.48971247673035,
+   "tokens_per_second": 107564.67865622544,
+   "peak_memory_mb": 11154.871337890625
+  },
+  {
+   "k": 12,
+   "remat": "dots",
+   "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.11GiB with allocator GPU_0_bfc on device 0. [executable_name='jit_step'] [tf-allocator-allocation-error='']"
+  }
+ ],
+ "wall_seconds": 560.6847970485687
+}

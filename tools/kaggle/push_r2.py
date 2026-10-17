@@ -25,6 +25,16 @@ Presets (each is two job lists, one per GPU):
 - ``r2-fused``: R2's transformer arms with fused attention, seeds 0-2. ``r2`` ran them with
   explicit attention whose fp16 scores were rounded before the softmax (fixed since).
 - ``r3-fused``: R3's transformer arm with fused attention.
+- ``n1-calibrate``: N1's vmapped step: compiled memory for K = 1..18 copies of the 4M
+  transformer (remat none / dots), and steady throughput for K = 1, 2, 4, 8 against K = 1.
+- ``n1``: ml-ladder's §7 sweep (4M, T=1024, 6 LRs x seeds 0-2, 3,000 steps) as vmapped
+  groups of 3 copies (no remat; K=4 is the memory limit), plus a throughput scan of
+  smaller transformers to find where vmapping copies starts to pay.
+- ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
+  two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
+  run-to-run nondeterminism at an unstable learning rate.
+- ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
+  (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -56,7 +66,48 @@ def _r3s1(tag: str, *extra: str, seed: int = 1) -> list[str]:
             *extra, "--out", f"r3-s{seed}-{tag}.json"]
 
 
+N1 = "@experiments/n1_vmap_sweep/run.py"
+
+def _n1(seed: int, lrs: list[str], tag: str) -> list[str]:
+    return [N1, "--studies", "sweep", "--seeds", str(seed), "--lrs", *lrs, "--group", "3", "--out", f"n1-sweep-{tag}.json"]
+
+
+def _n1_size(size: str) -> list[str]:
+    return [N1, "--studies", "throughput", "--size", size, "--ks", "1", "2", "4", "8", "16", "32", "--remats", "none",
+            "--out", f"n1-throughput-w{size.split(',')[0]}.json"]
+
+
+LOW, HIGH = ["3e-4", "6e-4", "1e-3"], ["2e-3", "4e-3", "8e-3"]
+
+def _seq4m(tag: str) -> list[str]:
+    return ["--studies", "enwik8", "--models", "transformer-4M", "--contexts", "1024", "--seeds", "2", "--amp",
+            "--peak-lr", "4e-3", "--enwik8-steps", "3000", "--log-every", "50", "--out", f"n1-fork-sequential-{tag}.json"]
+
+
+def _torch4m(tag: str) -> list[str]:
+    return ["@../ml-ladder/tools/gpu/c_context_scaling.py", "--studies", "enwik8", "--models", "transformer-4M",
+            "--contexts", "1024", "--seeds", "2", "--peak-lr", "4e-3", "--enwik8-steps", "3000",
+            "--out", f"n1-fork-torch-{tag}.json"]
+
+
 PRESETS = {
+    "n1-fork-torch": [[_torch4m("a")], [_torch4m("b")]],
+    "n1-fork": [
+        [_seq4m("a"), _seq4m("b")],
+        [[N1, "--studies", "sweep", "--seeds", "2", "--lrs", "2e-3", "4e-3", "8e-3", "--group", "3", "--log-every", "50",
+          "--out", "n1-fork-vmapped.json"]],
+    ],
+    "n1": [
+        [_n1(0, LOW + HIGH, "s0"), _n1(2, LOW, "s2-low"), _n1_size("64,2,4")],
+        [_n1(1, LOW + HIGH, "s1"), _n1(2, HIGH, "s2-high"), _n1_size("128,2,4")],
+    ],
+    "n1-calibrate": [
+        [
+            [N1, "--studies", "memory", "--ks", "1", "2", "4", "6", "8", "12", "18", "--out", "n1-memory.json"],
+            [N1, "--studies", "throughput", "--ks", "1", "2", "4", "8", "--remats", "none", "--out", "n1-throughput-none.json"],
+        ],
+        [[N1, "--studies", "throughput", "--ks", "1", "2", "4", "8", "12", "--remats", "dots", "--out", "n1-throughput-dots.json"]],
+    ],
     "calibrate-fused": [
         [
             ["--studies", "memory", "--models", "transformer-25M-rope", "transformer-4M", "--contexts", "1024",
@@ -352,12 +403,18 @@ if not (DATA / "enwik8").exists():  # once, before the parallel jobs
 common = {common}
 
 def run_lane(gpu, jobs):
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu), PYTHONUNBUFFERED="1")
+    # 0.92 of the card instead of JAX's default 0.75: N1 packs K model copies into one program.
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu), PYTHONUNBUFFERED="1", XLA_PYTHON_CLIENT_MEM_FRACTION="0.92")
     for args in jobs:
+        script = "{run}"
+        if args[0].startswith("@"):  # a job may name its own script: ["@experiments/.../run.py", ...]
+            script, args = args[0][1:], args[1:]
         out = args[args.index("--out") + 1]
         args = args[: args.index("--out")] + ["--out", str(OUT / out)] + args[args.index("--out") + 2 :]
         log = open(OUT / (Path(out).stem + ".log"), "w")
-        cmd = [sys.executable, str(SRC / "jax-experiments" / "{run}")] + common + args
+        # A script outside this repo (e.g. "@../ml-ladder/tools/gpu/c_context_scaling.py") gets only --data-dir.
+        extra = common if not script.startswith("../") else common[:2]
+        cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + extra + args
         print(f"[gpu{{gpu}}]", " ".join(cmd), flush=True)
         rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT).returncode
         print(f"[gpu{{gpu}}] exit {{rc}} for {{out}}", flush=True)
