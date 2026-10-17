@@ -1,0 +1,167 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/kaggle/working/r3-transformer.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "copy"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "contexts": [
+   256,
+   1024
+  ],
+  "models": [
+   "gru",
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "transformer-4M"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32,
+   128,
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": true,
+  "remat": "none",
+  "attention": "explicit",
+  "log_every": 250
+ },
+ "copy": [
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.028792842741935484,
+   "chance": 0.03125,
+   "train_seconds": 84.80375576019287,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.030450295275590553,
+   "chance": 0.03125,
+   "train_seconds": 111.13110780715942,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 0.9967727661132812,
+   "first_half_accuracy": 0.03125764432485323,
+   "chance": 0.03125,
+   "train_seconds": 177.86696124076843,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.030619959677419355,
+   "chance": 0.03125,
+   "train_seconds": 93.46052384376526,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.03086552657480315,
+   "chance": 0.03125,
+   "train_seconds": 110.5014967918396,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 0.2733345031738281,
+   "first_half_accuracy": 0.030814273483365948,
+   "chance": 0.03125,
+   "train_seconds": 174.39737462997437,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.030871975806451613,
+   "chance": 0.03125,
+   "train_seconds": 94.06963872909546,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031449926181102365,
+   "chance": 0.03125,
+   "train_seconds": 110.053790807724,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031918878424657536,
+   "chance": 0.03125,
+   "train_seconds": 176.57178044319153,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  }
+ ],
+ "finished": "2026-10-16 19:57:22",
+ "wall_seconds": 1171.6736915111542
+}

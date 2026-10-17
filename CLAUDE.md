@@ -6,8 +6,64 @@ reproduce. This file is the practical brief for picking it up.
 
 ## Where things stand (handed over 2026-10-11)
 
-- **Code.** Only the scaffold exists: `pyproject.toml`, the `jaxexp` package
-  and a smoke test. No experiment has been run yet. Start at milestone M0.
+- **Code.** M0 is done (2026-10-15). `jaxexp.transformer` is C3's transformer in
+  Flax NNX (learned, sinusoidal or RoPE positions; explicit or fused attention),
+  and `jaxexp.torch_port` loads PyTorch weights into it. R1 shows it matches
+  ml-ladder's PyTorch models to fp32 round-off: 7.7e-08 per block, 6.1e-07 for
+  the 25M RoPE model at T=1024, and 4.9e-07 for gradients
+  (`docs/m0-r1-parity.md`). **Use `jaxexp.transformer.TORCH` numerics:**
+  `jax.nn.gelu` defaults to tanh, and `nnx.LayerNorm` defaults to ε=1e-6 with
+  fast variance, which is not PyTorch's function.
+- **M1 is done** (O1 and O2, `docs/m1-autodiff-and-newton.md`). O2 added
+  `jaxexp.newton` (Newton, Newton-CG, L-BFGS, gradient descent as compiled
+  loops) and `jaxexp.boosting` (autodiff Newton-leaf boosting that reproduces
+  XGBoost's exact updater tree for tree; `uv sync --extra boost` installs
+  `xgboost-cpu`). Two O1 findings bind R2 (below).
+- **M5 is done** (N7 and O7, `docs/m5-mel-and-ntk.md`).
+  - `jaxexp.ntk` has the analytic NTK, matching neural-tangents 0.6.5 to 1e-8 in
+    float64; compute it in float64, because float32 arccos is off by 7e-4 on the
+    diagonal.
+  - It also has an empirical NTK that works for any activation without forming
+    the Jacobian.
+  - `jaxexp.data.mnist()` downloads and verifies MNIST into `data/`.
+  - O7: `jaxexp.mel` is Whisper's log-mel in `jnp` (5e-5 from transformers).
+    `tools/candle_mel` runs candle's `audio.rs` verbatim (the fork's
+    `candle-transformers` does not build without CUDA). candle's `pcm_to_mel` is
+    Whisper's front end on audio advanced 200 samples with a √2 gain
+    (`center=False, double_bins=True` reproduce it to 1.5e-4). Under one
+    decoder it accounts for 15 of the 17 tiny.en transcripts where candle and
+    transformers disagree. But a one-frame delay flips 15 of 61 by itself, and
+    accuracy does not change.
+    O7 runs in its own uv environment (torchaudio needs torch 2.11); the
+    command is in `experiments/o7_mel/run.py`.
+- **M2 is done** (R2 and R3, `docs/m2-enwik8-and-copy.md`; Kaggle T4s).
+  - R2 reproduces ml-ladder seed for seed, within 0.006 bits/byte per pair:
+    25M RoPE 1.3226 (ml-ladder 1.3251), GRU 1.5979 (1.5982), 4M at lr 2e-3
+    1.5435 (1.5437). These runs start from ml-ladder's own initial weights
+    (`--init torch`) and see byte-identical batches.
+  - **Attention numerics matter:** ml-ladder uses SDPA (fp32 score
+    accumulation). Explicit attention used to round fp16 scores before the
+    softmax. That was harmless on enwik8, but delayed the copy task's escape
+    from its plateau (R3 seed 1 at n=512: 0/3 runs escape, against 6/6 with
+    fp32 scores). Fixed in `jaxexp.transformer`; `run.py` defaults to fused.
+  - **XLA on GPU is not run-to-run deterministic.** Repeat a surprising run
+    before believing it.
+  - **Cost on a T4:** JAX runs at 0.78× PyTorch on the 25M model, 0.53× on the
+    4M and 0.45× cuDNN for the GRU (`lax.scan`), with about 3× the memory:
+    XLA's attention materialises T×T scores, and the T4 has no flash path.
+  - `jaxexp.text`, `jaxexp.recurrent` and `jaxexp.train` hold the protocol.
+    `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
+    dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
+    scores it against ml-ladder's JSON.
+- **Two O1 findings that shaped R2:**
+  - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
+    RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
+    of temp memory. On the T4, XLA's GPU compiler needs 10.13 GiB in fp32,
+    6.85 GiB with fp16 matmuls, and 2.28 GiB with per-block remat (`dots`)
+    (`docs/data/r2-calibrate/`). So R2 runs without remat. CPU memory numbers
+    do not transfer to the GPU; measure on the target.
+  - **Memory comes from `compiled_stats`, not the jaxpr.** Use `temp_bytes`;
+    `peak_memory_in_bytes` excludes temp on CPU.
 - **Prior JAX use.** None. JAX was not installed in any environment of the
   originating session, and no repo of this account had imported it before.
 - **Verified versions.** On 2026-10-11 these installed from PyPI and passed
@@ -18,6 +74,8 @@ reproduce. This file is the practical brief for picking it up.
   `pyproject.toml` and `.python-version` pin. Kaggle's GPU image runs 3.13,
   which satisfies it (see Compute).
   There is no GPU in the cloud container; GPU work goes to Kaggle (below).
+  `uv sync --extra torch` adds torch for R1's parity checks, pinned to the
+  CPU wheel index (torch 2.14.1+cpu on 2026-10-12, against Kaggle's 2.11).
 
 ## The repo this builds on
 
@@ -48,6 +106,21 @@ Attach it to the session to read it. The files that matter most:
 Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
 
 - **CPU, here.** Unit tests, R1, O1, O2, O7, N7 and small prototypes.
+- **If one provider is queued for a long time, use another.** Don't wait on a
+  queue. A Kaggle kernel normally starts within a minute or two. If one sits
+  in `QUEUED` for more than about 15–20 minutes, check that this account
+  isn't holding the slots itself (`kaggle kernels list --mine`, then `status`
+  on each), then run the job elsewhere.
+  - **Colab** (the colab MCP server): `colab_new(gpu="T4")` gives the same
+    GPU as Kaggle, with JAX 0.11.1 preinstalled. Pin `flax==0.12.10` to match
+    Kaggle (Colab ships 0.11.2), upload `git archive` tarballs with
+    `colab_upload`, and `pip install --no-deps -e`.
+  - **Long jobs:** `colab_execute` calls time out after about 60 s, so start
+    long jobs with `nohup ... &` and poll the log.
+  - **Recording:** note the provider in the results, and keep the hardware
+    the same as the reference (a T4) when comparing against ml-ladder.
+    2026-10-17: R3's fused rerun sat queued on Kaggle for 20+ minutes (no
+    other kernels of this account running) and ran on Colab instead.
 - **Weekly quota** (`kaggle quota`): **30 h GPU and 20 h TPU**, resetting each
   week (the 2026-10-17 00:00 UTC refresh was the next one at handover). Other
   sessions of this account share it, and use GPU heavily.
@@ -140,6 +213,12 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
 - **Writeup shape.** One writeup per milestone: Question, The idea, The math,
   What we measure and why, What I built, Results, What surprised me, Open
   threads.
+- **PDF of every writeup.** Writeups are `docs/m<N>-*.md`. Build them with
+  `uv run python tools/build_pdf.py --all` (pandoc + XeLaTeX, ported from
+  ml-ladder), and commit `docs/pdf/*.pdf` beside the markdown. In a fresh
+  container, first run `apt-get install pandoc texlive-xetex texlive-latex-extra
+  texlive-fonts-recommended fonts-texgyre`. The builder refuses glyphs the font
+  lacks, so write powers as `$10^{-6}$`, not `10⁻⁶`.
 - **Verified vs not.** Say explicitly what was run and what was not.
   Numbers quoted from someone else's commit or paper are labelled as such.
 - **Arithmetic.** Check every number in prose against the JSON before
@@ -160,7 +239,10 @@ PLAN.md            the experiment plan (work order)
 CLAUDE.md          this brief
 pyproject.toml     uv project: jax, flax, optax; optional [cuda] extra
 src/jaxexp/        shared code (models, training loop, data) as it is written
-tests/             pytest; test_smoke.py checks jit/grad/vmap and the Flax/Optax APIs
+tests/             pytest; test_smoke.py checks jit/grad/vmap and the Flax/Optax APIs;
+                   test_r1_parity.py (torch tests need `--extra torch` and ../ml-ladder or $ML_LADDER)
+experiments/       one directory per experiment (r1_parity/)
+docs/              writeups per milestone; data/ holds their JSON
 ```
 
 As milestones land, add `experiments/<id>_<name>/` for each experiment's

@@ -1,0 +1,10968 @@
+{
+ "what": "transformers' tiny.en generate (return_timestamps=True, max_new_tokens=200, greedy; ml-ladder's whisper_hf_timestamps.py protocol) fed each front end's features; only the features change",
+ "env": {
+  "python": "3.12.3",
+  "jax": "0.11.2",
+  "torch": "2.11.0+cpu",
+  "torchaudio": "2.11.0+cpu",
+  "transformers": "5.20.1",
+  "scipy": "1.18.1",
+  "numpy": "2.5.4",
+  "candle_audio_rs": "davidmiheev/candle@9aa02f10 candle-transformers/src/models/whisper/audio.rs, sha256 ed5f1c81a0bebf0e67f8066f51d87cf8312a48aadb3a9a3a126ab7c09714880b",
+  "machine": "x86_64",
+  "cpus": 4
+ },
+ "seconds": 114.7,
+ "references": {
+  "mlladder_transformers": "ml-ladder i-whisper-example-rules.json arm hf-timestamps (transformers on the same clips)",
+  "candle_example_prompt+pair-greedy": "candle's whisper example with prompt and pairing rule fixed, temperature fallback off (CPU, f32)",
+  "candle_example_prompt+pair": "the same with candle's fallback on"
+ },
+ "candle_example_vs_mlladder_transformers": {
+  "prompt+pair-greedy": {
+   "tokens": 34,
+   "words": 44,
+   "words_differ": [
+    "0_yweweler_1.wav",
+    "0_yweweler_2.wav",
+    "2_yweweler_0.wav",
+    "2_yweweler_4.wav",
+    "3_yweweler_2.wav",
+    "4_yweweler_0.wav",
+    "4_yweweler_1.wav",
+    "4_yweweler_3.wav",
+    "5_yweweler_4.wav",
+    "6_yweweler_0.wav",
+    "6_yweweler_2.wav",
+    "8_yweweler_1.wav",
+    "8_yweweler_3.wav",
+    "8_yweweler_4.wav",
+    "seq_0.wav",
+    "seq_1.wav",
+    "seq_3.wav"
+   ]
+  },
+  "prompt+pair": {
+   "tokens": 32,
+   "words": 42,
+   "words_differ": [
+    "0_yweweler_0.wav",
+    "0_yweweler_1.wav",
+    "0_yweweler_2.wav",
+    "2_yweweler_0.wav",
+    "2_yweweler_1.wav",
+    "2_yweweler_4.wav",
+    "3_yweweler_2.wav",
+    "4_yweweler_0.wav",
+    "4_yweweler_1.wav",
+    "4_yweweler_3.wav",
+    "5_yweweler_4.wav",
+    "6_yweweler_0.wav",
+    "6_yweweler_2.wav",
+    "8_yweweler_1.wav",
+    "8_yweweler_3.wav",
+    "8_yweweler_4.wav",
+    "seq_0.wav",
+    "seq_1.wav",
+    "seq_3.wav"
+   ]
+  }
+ },
+ "comparisons": {
+  "transformers": {
+   "vs_mlladder_transformers": {
+    "tokens": 60,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_this_run_transformers": {
+    "tokens": 61,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 34,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 32,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "candle": {
+   "vs_mlladder_transformers": {
+    "tokens": 34,
+    "words": 45,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_this_run_transformers": {
+    "tokens": 34,
+    "words": 45,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 58,
+    "words": 59,
+    "words_differ": [
+     "seq_0.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 56,
+    "words": 57,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "seq_0.wav",
+     "seq_1.wav"
+    ]
+   }
+  },
+  "double-bins": {
+   "vs_mlladder_transformers": {
+    "tokens": 53,
+    "words": 58,
+    "words_differ": [
+     "8_yweweler_4.wav",
+     "9_yweweler_1.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_this_run_transformers": {
+    "tokens": 54,
+    "words": 58,
+    "words_differ": [
+     "8_yweweler_4.wav",
+     "9_yweweler_1.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 35,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "9_yweweler_1.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 33,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "9_yweweler_1.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "jnp": {
+   "vs_mlladder_transformers": {
+    "tokens": 60,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_this_run_transformers": {
+    "tokens": 61,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 34,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 32,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "jnp-candle-filters": {
+   "vs_mlladder_transformers": {
+    "tokens": 60,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_this_run_transformers": {
+    "tokens": 61,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 34,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 32,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "no-center": {
+   "vs_mlladder_transformers": {
+    "tokens": 37,
+    "words": 46,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_0.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_this_run_transformers": {
+    "tokens": 37,
+    "words": 46,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_0.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 54,
+    "words": 56,
+    "words_differ": [
+     "8_yweweler_0.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 52,
+    "words": 54,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "8_yweweler_0.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "replica": {
+   "vs_mlladder_transformers": {
+    "tokens": 34,
+    "words": 45,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_this_run_transformers": {
+    "tokens": 34,
+    "words": 45,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 58,
+    "words": 59,
+    "words_differ": [
+     "seq_0.wav",
+     "seq_1.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 56,
+    "words": 57,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "seq_0.wav",
+     "seq_1.wav"
+    ]
+   }
+  },
+  "torchaudio": {
+   "vs_mlladder_transformers": {
+    "tokens": 60,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_this_run_transformers": {
+    "tokens": 61,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 34,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 32,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  },
+  "transformers-numpy": {
+   "vs_mlladder_transformers": {
+    "tokens": 60,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_this_run_transformers": {
+    "tokens": 61,
+    "words": 61,
+    "words_differ": []
+   },
+   "vs_candle_example_prompt+pair-greedy": {
+    "tokens": 34,
+    "words": 44,
+    "words_differ": [
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   },
+   "vs_candle_example_prompt+pair": {
+    "tokens": 32,
+    "words": 42,
+    "words_differ": [
+     "0_yweweler_0.wav",
+     "0_yweweler_1.wav",
+     "0_yweweler_2.wav",
+     "2_yweweler_0.wav",
+     "2_yweweler_1.wav",
+     "2_yweweler_4.wav",
+     "3_yweweler_2.wav",
+     "4_yweweler_0.wav",
+     "4_yweweler_1.wav",
+     "4_yweweler_3.wav",
+     "5_yweweler_4.wav",
+     "6_yweweler_0.wav",
+     "6_yweweler_2.wav",
+     "8_yweweler_1.wav",
+     "8_yweweler_3.wav",
+     "8_yweweler_4.wav",
+     "seq_0.wav",
+     "seq_1.wav",
+     "seq_3.wav"
+    ]
+   }
+  }
+ },
+ "arms": {
+  "transformers": {
+   "scores": {
+    "digit": {
+     "wer": 0.82,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 0.15
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "zero, seven, one, take.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      530,
+      11,
+      1011,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "candle": {
+   "scores": {
+    "digit": {
+     "wer": 0.84,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 2.65
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "zero.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "me.",
+     "tokens": [
+      50257,
+      50363,
+      502,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Take.",
+     "tokens": [
+      50257,
+      50363,
+      7214,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      11,
+      362,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50470
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "double-bins": {
+   "scores": {
+    "digit": {
+     "wer": 0.78,
+     "exact": 0.48
+    },
+    "sequence": {
+     "wer": 2.625
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "4.",
+     "tokens": [
+      50257,
+      50363,
+      604,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      11,
+      362,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "jnp": {
+   "scores": {
+    "digit": {
+     "wer": 0.82,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 0.15
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "zero, seven, one, take.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      530,
+      11,
+      1011,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "jnp-candle-filters": {
+   "scores": {
+    "digit": {
+     "wer": 0.82,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 0.15
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "zero, seven, one, take.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      530,
+      11,
+      1011,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "no-center": {
+   "scores": {
+    "digit": {
+     "wer": 0.88,
+     "exact": 0.4
+    },
+    "sequence": {
+     "wer": 2.625
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "zero.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "me.",
+     "tokens": [
+      50257,
+      50363,
+      502,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Take.",
+     "tokens": [
+      50257,
+      50363,
+      7214,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "Hey.",
+     "tokens": [
+      50257,
+      50363,
+      14690,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      11,
+      362,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "zero, seven, six, three.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      2237,
+      11,
+      1115,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "replica": {
+   "scores": {
+    "digit": {
+     "wer": 0.84,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 2.65
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "zero.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "me.",
+     "tokens": [
+      50257,
+      50363,
+      502,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Take.",
+     "tokens": [
+      50257,
+      50363,
+      7214,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      11,
+      362,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513,
+      11,
+      513
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50470
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "torchaudio": {
+   "scores": {
+    "digit": {
+     "wer": 0.82,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 0.15
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "zero, seven, one, take.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      530,
+      11,
+      1011,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  },
+  "transformers-numpy": {
+   "scores": {
+    "digit": {
+     "wer": 0.82,
+     "exact": 0.44
+    },
+    "sequence": {
+     "wer": 0.15
+    },
+    "long": {
+     "wer": 0.0
+    }
+   },
+   "rows": [
+    {
+     "clip": "0_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're welcome.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      7062,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "hero.",
+     "tokens": [
+      50257,
+      50363,
+      4293,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "You're all.",
+     "tokens": [
+      50257,
+      50363,
+      921,
+      821,
+      477,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "0_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "zero"
+     ],
+     "text": "Zero.",
+     "tokens": [
+      50257,
+      50363,
+      12169,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "1_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "One.",
+     "tokens": [
+      50257,
+      50363,
+      1881,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "1_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "1.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "1_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "one"
+     ],
+     "text": "one.",
+     "tokens": [
+      50257,
+      50363,
+      530,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "2_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "2_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "two"
+     ],
+     "text": "to.",
+     "tokens": [
+      50257,
+      50363,
+      284,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "3_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Three.",
+     "tokens": [
+      50257,
+      50363,
+      7683,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "Be.",
+     "tokens": [
+      50257,
+      50363,
+      1355,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "3_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "We.",
+     "tokens": [
+      50257,
+      50363,
+      775,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "3_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "three"
+     ],
+     "text": "free.",
+     "tokens": [
+      50257,
+      50363,
+      1479,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "4_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "for.",
+     "tokens": [
+      50257,
+      50363,
+      329,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "4_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Four.",
+     "tokens": [
+      50257,
+      50363,
+      6675,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "4_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "four"
+     ],
+     "text": "Oh.",
+     "tokens": [
+      50257,
+      50363,
+      3966,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "5_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "five"
+     ],
+     "text": "5.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "6_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "See.",
+     "tokens": [
+      50257,
+      50363,
+      4091,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "6_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "6_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "six"
+     ],
+     "text": "Thank you.",
+     "tokens": [
+      50257,
+      50363,
+      6952,
+      345,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "7.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "7_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Heaven.",
+     "tokens": [
+      50257,
+      50363,
+      11225,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "7_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Seven.",
+     "tokens": [
+      50257,
+      50363,
+      13723,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "7_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "seven"
+     ],
+     "text": "Evan.",
+     "tokens": [
+      50257,
+      50363,
+      21523,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "8.",
+     "tokens": [
+      50257,
+      50363,
+      807,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "8_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "paid.",
+     "tokens": [
+      50257,
+      50363,
+      3432,
+      13,
+      50413
+     ]
+    },
+    {
+     "clip": "8_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "eight"
+     ],
+     "text": "aid.",
+     "tokens": [
+      50257,
+      50363,
+      6133,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_0.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_1.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Bye.",
+     "tokens": [
+      50257,
+      50363,
+      47843,
+      13,
+      50405
+     ]
+    },
+    {
+     "clip": "9_yweweler_2.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_3.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "Nine.",
+     "tokens": [
+      50257,
+      50363,
+      16431,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "9_yweweler_4.wav",
+     "kind": "digit",
+     "words": [
+      "nine"
+     ],
+     "text": "9.",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      13,
+      50388
+     ]
+    },
+    {
+     "clip": "seq_0.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "seven",
+      "six"
+     ],
+     "text": "5, 7, 6.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      718,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_1.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "one",
+      "six"
+     ],
+     "text": "zero, seven, one, take.",
+     "tokens": [
+      50257,
+      50363,
+      6632,
+      11,
+      3598,
+      11,
+      530,
+      11,
+      1011,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_2.wav",
+     "kind": "sequence",
+     "words": [
+      "seven",
+      "nine",
+      "five",
+      "six"
+     ],
+     "text": "7, 9, 5, 6.",
+     "tokens": [
+      50257,
+      50363,
+      767,
+      11,
+      860,
+      11,
+      642,
+      11,
+      718,
+      13,
+      50477
+     ]
+    },
+    {
+     "clip": "seq_3.wav",
+     "kind": "sequence",
+     "words": [
+      "zero",
+      "seven",
+      "six",
+      "three"
+     ],
+     "text": "0, 7, 6, 3.",
+     "tokens": [
+      50257,
+      50363,
+      657,
+      11,
+      767,
+      11,
+      718,
+      11,
+      513,
+      13,
+      50471
+     ]
+    },
+    {
+     "clip": "seq_4.wav",
+     "kind": "sequence",
+     "words": [
+      "nine",
+      "one",
+      "eight",
+      "seven"
+     ],
+     "text": "9 1 8 7",
+     "tokens": [
+      50257,
+      50363,
+      860,
+      352,
+      807,
+      767,
+      50469
+     ]
+    },
+    {
+     "clip": "seq_5.wav",
+     "kind": "sequence",
+     "words": [
+      "two",
+      "five",
+      "four",
+      "zero"
+     ],
+     "text": "2, 5, or 0.",
+     "tokens": [
+      50257,
+      50363,
+      362,
+      11,
+      642,
+      11,
+      393,
+      657,
+      13,
+      50465
+     ]
+    },
+    {
+     "clip": "seq_6.wav",
+     "kind": "sequence",
+     "words": [
+      "six",
+      "zero",
+      "one",
+      "nine"
+     ],
+     "text": "1. 9.",
+     "tokens": [
+      50257,
+      50363,
+      352,
+      13,
+      860,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_7.wav",
+     "kind": "sequence",
+     "words": [
+      "five",
+      "seven",
+      "three",
+      "four"
+     ],
+     "text": "5, 7, 3, 4.",
+     "tokens": [
+      50257,
+      50363,
+      642,
+      11,
+      767,
+      11,
+      513,
+      11,
+      604,
+      13,
+      50475
+     ]
+    },
+    {
+     "clip": "seq_8.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "six",
+      "nine",
+      "nine"
+     ],
+     "text": "3, 2, 9, 9.",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      11,
+      362,
+      11,
+      860,
+      11,
+      860,
+      13,
+      50463
+     ]
+    },
+    {
+     "clip": "seq_9.wav",
+     "kind": "sequence",
+     "words": [
+      "three",
+      "eight",
+      "five",
+      "one"
+     ],
+     "text": "3 8 5 1",
+     "tokens": [
+      50257,
+      50363,
+      513,
+      807,
+      642,
+      352,
+      50463
+     ]
+    },
+    {
+     "clip": "samples_jfk.wav",
+     "kind": "long",
+     "words": [
+      "and",
+      "so",
+      "my",
+      "fellow",
+      "americans",
+      "ask",
+      "not",
+      "what",
+      "your",
+      "country",
+      "can",
+      "do",
+      "for",
+      "you",
+      "ask",
+      "what",
+      "you",
+      "can",
+      "do",
+      "for",
+      "your",
+      "country"
+     ],
+     "text": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+     "tokens": [
+      50257,
+      50363,
+      843,
+      523,
+      616,
+      5891,
+      3399,
+      1265,
+      407,
+      644,
+      534,
+      1499,
+      460,
+      466,
+      329,
+      345,
+      50763,
+      50763,
+      1265,
+      644,
+      345,
+      460,
+      466,
+      329,
+      534,
+      1499,
+      13,
+      50913
+     ]
+    }
+   ]
+  }
+ }
+}

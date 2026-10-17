@@ -1,0 +1,59 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/kaggle/working/r3-s1-fp32.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "copy"
+  ],
+  "seeds": [
+   1
+  ],
+  "contexts": [
+   256,
+   1024
+  ],
+  "models": [
+   "gru",
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "transformer-4M"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": false,
+  "remat": "none",
+  "attention": "explicit",
+  "log_every": 250
+ },
+ "copy": [
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.03126528864970646,
+   "chance": 0.03125,
+   "train_seconds": 515.6811060905457,
+   "framework": "jax",
+   "init": "torch",
+   "amp": false
+  }
+ ],
+ "finished": "2026-10-16 20:39:53",
+ "wall_seconds": 528.0901293754578
+}

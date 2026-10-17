@@ -1,0 +1,8 @@
+  [enwik8 transformer-4M T=1024 s0] step     0 loss 5.6171 (7s)
+  [enwik8 transformer-4M T=1024 s0] step    50 loss 2.8091 (13s)
+  [enwik8 transformer-4M T=1024 s0] step   100 loss 2.6180 (18s)
+  [enwik8 transformer-4M T=1024 s0] step   150 loss 2.6538 (24s)
+  [enwik8 transformer-4M T=1024 s0] step   200 loss 2.6051 (30s)
+  [enwik8 transformer-4M T=1024 s0] step   250 loss 2.5595 (37s)
+  [enwik8 transformer-4M T=1024 s0] step   299 loss 2.6223 (43s)
+[enwik8] s0 T=1024  transformer-4M         3.6229 bits/byte (last quarter 3.6270) params=4,342,528 43s 139,052 tok/s init=torch

@@ -1,0 +1,336 @@
+{
+  "experiment": "O1 rematerialisation",
+  "environment": {
+    "python": "3.12.3",
+    "jax": "0.11.2",
+    "flax": "0.12.10",
+    "device": "cpu:0",
+    "cpu_count": 4,
+    "x64": false
+  },
+  "settings": {
+    "mlp": {
+      "width": 512,
+      "depth": 12,
+      "batch": 4096
+    },
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "mlp": {
+    "no remat": {
+      "seconds": {
+        "median": 0.2368962539999302,
+        "min": 0.23532222600010755,
+        "max": 0.23922659300001214,
+        "per_seed": [
+          0.23922659300001214,
+          0.2368962539999302,
+          0.23532222600010755
+        ]
+      },
+      "grad_relative_vs_no_remat": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "residuals": {
+        "count": 24,
+        "bytes": 201326592
+      },
+      "flops": 75264688128.0,
+      "peak_bytes": 33554528,
+      "temp_bytes": 109051904,
+      "argument_bytes": 20971520,
+      "output_bytes": 12583008,
+      "total_bytes": 142606432,
+      "flops_vs_no_remat": 1.0,
+      "time_vs_no_remat": 1.0
+    },
+    "per layer, save nothing": {
+      "seconds": {
+        "median": 0.2981044955000698,
+        "min": 0.28615413299996817,
+        "max": 0.3101373109998349,
+        "per_seed": [
+          0.2981044955000698,
+          0.3101373109998349,
+          0.28615413299996817
+        ]
+      },
+      "grad_relative_vs_no_remat": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "residuals": {
+        "count": 12,
+        "bytes": 100663296
+      },
+      "flops": 101034491904.0,
+      "peak_bytes": 33554528,
+      "temp_bytes": 109051904,
+      "argument_bytes": 20971520,
+      "output_bytes": 12583008,
+      "total_bytes": 142606432,
+      "flops_vs_no_remat": 1.3423890328512915,
+      "time_vs_no_remat": 1.2583757255197359
+    },
+    "per layer, save matmuls": {
+      "seconds": {
+        "median": 0.29082281350008543,
+        "min": 0.28531202199997097,
+        "max": 0.3373630390001381,
+        "per_seed": [
+          0.28531202199997097,
+          0.3373630390001381,
+          0.29082281350008543
+        ]
+      },
+      "grad_relative_vs_no_remat": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "residuals": {
+        "count": 24,
+        "bytes": 201326592
+      },
+      "flops": 75315019776.0,
+      "peak_bytes": 33554528,
+      "temp_bytes": 201326592,
+      "argument_bytes": 20971520,
+      "output_bytes": 12583008,
+      "total_bytes": 234881120,
+      "flops_vs_no_remat": 1.0006687285797877,
+      "time_vs_no_remat": 1.2276378734978695
+    },
+    "4 segments of 3 layers": {
+      "seconds": {
+        "median": 0.2611620634999099,
+        "min": 0.2517889590000095,
+        "max": 0.27036112050018346,
+        "per_seed": [
+          0.2611620634999099,
+          0.2517889590000095,
+          0.27036112050018346
+        ]
+      },
+      "grad_relative_vs_no_remat": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "residuals": {
+        "count": 4,
+        "bytes": 33554432
+      },
+      "flops": 101034491904.0,
+      "peak_bytes": 33554528,
+      "temp_bytes": 58720256,
+      "argument_bytes": 20971520,
+      "output_bytes": 12583008,
+      "total_bytes": 92274784,
+      "flops_vs_no_remat": 1.3423890328512915,
+      "time_vs_no_remat": 1.1024322212371787
+    },
+    "whole network": {
+      "seconds": {
+        "median": 0.2720641760000717,
+        "min": 0.2585188205000577,
+        "max": 0.27264028499996584,
+        "per_seed": [
+          0.2585188205000577,
+          0.2720641760000717,
+          0.27264028499996584
+        ]
+      },
+      "grad_relative_vs_no_remat": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "residuals": {
+        "count": 1,
+        "bytes": 8388608
+      },
+      "flops": 101034491904.0,
+      "peak_bytes": 33554528,
+      "temp_bytes": 109051904,
+      "argument_bytes": 20971520,
+      "output_bytes": 12583008,
+      "total_bytes": 142606432,
+      "flops_vs_no_remat": 1.3423890328512915,
+      "time_vs_no_remat": 1.1484528413022177
+    }
+  },
+  "transformer": {
+    "transformer-4M learned, T=256, batch 16": {
+      "no remat": {
+        "residuals": {
+          "count": 164,
+          "bytes": 881885228
+        },
+        "flops": 116729774080.0,
+        "peak_bytes": 33184360,
+        "temp_bytes": 910459904,
+        "argument_bytes": 16600128,
+        "output_bytes": 16584200,
+        "compile_s": 0.9512225500000113,
+        "total_bytes": 943644232,
+        "seconds": {
+          "median": 0.7316670539998995,
+          "min": 0.7036347490000026,
+          "max": 0.7858219529999815,
+          "per_seed": [
+            0.7858219529999815,
+            0.7316670539998995,
+            0.7036347490000026
+          ]
+        },
+        "flops_vs_no_remat": 1.0,
+        "time_vs_no_remat": 1.0
+      },
+      "per block, save nothing": {
+        "residuals": {
+          "count": 19,
+          "bytes": 42031108
+        },
+        "flops": 146567249920.0,
+        "peak_bytes": 33184364,
+        "temp_bytes": 234947584,
+        "argument_bytes": 16600128,
+        "output_bytes": 16584200,
+        "compile_s": 0.9987390989999767,
+        "total_bytes": 268131912,
+        "seconds": {
+          "median": 0.6441806660000111,
+          "min": 0.6434386200000972,
+          "max": 0.6810775930000545,
+          "per_seed": [
+            0.6810775930000545,
+            0.6441806660000111,
+            0.6434386200000972
+          ]
+        },
+        "flops_vs_no_remat": 1.2556115273516342,
+        "time_vs_no_remat": 0.880428690178661
+      },
+      "per block, save matmuls without batch dims": {
+        "residuals": {
+          "count": 34,
+          "bytes": 209803268
+        },
+        "flops": 125247619072.0,
+        "peak_bytes": 33184364,
+        "temp_bytes": 310445056,
+        "argument_bytes": 16600128,
+        "output_bytes": 16584200,
+        "compile_s": 1.100163848999955,
+        "total_bytes": 343629384,
+        "seconds": {
+          "median": 0.5533053434999147,
+          "min": 0.5153977820000364,
+          "max": 0.5795444054999734,
+          "per_seed": [
+            0.5795444054999734,
+            0.5153977820000364,
+            0.5533053434999147
+          ]
+        },
+        "flops_vs_no_remat": 1.0729706286089644,
+        "time_vs_no_remat": 0.7562255816700894
+      }
+    },
+    "transformer-25M rope, T=1024, batch 16 (R2's step; compiled only)": {
+      "no remat": {
+        "residuals": {
+          "count": 317,
+          "bytes": 21645084740
+        },
+        "flops": 3353727205376.0,
+        "peak_bytes": 203924352,
+        "temp_bytes": 21174484992,
+        "argument_bytes": 101994560,
+        "output_bytes": 101929760,
+        "compile_s": 1.3775295709999682,
+        "total_bytes": 21378409312,
+        "flops_vs_no_remat": 1.0
+      },
+      "per block, save nothing": {
+        "residuals": {
+          "count": 21,
+          "bytes": 419776516
+        },
+        "flops": 4221920608256.0,
+        "peak_bytes": 203924356,
+        "temp_bytes": 3187933184,
+        "argument_bytes": 101994560,
+        "output_bytes": 101929760,
+        "compile_s": 1.476552502000004,
+        "total_bytes": 3391857504,
+        "flops_vs_no_remat": 1.2588741867520687
+      },
+      "per block, save matmuls without batch dims": {
+        "residuals": {
+          "count": 45,
+          "bytes": 2567260164
+        },
+        "flops": 3674112000000.0,
+        "peak_bytes": 203924356,
+        "temp_bytes": 4194566144,
+        "argument_bytes": 101994560,
+        "output_bytes": 101929760,
+        "compile_s": 1.7080747819998123,
+        "total_bytes": 4398490464,
+        "flops_vs_no_remat": 1.0955309645073175
+      }
+    }
+  },
+  "xla_buffer_reuse_check": {
+    "width": 1024,
+    "depth": 12,
+    "batch": 512,
+    "gradient w.r.t. weights": {
+      "temp_bytes": 4194304,
+      "argument_bytes": 52428800,
+      "output_bytes": 50331744,
+      "peak_bytes": 102760544
+    },
+    "gradient w.r.t. input only": {
+      "temp_bytes": 25165824,
+      "argument_bytes": 52428800,
+      "output_bytes": 2097152,
+      "peak_bytes": 54525952
+    },
+    "saved_residuals_bytes": 50331648
+  }
+}

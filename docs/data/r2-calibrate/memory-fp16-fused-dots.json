@@ -1,0 +1,64 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/kaggle/working/memory-fp16-fused-dots.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "memory"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "contexts": [
+   1024
+  ],
+  "models": [
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "lstm",
+   "transformer-4M"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32,
+   128,
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": true,
+  "remat": "dots",
+  "attention": "fused",
+  "log_every": 250
+ },
+ "memory": [
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 16,
+   "parameters": 25482240,
+   "amp": true,
+   "remat": "dots",
+   "attention": "fused",
+   "flops": 91801583616.0,
+   "peak_bytes": 3458900768,
+   "temp_bytes": 3257470336,
+   "argument_bytes": 101928960,
+   "output_bytes": 101929760,
+   "compile_s": 7.470415841999966
+  }
+ ],
+ "finished": "2026-10-16 21:04:08",
+ "wall_seconds": 11.478097200393677
+}
