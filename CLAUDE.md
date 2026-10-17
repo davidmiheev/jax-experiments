@@ -106,6 +106,21 @@ Attach it to the session to read it. The files that matter most:
 Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
 
 - **CPU, here.** Unit tests, R1, O1, O2, O7, N7 and small prototypes.
+- **If one provider is queued for a long time, use another.** Don't wait on a
+  queue. A Kaggle kernel normally starts within a minute or two. If one sits
+  in `QUEUED` for more than about 15–20 minutes, check that this account
+  isn't holding the slots itself (`kaggle kernels list --mine`, then `status`
+  on each), then run the job elsewhere.
+  - **Colab** (the colab MCP server): `colab_new(gpu="T4")` gives the same
+    GPU as Kaggle, with JAX 0.11.1 preinstalled. Pin `flax==0.12.10` to match
+    Kaggle (Colab ships 0.11.2), upload `git archive` tarballs with
+    `colab_upload`, and `pip install --no-deps -e`.
+  - **Long jobs:** `colab_execute` calls time out after about 60 s, so start
+    long jobs with `nohup ... &` and poll the log.
+  - **Recording:** note the provider in the results, and keep the hardware
+    the same as the reference (a T4) when comparing against ml-ladder.
+    2026-10-17: R3's fused rerun sat queued on Kaggle for 20+ minutes (no
+    other kernels of this account running) and ran on Colab instead.
 - **Weekly quota** (`kaggle quota`): **30 h GPU and 20 h TPU**, resetting each
   week (the 2026-10-17 00:00 UTC refresh was the next one at handover). Other
   sessions of this account share it, and use GPU heavily.
