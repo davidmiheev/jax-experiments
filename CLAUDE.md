@@ -36,20 +36,26 @@ reproduce. This file is the practical brief for picking it up.
     accuracy does not change.
     O7 runs in its own uv environment (torchaudio needs torch 2.11); the
     command is in `experiments/o7_mel/run.py`.
-- **M2 groundwork is done; M2 itself waits on Kaggle.**
-  - `jaxexp.text`: enwik8 (SHA-256 checked) with the 90M/5M split, and
-    ml-ladder's batch sampler and copy task, byte-identical batches.
-  - `jaxexp.recurrent`: GRU/LSTM/RNN as `lax.scan` in PyTorch's equations, with
-    `state_dict` names.
-  - `jaxexp.train`: ml-ladder's schedule, AdamW and clipping, plus fp16 compute
-    with GradScaler-style loss scaling.
-  - Parity against ml-ladder's own `train()`: loss to 5.9e-7 and validation
-    bits/byte to 7 digits (`docs/data/r2-parity.json`).
-  - `tools/kaggle/push_r2.py` writes T4×2 kernels (presets `calibrate`, `r2-gru`,
-    `r2-rope`, `r2-4m`, `r3`); `tools/kaggle/package_source.sh` builds the source
-    dataset. **Nothing has been pushed:** start with `calibrate`, after the user
-    agrees to spend GPU quota.
-- **Two O1 findings bind R2:**
+- **M2 is done** (R2 and R3, `docs/m2-enwik8-and-copy.md`; Kaggle T4s).
+  - R2 reproduces ml-ladder seed for seed, within 0.006 bits/byte per pair:
+    25M RoPE 1.3226 (ml-ladder 1.3251), GRU 1.5979 (1.5982), 4M at lr 2e-3
+    1.5435 (1.5437). These runs start from ml-ladder's own initial weights
+    (`--init torch`) and see byte-identical batches.
+  - **Attention numerics matter:** ml-ladder uses SDPA (fp32 score
+    accumulation). Explicit attention used to round fp16 scores before the
+    softmax. That was harmless on enwik8, but delayed the copy task's escape
+    from its plateau (R3 seed 1 at n=512: 0/3 runs escape, against 6/6 with
+    fp32 scores). Fixed in `jaxexp.transformer`; `run.py` defaults to fused.
+  - **XLA on GPU is not run-to-run deterministic.** Repeat a surprising run
+    before believing it.
+  - **Cost on a T4:** JAX runs at 0.78× PyTorch on the 25M model, 0.53× on the
+    4M and 0.45× cuDNN for the GRU (`lax.scan`), with about 3× the memory:
+    XLA's attention materialises T×T scores, and the T4 has no flash path.
+  - `jaxexp.text`, `jaxexp.recurrent` and `jaxexp.train` hold the protocol.
+    `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
+    dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
+    scores it against ml-ladder's JSON.
+- **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
     of temp memory. On the T4, XLA's GPU compiler needs 10.13 GiB in fp32,
