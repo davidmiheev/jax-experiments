@@ -33,6 +33,9 @@ Presets (each is two job lists, one per GPU):
 - ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
   two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
   run-to-run nondeterminism at an unstable learning rate.
+- ``o3-stage1``: O3's LR sweeps for AdamW (ml-ladder's protocol) and Lion on seed 0: the 4M
+  transformer at T=256, 3,000 steps, six peak LRs each, vmapped in groups of 3. Muon follows
+  in stage 2, because its AdamW part uses AdamW's tuned peak.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -90,7 +93,19 @@ def _torch4m(tag: str) -> list[str]:
             "--out", f"n1-fork-torch-{tag}.json"]
 
 
+def _o3(opt: str, lrs: list[str], seeds: list[str], tag: str, *extra: str) -> list[str]:
+    return [N1, "--studies", "sweep", "--context", "256", "--seeds", *seeds, "--lrs", *lrs, "--group", "3",
+            "--log-every", "25", "--optimizer", opt, *extra, "--out", f"o3-{tag}.json"]
+
+
+ADAMW_LRS = ["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2"]
+LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
+
 PRESETS = {
+    "o3-stage1": [
+        [_o3("adamw", ADAMW_LRS, ["0"], "adamw-s0")],
+        [_o3("lion", LION_LRS, ["0"], "lion-s0", "--weight-decay", "1.0")],
+    ],
     "n1-fork-torch": [[_torch4m("a")], [_torch4m("b")]],
     "n1-fork": [
         [_seq4m("a"), _seq4m("b")],
