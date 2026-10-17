@@ -231,6 +231,15 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   saying whose code something is.
 - **Hygiene.** Keep credentials and the private ignite-catalog source out of
   this repo. Do not put model identifiers in commits or PR text.
+- **One PR per major item** (the user's rule, from 2026-10-17). A major item
+  is a milestone or a standalone experiment (M3, N1, …), or a significant
+  piece of infrastructure.
+  - Open its PR against `main` when its work is ready, with the writeup, PDF
+    and data inside.
+  - Small fixes (CLAUDE.md notes, typos) ride along with the next item's PR.
+  - After a PR merges, restart the working branch from the new `main` before
+    starting the next item; never stack new work on merged history. PR #2
+    (M0, M1, M2, M5) was the last combined one.
 
 ## Layout
 
