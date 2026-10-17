@@ -20,11 +20,15 @@ RUNS = ROOT / "docs" / "data" / "r2"
 LADDER = Path(os.environ.get("ML_LADDER", ROOT.parent / "ml-ladder")) / "docs" / "writeups" / "data"
 FIG = ROOT / "docs" / "figures"
 
-# arm: (model, peak_lr, ml-ladder file holding the 12,000-step T=1024 reference rows)
+# arm: (model, peak_lr, attention or None, ml-ladder file holding the 12,000-step T=1024 reference rows).
+# ml-ladder's transformers use SDPA (fused, fp32 scores). The "explicit" arms are the first R2 kernel's
+# explicit attention, which rounded fp16 scores before the softmax (fixed in 5b0e3e8).
 ARMS = {
-    "transformer-25M-rope": ("transformer-25M-rope", 6e-4, "c-gpu-rope-1024.json"),
-    "gru": ("gru", 2e-3, "c-gpu-long.json"),
-    "transformer-4M (lr 2e-3)": ("transformer-4M", 2e-3, "c-gpu-4m-long.json"),
+    "transformer-25M-rope": ("transformer-25M-rope", 6e-4, "fused", "c-gpu-rope-1024.json"),
+    "gru": ("gru", 2e-3, None, "c-gpu-long.json"),
+    "transformer-4M (lr 2e-3)": ("transformer-4M", 2e-3, "fused", "c-gpu-4m-long.json"),
+    "transformer-25M-rope, explicit fp16 scores": ("transformer-25M-rope", 6e-4, "explicit", "c-gpu-rope-1024.json"),
+    "transformer-4M (lr 2e-3), explicit fp16 scores": ("transformer-4M", 2e-3, "explicit", "c-gpu-4m-long.json"),
 }
 
 
@@ -48,19 +52,24 @@ def _reference_rows(model, lr, fname):
     )
 
 
-def _our_rows(model, lr):
+def _our_rows(model, lr, attention):
     rows = []
     for path in sorted(RUNS.glob("r2-*-s*.json")):
         for r in json.loads(path.read_text()).get("enwik8", []):
-            if r["model"] == model and abs(r["peak_lr"] - lr) < 1e-12 and r["steps"] == 12000:
+            if (
+                r["model"] == model
+                and abs(r["peak_lr"] - lr) < 1e-12
+                and r["steps"] == 12000
+                and (attention is None or r["attention"] == attention)
+            ):
                 rows.append(r)
     return sorted(rows, key=lambda r: r["seed"])
 
 
 def enwik8_summary() -> dict:
     out = {}
-    for arm, (model, lr, fname) in ARMS.items():
-        ref, ours = _reference_rows(model, lr, fname), _our_rows(model, lr)
+    for arm, (model, lr, attention, fname) in ARMS.items():
+        ref, ours = _reference_rows(model, lr, fname), _our_rows(model, lr, attention)
         entry = {
             "reference_file": fname,
             "reference_seeds": [r["seed"] for r in ref],
@@ -73,6 +82,9 @@ def enwik8_summary() -> dict:
             entry["bits_last_quarter"] = _spread([r["bits_last_quarter"] for r in ours])
             entry["reference_bits_last_quarter"] = _spread([r["bits_last_quarter"] for r in ref])
             entry["delta_median_bits"] = entry["bits_per_byte"]["median"] - entry["reference_bits_per_byte"]["median"]
+            # Same seed = same initial weights (ml-ladder's own init) and the same batches, so pair them.
+            by_seed = {r["seed"]: r["bits_per_byte"] for r in ref}
+            entry["per_seed_delta_bits"] = {r["seed"]: r["bits_per_byte"] - by_seed[r["seed"]] for r in ours}
             entry["steady_tokens_per_second"] = _spread([r["steady_tokens_per_second"] for r in ours])
             entry["compile_seconds"] = _spread([r["compile_seconds"] for r in ours])
             entry["train_seconds"] = _spread([r["train_seconds"] for r in ours])
@@ -93,17 +105,28 @@ def enwik8_summary() -> dict:
 
 
 def copy_summary() -> dict:
+    """R3 by arm. ``r3-transformer.json`` / ``r3-lstm.json`` ran the old explicit attention (fp16
+    scores); ``r3-transformer-fused-*.json`` the protocol's fused attention. The LSTM has no attention."""
     ref = json.loads((LADDER / "c-gpu.json").read_text())["copy"]
-    ours = [r for p in sorted(RUNS.glob("r3-*.json")) for r in json.loads(p.read_text()).get("copy", [])]
+
+    def load(pattern):
+        return [r for p in sorted(RUNS.glob(pattern)) for r in json.loads(p.read_text()).get("copy", [])]
+
+    arms = {
+        "transformer-4M": load("r3-transformer-fused-*.json"),
+        "transformer-4M, explicit fp16 scores": load("r3-transformer.json"),
+        "lstm": load("r3-lstm.json"),
+    }
     out = {}
-    for model in ("transformer-4M", "lstm"):
+    for arm, ours in arms.items():
+        model = arm.split(",")[0]
         for n in (32, 128, 512):
-            key = f"{model} n={n}"
             entry = {"reference": _spread([r["second_half_accuracy"] for r in ref if r["model"] == model and r["n"] == n])}
-            mine = [r["second_half_accuracy"] for r in ours if r["model"] == model and r["n"] == n]
+            mine = sorted((r for r in ours if r["model"] == model and r["n"] == n), key=lambda r: r["seed"])
             if mine:
-                entry["ours"] = _spread(mine)
-            out[key] = entry
+                entry["ours"] = _spread([r["second_half_accuracy"] for r in mine])
+                entry["ours_by_seed"] = {r["seed"]: r["second_half_accuracy"] for r in mine}
+            out[f"{arm} n={n}"] = entry
     return out
 
 
@@ -113,7 +136,7 @@ def plot(enwik8: dict) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    arms = [a for a, e in enwik8.items() if "_curves" in e]
+    arms = [a for a, e in enwik8.items() if "_curves" in e and "explicit" not in a]
     if not arms:
         return
     fig, axes = plt.subplots(1, len(arms), figsize=(4.6 * len(arms), 3.6), constrained_layout=True, squeeze=False)
