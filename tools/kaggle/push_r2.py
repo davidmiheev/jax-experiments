@@ -33,6 +33,8 @@ Presets (each is two job lists, one per GPU):
 - ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
   two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
   run-to-run nondeterminism at an unstable learning rate.
+- ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
+  (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -82,7 +84,14 @@ def _seq4m(tag: str) -> list[str]:
             "--peak-lr", "4e-3", "--enwik8-steps", "3000", "--log-every", "50", "--out", f"n1-fork-sequential-{tag}.json"]
 
 
+def _torch4m(tag: str) -> list[str]:
+    return ["@../ml-ladder/tools/gpu/c_context_scaling.py", "--studies", "enwik8", "--models", "transformer-4M",
+            "--contexts", "1024", "--seeds", "2", "--peak-lr", "4e-3", "--enwik8-steps", "3000",
+            "--out", f"n1-fork-torch-{tag}.json"]
+
+
 PRESETS = {
+    "n1-fork-torch": [[_torch4m("a")], [_torch4m("b")]],
     "n1-fork": [
         [_seq4m("a"), _seq4m("b")],
         [[N1, "--studies", "sweep", "--seeds", "2", "--lrs", "2e-3", "4e-3", "8e-3", "--group", "3", "--log-every", "50",
@@ -403,7 +412,9 @@ def run_lane(gpu, jobs):
         out = args[args.index("--out") + 1]
         args = args[: args.index("--out")] + ["--out", str(OUT / out)] + args[args.index("--out") + 2 :]
         log = open(OUT / (Path(out).stem + ".log"), "w")
-        cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + common + args
+        # A script outside this repo (e.g. "@../ml-ladder/tools/gpu/c_context_scaling.py") gets only --data-dir.
+        extra = common if not script.startswith("../") else common[:2]
+        cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + extra + args
         print(f"[gpu{{gpu}}]", " ".join(cmd), flush=True)
         rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT).returncode
         print(f"[gpu{{gpu}}] exit {{rc}} for {{out}}", flush=True)
