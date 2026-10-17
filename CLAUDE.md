@@ -55,6 +55,18 @@ reproduce. This file is the practical brief for picking it up.
     `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
     dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
     scores it against ml-ladder's JSON.
+- **M3: N1 is done** (`docs/m3-sweeps-optimisers-noise.md`); O3 and N2 not started.
+  - `jaxexp.sweep.train_many` trains K copies (own LR, loss scale and batch
+    stream) as one `jit(vmap(step))`. It equals sequential runs to 1e-6 on CPU.
+  - It reproduces ml-ladder's §7 sweep: best LR 2e-3 (1.824 against 1.825),
+    and 12/12 pairs within 0.0095 up to the optimum.
+  - **No speedup on a T4 at ml-ladder's 16k tokens per step.** One copy
+    saturates the GPU, even for a 0.2M model (at most 1.11×). K is capped by
+    memory: 4 copies of the 4M without remat, 8 with remat.
+  - **Above the optimum, a single run is a draw.** ml-ladder's recorded seed 2
+    at 4e-3 (1.84) did not reproduce in two PyTorch reruns (2.01, 2.04); four
+    JAX runs gave 2.05–2.06. Kernels can run ml-ladder's own scripts (job
+    `"@../ml-ladder/..."`) for such controls.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
