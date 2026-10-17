@@ -1,0 +1,176 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/r3-transformer-fused-colab.json",
+  "data_dir": null,
+  "ml_ladder": "/content/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "copy"
+  ],
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "contexts": [
+   256,
+   1024
+  ],
+  "models": [
+   "gru",
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "transformer-4M"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32,
+   128,
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": true,
+  "remat": "none",
+  "attention": "fused",
+  "log_every": 250
+ },
+ "copy": [
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031060987903225805,
+   "chance": 0.03125,
+   "train_seconds": 94.16256928443909,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.03109621062992126,
+   "chance": 0.03125,
+   "train_seconds": 131.514262676239,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 0,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 0.9813003540039062,
+   "first_half_accuracy": 0.03113915728962818,
+   "chance": 0.03125,
+   "train_seconds": 249.7741997241974,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.03055695564516129,
+   "chance": 0.03125,
+   "train_seconds": 101.19707822799683,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.030880905511811024,
+   "chance": 0.03125,
+   "train_seconds": 130.28204226493835,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 1,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031379953522504896,
+   "chance": 0.03125,
+   "train_seconds": 245.19171357154846,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 32,
+   "parameters": 3981824,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.030682963709677418,
+   "chance": 0.03125,
+   "train_seconds": 101.27376127243042,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 128,
+   "parameters": 4030976,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031603715551181105,
+   "chance": 0.03125,
+   "train_seconds": 130.20256972312927,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  },
+  {
+   "seed": 2,
+   "model": "transformer-4M",
+   "n": 512,
+   "parameters": 4227584,
+   "second_half_accuracy": 1.0,
+   "first_half_accuracy": 0.031467863258317026,
+   "chance": 0.03125,
+   "train_seconds": 247.04031658172607,
+   "framework": "jax",
+   "init": "torch",
+   "amp": true
+  }
+ ],
+ "finished": "2026-10-17 19:00:49",
+ "wall_seconds": 1469.428757429123,
+ "provider": {
+  "service": "Google Colab",
+  "gpu": "Tesla T4",
+  "python": "3.13.15",
+  "jax": "0.11.1",
+  "flax": "0.12.10 (pip-installed to match Kaggle; Colab ships 0.11.2)",
+  "source": "jax-experiments 4fee3e5 (git archive), ml-ladder 42489de (tools, parts, src)",
+  "why": "Kaggle kernel jaxexp-r3-fused sat QUEUED for 20+ min with no other kernels of this account running"
+ }
+}

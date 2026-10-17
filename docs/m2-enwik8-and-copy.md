@@ -1,9 +1,9 @@
 # M2 — enwik8 and the copy task in JAX (R2, R3)
 
-> **Status:** R2 done; R3 done except the fused-attention transformer rerun (pending; its row reads R3_FUSED_*) ·
-> **Hardware:** Kaggle T4 ×2 (sm_75, one job per GPU), JAX 0.11.1 on the Kaggle image; parity checks on CPU (4 cores) ·
+> **Status:** done (R2 and R3) ·
+> **Hardware:** Kaggle T4 ×2 (sm_75, one job per GPU), JAX 0.11.1 on the Kaggle image. R3's fused-attention transformer ran on a Colab T4 (same JAX, Flax pinned to Kaggle's 0.12.10), because its Kaggle kernel sat queued for over 20 minutes. Parity checks on CPU (4 cores) ·
 > **Data:** [`data/r2-summary.json`](data/r2-summary.json) (every number below), [`data/r2/`](data/r2/) (one JSON and log per run), [`data/r2-calibrate/`](data/r2-calibrate/), [`data/r2-parity.json`](data/r2-parity.json); ml-ladder's references from its `docs/writeups/data/c-gpu*.json` ·
-> **Reproduce:** `tools/kaggle/package_source.sh`, then `uv run python tools/kaggle/push_r2.py <preset> --push` for `calibrate`, `calibrate-fused`, `r2`, `r2-fused`, `r3`, `r3-fused`, `r3-s1`, `r3-s1b`; then `uv run python experiments/r2_enwik8/analyze.py`. CPU parity: `uv run --extra torch python experiments/r2_enwik8/parity.py`
+> **Reproduce:** `tools/kaggle/package_source.sh`, then `uv run python tools/kaggle/push_r2.py <preset> --push` for `calibrate`, `calibrate-fused`, `r2`, `r2-fused`, `r3`, `r3-s1`, `r3-s1b` (the `r3-fused` preset ran on Colab instead, as `run.py --studies copy --copy-models transformer-4M --seeds 0 1 2 --amp --attention fused`); then `uv run python experiments/r2_enwik8/analyze.py`. CPU parity: `uv run --extra torch python experiments/r2_enwik8/parity.py`
 
 ## Question
 
@@ -194,11 +194,15 @@ same T4 type (fp16 autocast, SDPA, cuDNN).*
 | LSTM, ml-ladder | 0.903 (0.865–0.912) | 0.031 (chance) | 0.031 |
 | LSTM, JAX | 0.893 (0.864–0.910) | 0.031 | 0.031 |
 | transformer 4M, ml-ladder | 1.000 | 1.000 | 0.999 (0.917–1.000) |
-| transformer 4M, JAX, fused | R3_FUSED_32 | R3_FUSED_128 | R3_FUSED_512 |
+| transformer 4M, JAX, fused (Colab T4) | 1.000 | 1.000 | **1.000** (0.981–1.000) |
 | *transformer 4M, JAX, explicit, fp16 scores* | *1.000* | *1.000* | *0.997 (0.273–1.000)* |
 
-The LSTM reproduces per seed (0.910 / 0.893 / 0.864 against 0.912 / 0.903 /
-0.865) and fails at 128, as in ml-ladder.
+Both of ml-ladder's claims hold:
+- **The transformer copies 512 symbols.** With fused attention, all three
+  seeds do: 0.981, 1.000 and 1.000, against ml-ladder's 0.917, 1.000 and
+  0.999.
+- **The LSTM fails at 128.** It reproduces per seed at n=32 (0.910 / 0.893 /
+  0.864, against 0.912 / 0.903 / 0.865) and is at chance from n=128 on.
 
 **The one miss, and what it found.** In the first R3 kernel, the
 explicit-attention transformer (fp16 scores) reached only 0.273 on seed 1 at
@@ -217,7 +221,8 @@ configuration:
   identical weights and batches agree to step 375, then diverge (0.14, 0.27,
   0.58).
 - **The lag is systematic anyway.** Three of three fp16-score runs stay on the
-  plateau. Six of six runs with fp32 scores leave it by step 750.
+  plateau. Six of six runs with fp32 scores leave it by step 750. So does the
+  seventh, R3's fused rerun on Colab (2.68 at step 750, 1.000 at the end).
 - **That is why ml-ladder's protocol choice (SDPA) matters, and why the
   explicit path was fixed.** Copying 512 symbols needs attention sharp enough
   that a rounding of about 0.02 in the scores slows the transition. With 1,500 steps,
