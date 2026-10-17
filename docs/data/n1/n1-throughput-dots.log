@@ -1,0 +1,5 @@
+[throughput] K=1   remat=dots     103,160 tok/s total (1.00x K=1, i.e. 1.00x 1 sequential runs' rate)  compile 16.2s
+[throughput] K=2   remat=dots     104,424 tok/s total (1.01x K=1, i.e. 1.01x 2 sequential runs' rate)  compile 15.5s
+[throughput] K=4   remat=dots     106,137 tok/s total (1.03x K=1, i.e. 1.03x 4 sequential runs' rate)  compile 16.6s
+[throughput] K=8   remat=dots     107,565 tok/s total (1.04x K=1, i.e. 1.04x 8 sequential runs' rate)  compile 14.1s
+[throughput] K=12 remat=dots: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.11GiB with allocator GPU_0_bfc on device 0. [executable_na

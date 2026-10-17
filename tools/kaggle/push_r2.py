@@ -27,6 +27,9 @@ Presets (each is two job lists, one per GPU):
 - ``r3-fused``: R3's transformer arm with fused attention.
 - ``n1-calibrate``: N1's vmapped step: compiled memory for K = 1..18 copies of the 4M
   transformer (remat none / dots), and steady throughput for K = 1, 2, 4, 8 against K = 1.
+- ``n1``: ml-ladder's §7 sweep (4M, T=1024, 6 LRs x seeds 0-2, 3,000 steps) as vmapped
+  groups of 3 copies (no remat; K=4 is the memory limit), plus a throughput scan of
+  smaller transformers to find where vmapping copies starts to pay.
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -60,7 +63,22 @@ def _r3s1(tag: str, *extra: str, seed: int = 1) -> list[str]:
 
 N1 = "@experiments/n1_vmap_sweep/run.py"
 
+def _n1(seed: int, lrs: list[str], tag: str) -> list[str]:
+    return [N1, "--studies", "sweep", "--seeds", str(seed), "--lrs", *lrs, "--group", "3", "--out", f"n1-sweep-{tag}.json"]
+
+
+def _n1_size(size: str) -> list[str]:
+    return [N1, "--studies", "throughput", "--size", size, "--ks", "1", "2", "4", "8", "16", "32", "--remats", "none",
+            "--out", f"n1-throughput-w{size.split(',')[0]}.json"]
+
+
+LOW, HIGH = ["3e-4", "6e-4", "1e-3"], ["2e-3", "4e-3", "8e-3"]
+
 PRESETS = {
+    "n1": [
+        [_n1(0, LOW + HIGH, "s0"), _n1(2, LOW, "s2-low"), _n1_size("64,2,4")],
+        [_n1(1, LOW + HIGH, "s1"), _n1(2, HIGH, "s2-high"), _n1_size("128,2,4")],
+    ],
     "n1-calibrate": [
         [
             [N1, "--studies", "memory", "--ks", "1", "2", "4", "6", "8", "12", "18", "--out", "n1-memory.json"],

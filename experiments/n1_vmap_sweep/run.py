@@ -60,7 +60,7 @@ def study_memory(args, report) -> None:
     batch = args.tokens_per_step // args.context
     for remat in args.remats:
         for k in args.ks:
-            params, apply, _, _ = r2.build(MODEL, args.context, 0, _builder_args(args, remat), None)
+            params, apply, _, _ = r2.build(args.model, args.context, 0, _builder_args(args, remat), None)
             opt = TR.optimizer(0.1)
             stacked = S.stack([params] * k)
             opt_state = jax.vmap(opt.init)(stacked)
@@ -69,7 +69,7 @@ def study_memory(args, report) -> None:
             lr = jnp.zeros((k,), jnp.float32)
             step = jax.vmap(TR.make_step(apply, opt, args.amp))
             stats = compiled_stats(step, stacked, opt_state, scale, ids, ids, lr)
-            rows.append({"k": k, "remat": remat, "context": args.context, "batch": batch, **stats})
+            rows.append({"model": args.model, "k": k, "remat": remat, "context": args.context, "batch": batch, **stats})
             print(
                 f"[memory] K={k:<3} remat={remat:<5} temp {stats['temp_bytes'] / 2**30:6.2f} GiB "
                 f"({stats['temp_bytes'] / 2**30 / k:5.2f} per copy)  args {stats['argument_bytes'] / 2**30:5.2f} GiB  "
@@ -85,7 +85,7 @@ def study_throughput(args, report) -> None:
     batch = args.tokens_per_step // args.context
     for remat in args.remats:
         for k in args.ks:
-            params, apply, _, _ = r2.build(MODEL, args.context, 0, _builder_args(args, remat), None)
+            params, apply, _, _ = r2.build(args.model, args.context, 0, _builder_args(args, remat), None)
             sampler = text.Batches(train_ids, args.context, batch, 0)
             try:
                 _, timing = S.train_many(
@@ -99,7 +99,7 @@ def study_throughput(args, report) -> None:
                     log_every=10**9,
                 )
             except Exception as error:  # noqa: BLE001  (out of memory ends the K sweep)
-                rows.append({"k": k, "remat": remat, "error": str(error)[:300]})
+                rows.append({"model": args.model, "k": k, "remat": remat, "error": str(error)[:300]})
                 print(f"[throughput] K={k} remat={remat}: {str(error)[:120]}", flush=True)
                 _save(args, report)
                 break
@@ -107,6 +107,8 @@ def study_throughput(args, report) -> None:
             tokens = (args.throughput_steps - 1) * batch * args.context * k
             rows.append(
                 {
+                    "model": args.model,
+                    "parameters": int(sum(np.prod(v.shape) for v in jax.tree.leaves(params))),
                     "k": k,
                     "remat": remat,
                     "steps": args.throughput_steps,
@@ -116,10 +118,14 @@ def study_throughput(args, report) -> None:
                     "peak_memory_mb": (r2.device_peak_bytes() or 0) / 2**20,
                 }
             )
-            base = next((r for r in rows if r.get("k") == 1 and r["remat"] == remat and "tokens_per_second" in r), None)
+            base = next(
+                (r for r in rows if r.get("k") == 1 and r["remat"] == remat and r.get("model") == args.model
+                 and "tokens_per_second" in r),
+                None,
+            )
             speedup = rows[-1]["tokens_per_second"] / base["tokens_per_second"] if base else float("nan")
             print(
-                f"[throughput] K={k:<3} remat={remat:<5} {rows[-1]['tokens_per_second']:>10,.0f} tok/s total "
+                f"[throughput] {args.model} K={k:<3} remat={remat:<5} {rows[-1]['tokens_per_second']:>10,.0f} tok/s total "
                 f"({speedup:.2f}x K=1, i.e. {speedup:.2f}x {k} sequential runs' rate)  compile {timing['compile_seconds']:.1f}s",
                 flush=True,
             )
@@ -138,7 +144,7 @@ def study_sweep(args, report) -> None:
     builder = _builder_args(args, args.remat)
     for start in range(0, len(grid), args.group):
         group = grid[start : start + args.group]
-        built = {seed: r2.build(MODEL, args.context, seed, builder, ladder) for seed in {s for s, _ in group}}
+        built = {seed: r2.build(args.model, args.context, seed, builder, ladder) for seed in {s for s, _ in group}}
         samplers = {seed: text.Batches(train_ids, args.context, batch, seed) for seed in built}
         apply = next(iter(built.values()))[1]
         label = "K=%d %s" % (len(group), " ".join(f"s{s}/{lr:g}" for s, lr in group))
@@ -148,7 +154,7 @@ def study_sweep(args, report) -> None:
             [samplers[s] for s, _ in group],
             steps=args.steps,
             peak_lrs=[lr for _, lr in group],
-            weight_decay=r2.MODELS[MODEL][3],
+            weight_decay=r2.MODELS[args.model][3],
             amp=args.amp,
             log_every=args.log_every,
             label=label,
@@ -160,7 +166,7 @@ def study_sweep(args, report) -> None:
             rows.append(
                 {
                     "seed": seed,
-                    "model": MODEL,
+                    "model": args.model,
                     "context": args.context,
                     "batch": batch,
                     "peak_lr": lr,
@@ -198,6 +204,8 @@ def main() -> None:
     parser.add_argument("--out", default=str(ROOT / "runs" / "n1.json"))
     parser.add_argument("--data-dir", default=None)
     parser.add_argument("--ml-ladder", default=str(ROOT.parent / "ml-ladder"))
+    parser.add_argument("--model", default=MODEL, help="a model of R2's run.py, or a --size")
+    parser.add_argument("--size", default=None, help="width,depth,heads: a learned-position transformer, lr 2e-3, wd 0.1")
     parser.add_argument("--context", type=int, default=1024)
     parser.add_argument("--tokens-per-step", type=int, default=16384)
     parser.add_argument("--ks", nargs="+", type=int, default=[1, 2, 4, 8])
@@ -213,6 +221,10 @@ def main() -> None:
     parser.add_argument("--attention", choices=["explicit", "fused"], default="fused")
     parser.add_argument("--no-amp", dest="amp", action="store_false")
     args = parser.parse_args()
+    if args.size:  # smaller transformers, to find where one copy stops filling the GPU
+        width, depth, heads = (int(x) for x in args.size.split(","))
+        args.model = f"transformer-w{width}d{depth}"
+        r2.MODELS[args.model] = ("learned", (width, depth, heads), 2e-3, 0.1)
     report = json.loads(Path(args.out).read_text()) if Path(args.out).exists() else {}
     report.update(
         {
