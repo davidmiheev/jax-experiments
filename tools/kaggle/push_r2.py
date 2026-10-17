@@ -25,6 +25,8 @@ Presets (each is two job lists, one per GPU):
 - ``r2-fused``: R2's transformer arms with fused attention, seeds 0-2. ``r2`` ran them with
   explicit attention whose fp16 scores were rounded before the softmax (fixed since).
 - ``r3-fused``: R3's transformer arm with fused attention.
+- ``n1-calibrate``: N1's vmapped step: compiled memory for K = 1..18 copies of the 4M
+  transformer (remat none / dots), and steady throughput for K = 1, 2, 4, 8 against K = 1.
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
   as is, in fp32 and with fused attention: is the late escape from the plateau numerics?
 - ``r3-s1b``: repeats of the fp32 and fused arms (one run each in ``r3-s1``), and of seed 0 in
@@ -56,7 +58,16 @@ def _r3s1(tag: str, *extra: str, seed: int = 1) -> list[str]:
             *extra, "--out", f"r3-s{seed}-{tag}.json"]
 
 
+N1 = "@experiments/n1_vmap_sweep/run.py"
+
 PRESETS = {
+    "n1-calibrate": [
+        [
+            [N1, "--studies", "memory", "--ks", "1", "2", "4", "6", "8", "12", "18", "--out", "n1-memory.json"],
+            [N1, "--studies", "throughput", "--ks", "1", "2", "4", "8", "--remats", "none", "--out", "n1-throughput-none.json"],
+        ],
+        [[N1, "--studies", "throughput", "--ks", "1", "2", "4", "8", "12", "--remats", "dots", "--out", "n1-throughput-dots.json"]],
+    ],
     "calibrate-fused": [
         [
             ["--studies", "memory", "--models", "transformer-25M-rope", "transformer-4M", "--contexts", "1024",
@@ -352,12 +363,16 @@ if not (DATA / "enwik8").exists():  # once, before the parallel jobs
 common = {common}
 
 def run_lane(gpu, jobs):
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu), PYTHONUNBUFFERED="1")
+    # 0.92 of the card instead of JAX's default 0.75: N1 packs K model copies into one program.
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(gpu), PYTHONUNBUFFERED="1", XLA_PYTHON_CLIENT_MEM_FRACTION="0.92")
     for args in jobs:
+        script = "{run}"
+        if args[0].startswith("@"):  # a job may name its own script: ["@experiments/.../run.py", ...]
+            script, args = args[0][1:], args[1:]
         out = args[args.index("--out") + 1]
         args = args[: args.index("--out")] + ["--out", str(OUT / out)] + args[args.index("--out") + 2 :]
         log = open(OUT / (Path(out).stem + ".log"), "w")
-        cmd = [sys.executable, str(SRC / "jax-experiments" / "{run}")] + common + args
+        cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + common + args
         print(f"[gpu{{gpu}}]", " ".join(cmd), flush=True)
         rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT).returncode
         print(f"[gpu{{gpu}}] exit {{rc}} for {{out}}", flush=True)
