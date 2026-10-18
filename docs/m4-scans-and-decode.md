@@ -212,7 +212,11 @@ ml-ladder's tuned baselines:
   better than the GRU at T=1024 and 0.05 better than the tuned transformer at
   T=256. At T=1024 it beats the transformer by 0.26.
 - **Seed 0 is the best Mamba-2 run at both lengths, by about 0.02.** It is
-  also the seed the LRs were picked on. S0REPEAT
+  also the seed the LRs were picked on, so it was run again, alone, at both
+  best LRs: 1.5595 at T=1024 (first run 1.5515) and 1.5513 at T=256
+  (1.5537). It reproduces within 0.008 and stays ahead of seeds 1–2
+  (1.567–1.581), so seed 0 is a better draw of initial weights and batches,
+  not a lucky run. The medians above use the first runs.
 
 **Loss by position.** The gap to the GRU at the same positions (bits/byte,
 median curves; both models are scored on the same validation windows, so the
