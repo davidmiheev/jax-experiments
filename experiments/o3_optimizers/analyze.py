@@ -8,8 +8,10 @@ setting); writes ``docs/data/o3-summary.json`` and the figure.
   an edge of the grid.
 - **Comparison:** seeds 0-2 at each optimiser's best LR, median (min-max) bits/byte.
 - **Steps to a target:** the first logged step at which the smoothed training loss
-  (mean of the last 8 logs, 200 steps) reaches AdamW's final smoothed loss at its best
-  LR (median over seeds).
+  (mean of 8 logs, 200 steps) reaches AdamW's level at its best LR (median over
+  seeds): its final level, and its level at step 1,500. Under a fixed-length cosine
+  schedule the final level is reached near the end by construction, so the halfway
+  target is the informative one.
 
     uv run python experiments/o3_optimizers/analyze.py
 """
@@ -72,17 +74,29 @@ def summarise() -> dict:
         }
     if "adamw" in out["optimizers"]:
         adam = out["optimizers"]["adamw"]
-        finals = [smoothed(r["train_history"])[1][-1] for r in data if r.get("optimizer") == "adamw" and r["peak_lr"] == adam["best_lr"]]
-        target = float(np.median(finals))
-        out["target_train_loss"] = target
+        adam_runs = [r for r in data if r.get("optimizer") == "adamw" and r["peak_lr"] == adam["best_lr"]]
+
+        def level_at(run, step):
+            steps, loss = smoothed(run["train_history"])
+            return float(loss[np.searchsorted(steps, step)])
+
+        # Two targets: AdamW's final smoothed loss (with a fixed-length cosine schedule, reaching it
+        # mostly tracks the schedule's end) and AdamW's level halfway through (step 1,500).
+        targets = {
+            "final": float(np.median([smoothed(r["train_history"])[1][-1] for r in adam_runs])),
+            "halfway": float(np.median([level_at(r, 1500) for r in adam_runs])),
+        }
+        out["targets_train_loss"] = targets
         for opt, entry in out["optimizers"].items():
-            reached = {}
-            for r in data:
-                if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"]:
-                    steps, loss = smoothed(r["train_history"])
-                    hit = np.nonzero(loss <= target)[0]
-                    reached[r["seed"]] = int(steps[hit[0]]) if hit.size else None
-            entry["steps_to_target"] = reached
+            entry["steps_to_target"] = {}
+            for name, target in targets.items():
+                reached = {}
+                for r in data:
+                    if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"]:
+                        steps, loss = smoothed(r["train_history"])
+                        hit = np.nonzero(loss <= target)[0]
+                        reached[r["seed"]] = int(steps[hit[0]]) if hit.size else None
+                entry["steps_to_target"][name] = reached
         ref = {r["peak_lr"]: r for r in json.loads((LADDER / "c-gpu-lr2-256.json").read_text())["enwik8"]
                if r["model"] == "transformer-4M" and r["seed"] == 0}
         ours = {r["peak_lr"]: r for r in data if r.get("optimizer") == "adamw" and r["seed"] == 0}
@@ -117,8 +131,8 @@ def plot(summary: dict) -> None:
     axes[0].set_ylabel("validation bits/byte")
     axes[0].set_title("LR sweep, seed 0 (squares: seeds 0-2 at the best LR)")
     axes[0].legend(fontsize=8)
-    if "target_train_loss" in summary:
-        axes[1].axhline(summary["target_train_loss"], color="0.4", ls="--", lw=0.8)
+    for name, level in summary.get("targets_train_loss", {}).items():
+        axes[1].axhline(level, color="0.4", ls="--" if name == "final" else ":", lw=0.8)
     axes[1].set_ylim(top=2.0)
     axes[1].set_xlabel("step")
     axes[1].set_ylabel(f"training loss (nats, mean of {WINDOW} logs)")
@@ -134,7 +148,7 @@ def main() -> None:
         print(opt, "curve", {k: round(v, 4) for k, v in e["seed0_curve"].items()}, "best", e["best_lr"],
               "EDGE" if e["best_at_grid_edge"] else "", "seeds", e["best_lr_bits"], "steps->target", e.get("steps_to_target"))
     if "adamw_vs_ml_ladder_seed0" in summary:
-        print("adamw vs ml-ladder (seed 0):", summary["adamw_vs_ml_ladder_seed0"], "target", summary["target_train_loss"])
+        print("adamw vs ml-ladder (seed 0):", summary["adamw_vs_ml_ladder_seed0"], "targets", summary["targets_train_loss"])
     plot(summary)
     (ROOT / "docs" / "data" / "o3-summary.json").write_text(json.dumps(summary, indent=1) + "\n")
     print("wrote docs/data/o3-summary.json")
