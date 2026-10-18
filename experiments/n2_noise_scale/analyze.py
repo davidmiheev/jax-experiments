@@ -3,7 +3,7 @@
 Reads ``docs/data/n2/n2-*.json``; writes ``docs/data/n2-summary.json`` and the figure.
 
 - **Steps to a target.** For each batch size B and target training loss L, S(B, L) is the
-  first logged step at which the smoothed loss (mean of 8 logs, 200 steps) is <= L, at the
+  first step at which the smoothed loss (mean of 8 logs, 200 steps, placed at the window's centre) is <= L, at the
   best of that batch size's learning rates (the fewest steps), with a flag if the best LR is
   an edge of the grid.
 - **Fit.** McCandlish et al.: S(B) = S_min (1 + B_crit / B), linear in 1/B, fitted by least
@@ -30,9 +30,13 @@ TARGETS = [1.6, 1.5, 1.4, 1.3, 1.25, 1.2]
 
 
 def smoothed(history):
+    """Mean of WINDOW consecutive logs, placed at the window's centre step. (A trailing mean
+    reports every crossing ~(WINDOW - 1) / 2 logs late: 87 steps here, which is 22% of the
+    B=256 counts but 5% of the B=16 ones, and would bias the fit.)"""
     steps = np.array([s for s, _ in history], float)
     loss = np.array([l for _, l in history], float)
-    return steps[WINDOW - 1 :], np.convolve(loss, np.ones(WINDOW) / WINDOW, mode="valid")
+    centres = (steps[: len(steps) - WINDOW + 1] + steps[WINDOW - 1 :]) / 2
+    return centres, np.convolve(loss, np.ones(WINDOW) / WINDOW, mode="valid")
 
 
 def first_reach(history, level):
@@ -72,6 +76,10 @@ def summarise() -> dict:
                 per_b[b] = {"steps": s, "lr": lr, "lr_at_grid_edge": lr in (lrs[0], lrs[-1]),
                             "examples": s * b, "all_lrs": {f"{l:g}": st for st, l in cands}}
         entry = {"per_batch": per_b}
+        # The fit-free answer: steps saved per 4x batch (perfect scaling 4.0, none 1.0).
+        bs = sorted(per_b)
+        entry["step_ratio_per_4x"] = {f"{a}->{b}": per_b[a]["steps"] / per_b[b]["steps"]
+                                      for a, b in zip(bs, bs[1:], strict=False) if b == 4 * a}
         if len(per_b) >= 2:
             bs = np.array(sorted(per_b), float)
             s = np.array([per_b[int(b)]["steps"] for b in bs])
@@ -142,6 +150,8 @@ def main() -> None:
             f"B={b}: {e['steps']:.0f} steps (lr {e['lr']:g}{' EDGE' if e['lr_at_grid_edge'] else ''})" for b, e in v["per_batch"].items())
         if "fit" in v:
             line += f" | S_min {v['fit']['s_min']:.0f}, B_crit {v['fit']['b_crit']:.1f}, max resid {v['fit']['residual_rel']:.2f}"
+        if v.get("step_ratio_per_4x"):
+            line += " | per 4x: " + ", ".join(f"{k} {r:.2f}" for k, r in v["step_ratio_per_4x"].items())
         if "b_simple_median" in v:
             line += f" | B_simple {v['b_simple_median']:.1f} " + str([(a["seed"], a["noise_batches"], round(a["b_simple"], 1)) for a in v["b_simple_at_level"]])
         print(line)

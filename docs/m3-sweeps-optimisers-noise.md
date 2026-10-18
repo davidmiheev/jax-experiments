@@ -1,9 +1,9 @@
 # M3 — Sweeps as one program, optimisers, gradient noise (N1, O3, N2)
 
-> **Status:** N1 and O3 done; N2 in progress ·
+> **Status:** done (N1, O3, N2) ·
 > **Hardware:** Kaggle T4 ×2 (sm_75, one job per GPU), JAX 0.11.1; CPU (4 cores) for the equivalence tests ·
-> **Data:** N1: [`data/n1-summary.json`](data/n1-summary.json) and [`data/n1/`](data/n1/) (one JSON and log per job); O3: [`data/o3-summary.json`](data/o3-summary.json) and [`data/o3/`](data/o3/); ml-ladder's references from its `docs/writeups/data/c-gpu-lr.json` and `c-gpu-lr2-1024.json` ·
-> **Reproduce:** `uv run python tools/kaggle/push_r2.py <preset> --push` for `n1-calibrate`, `n1`, `n1-fork` and `n1-fork-torch`, then `uv run python experiments/n1_vmap_sweep/analyze.py`; O3: presets `o3-stage1` to `o3-stage4`, then `uv run python experiments/o3_optimizers/analyze.py`. CPU tests: `uv run pytest tests/test_n1_sweep.py tests/test_o3_optimizers.py`
+> **Data:** N1: [`data/n1-summary.json`](data/n1-summary.json) and [`data/n1/`](data/n1/) (one JSON and log per job); O3: [`data/o3-summary.json`](data/o3-summary.json) and [`data/o3/`](data/o3/); N2: [`data/n2-summary.json`](data/n2-summary.json) and [`data/n2/`](data/n2/); ml-ladder's references from its `docs/writeups/data/c-gpu-lr.json` and `c-gpu-lr2-1024.json` ·
+> **Reproduce:** `uv run python tools/kaggle/push_r2.py <preset> --push` for `n1-calibrate`, `n1`, `n1-fork` and `n1-fork-torch`, then `uv run python experiments/n1_vmap_sweep/analyze.py`; O3: presets `o3-stage1` to `o3-stage4`, then `uv run python experiments/o3_optimizers/analyze.py`; N2: presets `n2`, `n2-ext` and `n2-noise32`, then `uv run python experiments/n2_noise_scale/analyze.py`. CPU tests: `uv run pytest tests/test_n1_sweep.py tests/test_o3_optimizers.py tests/test_n2_noise.py`
 
 ## N1 — Hyperparameter sweeps as one program
 
@@ -441,7 +441,7 @@ otherwise.
 
 - **`jaxexp.noise`:**
   - `make_per_example`: `vmap(grad)` in chunks, returning each example's
-    |gᵢ|² and the gradient sum;
+    $|g_i|^2$ and the gradient sum;
   - `batch_estimates`: the unbiased pair above;
   - `noise_scale`: the ratio of averages.
 - **`tests/test_n2_noise.py`:**
@@ -456,12 +456,93 @@ otherwise.
 
 ### Results
 
-N2_RESULTS
+![Left: B_simple through a B=64 run, three measurement series. Right: steps to reach six training losses at B = 16, 64, 256 (best LR each), the fit S_min(1 + B_crit/B), and the measured B_simple at each loss (dotted)](figures/n2-noise-scale.png)
+
+**The noise scale rises fast, then slowly.**
+- **At initialisation** B_simple is about 1 sequence: every example's gradient
+  points the same way.
+- **At step 250** it is 9–15.
+- **From step 500 to 2,750** the median is 44, with points ranging 29–60
+  (two seeds, 32 batches per point).
+- **From step 3,000 to 6,000** the median is 62 (range 40–82).
+
+Even at 32 batches per point the measurements scatter by up to ±30%, because |G|²
+is a small difference of large terms. The two seeds agree where it matters:
+at the losses below, they give B_simple = 42.0 and 42.4 (loss 1.6), and 38.6
+and 42.6 (loss 1.5).
+
+**Steps to each loss, at each batch size's best learning rate:**
+
+| training loss | B=16 | B=64 | B=256 | fewer steps per 4× (16→64, 64→256) | B_crit (fit) | B_simple at that loss |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1.6 | 1,712 | 562 | 312 | 3.04×, 1.80× | 118 (fit within 5%) | 43 |
+| 1.5 | 1,962 | 662 | 362 | 2.96×, 1.83× | 112 (3%) | 42 |
+| 1.4 | 3,388 | 862 | 412 | 3.93×, 2.09× | 365 (17%) | 43 |
+| 1.3 | 6,338 | 1,538 | 538 | 4.12×, 2.86× | 1,411 (14%) | 46 |
+| 1.25 | 8,438 | 2,162 | 662 | 3.90×, 3.26× | 1,140 (4%) | 45 |
+
+*No B=16 run reaches 1.2 within its 12,000 steps (its best ends at 1.250), so
+that row is left out; with two points the fit would be exact. Every best LR is interior
+to its grid: the grid was extended downward once, and the new points changed
+no answer.*
+
+- **Early in training, B_simple underestimates B_crit by about 2.7×.** At
+  losses 1.6–1.5 the step–batch relation fits well (3–5%), with B_crit ≈
+  112–118 sequences against a measured B_simple of 42–43. The direction is
+  the one McCandlish et al. predict: B_simple is a lower estimate.
+  Quantitatively, B_simple predicts 2.2× fewer steps for 16→64 and 1.4× for
+  64→256; the measured ratios are 3.0× and 1.8×.
+- **Late in training, it fails as a predictor.** At losses 1.3–1.25,
+  quadrupling the batch from 64 to 256 still saves 2.9–3.3× the steps, close
+  to the perfect 4×. Yet B_simple has only risen to 45–46. At B=256 the run
+  is still near-perfectly batch-efficient; B_simple would place the knee at
+  about 45. Even B_crit = 256 would predict only 2.5× for 64→256, so the
+  measured 2.9–3.3× puts B_crit above 256, more than 5× B_simple.
+  - The fitted B_crit there (1,100–1,400) is an extrapolation: it lies well
+    beyond the largest batch tried. Its size is not a measurement. The
+    direction is: the critical batch outgrows the largest batch tested,
+    while B_simple barely moves.
+- **Learning rates.** At every loss, larger batches want equal or larger
+  learning rates, and every batch size wants a lower one later. That is the expected
+  shape for a constant schedule, and it is why each point needed its own
+  grid.
+- **Cost.** The batch study used about 2.2 GPU-hours of program time. The
+  three 6,000-step noise runs took about 7 minutes each, and each
+  measurement of 32 × 64 per-example gradients took 8.7 s.
 
 ### What surprised me
 
-N2_SURPRISES
+**The simple noise scale tracks the critical batch only early on.**
+McCandlish et al. present B_simple as a cheap stand-in for the critical
+batch. Here it is within a factor of 3 at the start of training, but late in
+training it misses by more than 5× (by the most conservative reading, B=256
+is still nearly perfectly efficient). One explanation, not tested here:
+B_simple ignores curvature (the full noise scale is $\operatorname{tr}(H\Sigma)/G^\top H G$), and AdamW
+preconditions the gradient. The noise that matters for an Adam step is the
+noise in the *preconditioned* gradient, which the raw per-example gradients
+do not measure.
+
+**My own measurement had a bias before the experiment did.** A trailing
+200-step mean of the loss reports every crossing about 87 steps late. That
+is 22% of the B=256 step counts but 5% of the B=16 ones, enough to move the
+early B_crit from 82 to 118. It also changed O3's steps-to-target (Muon's
+advantage there is 1.13×, not 1.22×); O3's PR carries the correction.
+
+**Per-example gradients really are one line.** `vmap(grad)` over the batch
+axis, in chunks of 16, gave 2,048 per-example gradients of a 4M-parameter
+model in 8.7 s on a T4. The estimator was the hard part: its unbiasedness
+test needed a synthetic population, and its scatter needed four times the
+batches planned.
 
 ### Open threads
 
-N2_THREADS
+- **The preconditioned noise scale.** Measure B_simple on Adam's
+  preconditioned gradients ($\hat v^{-1/2} g$), or the full $B_\text{noise}$
+  with a Hessian-vector product (`jax.jvp` of `grad`, as in O1). Does either
+  track B_crit late in training?
+- **Larger batches.** B = 1,024 and 4,096, to actually reach the late-training
+  knee instead of extrapolating to it. On a T4 that needs gradient
+  accumulation or remat (N1's memory table).
+- **Seeds for the batch study.** One seed per (B, LR) here. The step counts'
+  seed spread at fixed B is unmeasured.
+- **The 25M model,** where ml-ladder's 12,000-step protocol sits.
