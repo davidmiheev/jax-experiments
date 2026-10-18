@@ -1,0 +1,81 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/o4-cmdbuf-off-4m.json",
+  "models": [
+   "transformer-4M"
+  ],
+  "contexts": [
+   1024
+  ],
+  "batches": [
+   1
+  ],
+  "modes": [
+   "cached",
+   "loop"
+  ],
+  "steps": 128,
+  "check_steps": 32,
+  "repeats": 3,
+  "recompute_max": 4096,
+  "amp": true,
+  "data_dir": null,
+  "ml_ladder": null
+ },
+ "rows": [
+  {
+   "model": "transformer-4M",
+   "context": 1024,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 9351680,
+   "cache_bytes": 5242880,
+   "step_bytes_model": 14594560,
+   "step_ms_at_bandwidth": 0.045608,
+   "mode": "cached",
+   "prefill_ms": 4.143798999848514,
+   "ms_per_step": 1.649095570311232,
+   "compile_seconds": 3.654187785999966,
+   "xla_flops": 20488588.0,
+   "xla_bytes_accessed": 24781160.0,
+   "temp_bytes": 545040,
+   "argument_bytes": 14594612,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 8.850038932095115
+  },
+  {
+   "model": "transformer-4M",
+   "context": 1024,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 9351680,
+   "cache_bytes": 5242880,
+   "step_bytes_model": 14594560,
+   "step_ms_at_bandwidth": 0.045608,
+   "mode": "loop",
+   "prefill_ms": 4.143798999848514,
+   "ms_per_step": 0.6257290866150161,
+   "loop_total_ms": 83.61139299995557,
+   "compile_seconds": 4.693500760000006,
+   "xla_flops": 562569920.0,
+   "xla_bytes_accessed": 506368160.0,
+   "temp_bytes": 27538312,
+   "argument_bytes": 9355308,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 23.32408755193347
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+[o4] transformer-25M-rope  C=1024  B=1   cached       1.714 ms/step  (bandwidth floor 0.213)  compile   5.6s  temp      0.3 MiB  agree {'cached==loop': 1.0}
+[o4] transformer-25M-rope  C=1024  B=1   loop         0.791 ms/step  (bandwidth floor 0.213)  compile   7.4s  temp     68.7 MiB  agree {'cached==loop': 1.0}
+[o4] transformer-25M-rope  C=4096  B=1   cached       1.699 ms/step  (bandwidth floor 0.370)  compile   5.2s  temp      0.3 MiB  agree {'cached==loop': 1.0}
+[o4] transformer-25M-rope  C=4096  B=1   loop         1.258 ms/step  (bandwidth floor 0.370)  compile   7.5s  temp    890.4 MiB  agree {'cached==loop': 1.0}

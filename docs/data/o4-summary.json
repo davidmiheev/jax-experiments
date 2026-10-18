@@ -636,5 +636,49 @@
     "fusion": 103
    }
   }
+ },
+ "command_buffers": {
+  "all": {
+   "transformer-25M-rope/C1024": {
+    "cached": 1.5656190078132681,
+    "loop": 0.8873802519658744
+   },
+   "transformer-25M-rope/C4096": {
+    "cached": 1.6199915624994787,
+    "loop": 1.3006314094506999
+   },
+   "transformer-4M/C1024": {
+    "cached": 1.444028132812747,
+    "loop": 0.5313035118107775
+   }
+  },
+  "default": {
+   "transformer-25M-rope/C1024": {
+    "cached": 1.7138668203138252,
+    "loop": 0.7908593937018156
+   },
+   "transformer-25M-rope/C4096": {
+    "cached": 1.6991500234375678,
+    "loop": 1.2583355984262865
+   },
+   "transformer-4M/C1024": {
+    "cached": 1.3860524999991242,
+    "loop": 0.668500472440471
+   }
+  },
+  "off": {
+   "transformer-25M-rope/C1024": {
+    "cached": 2.0501037343727546,
+    "loop": 0.749656496063692
+   },
+   "transformer-25M-rope/C4096": {
+    "cached": 2.0821930703114333,
+    "loop": 1.202680653545761
+   },
+   "transformer-4M/C1024": {
+    "cached": 1.649095570311232,
+    "loop": 0.6257290866150161
+   }
+  }
  }
 }
