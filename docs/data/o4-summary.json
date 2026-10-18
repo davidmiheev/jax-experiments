@@ -1,0 +1,640 @@
+{
+ "by_model_batch": {
+  "transformer-25M-rope/B32": {
+   "1024": {
+    "floor_ms": 1.8379136,
+    "step_bytes_model": 588132352,
+    "cache_bytes": 536870912,
+    "weight_bytes": 51261440,
+    "prefill_ms": 249.53679300006115,
+    "cached": {
+     "ms_per_token_step": 3.2948836171868834,
+     "achieved_GBps": 178.4986725880587,
+     "compile_seconds": 4.398961864999933,
+     "temp_MiB": 4.4174957275390625,
+     "xla_bytes_accessed_MB": 593.597824,
+     "xla_bytes_vs_model": 1.0092929286773873
+    },
+    "token_agreement": {
+     "cached==loop": 1.0
+    },
+    "loop": {
+     "ms_per_token_step": 3.206842590550763,
+     "achieved_GBps": 183.3991957487974,
+     "compile_seconds": 6.453860218000045,
+     "temp_MiB": 2300.246292114258,
+     "xla_bytes_accessed_MB": 34739.040256
+    },
+    "cached_over_loop": 1.0274541154266632
+   }
+  },
+  "transformer-25M-rope/B1": {
+   "256": {
+    "floor_ms": 0.1732992,
+    "step_bytes_model": 55455744,
+    "cache_bytes": 4194304,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 4.280358000016804,
+     "achieved_GBps": 12.95586584107738,
+     "compile_seconds": 2.4199516299999573,
+     "temp_MiB": 9.326675415039062,
+     "xla_bytes_accessed_MB": 191.94448
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.5516990156250188,
+     "achieved_GBps": 35.7387247408046,
+     "compile_seconds": 5.467574595999963,
+     "temp_MiB": 0.2558746337890625,
+     "xla_bytes_accessed_MB": 56.445088,
+     "xla_bytes_vs_model": 1.0178402439249574
+    },
+    "loop": {
+     "ms_per_token_step": 0.7909177795274596,
+     "achieved_GBps": 70.11568766747475,
+     "compile_seconds": 7.835203476000004,
+     "temp_MiB": 8.672561645507812,
+     "xla_bytes_accessed_MB": 168.296864,
+     "us_above_floor_per_kernel": 3.9338763027226724
+    },
+    "recompute_over_cached": 2.758497593228601,
+    "cached_over_loop": 1.9618967429864762
+   },
+   "512": {
+    "floor_ms": 0.1864064,
+    "step_bytes_model": 59650048,
+    "cache_bytes": 8388608,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 6.792775999997502,
+     "achieved_GBps": 8.781394822973986,
+     "compile_seconds": 2.5204831100000433,
+     "temp_MiB": 16.638931274414062,
+     "xla_bytes_accessed_MB": 481.323776
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6401451875003303,
+     "achieved_GBps": 36.368760799103335,
+     "compile_seconds": 5.254504924000003,
+     "temp_MiB": 0.2558746337890625,
+     "xla_bytes_accessed_MB": 61.228928,
+     "xla_bytes_vs_model": 1.0264690482730208
+    },
+    "loop": {
+     "ms_per_token_step": 0.7388618188977804,
+     "achieved_GBps": 80.7323459872169,
+     "compile_seconds": 7.664326162999998,
+     "temp_MiB": 19.487258911132812,
+     "xla_bytes_accessed_MB": 414.80448,
+     "us_above_floor_per_kernel": 3.5188243241896844
+    },
+    "recompute_over_cached": 4.141569936470112,
+    "cached_over_loop": 2.219826692286072
+   },
+   "1024": {
+    "floor_ms": 0.2126208,
+    "step_bytes_model": 68038656,
+    "cache_bytes": 16777216,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 13.131816999987223,
+     "achieved_GBps": 5.1812065306778345,
+     "compile_seconds": 2.5219547979999675,
+     "temp_MiB": 57.26393127441406,
+     "xla_bytes_accessed_MB": 1460.626176
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6091035546876853,
+     "achieved_GBps": 42.28357820836818,
+     "compile_seconds": 5.067902835000041,
+     "temp_MiB": 0.2578277587890625,
+     "xla_bytes_accessed_MB": 70.813536,
+     "xla_bytes_vs_model": 1.040783874390464
+    },
+    "loop": {
+     "ms_per_token_step": 0.785222937008085,
+     "achieved_GBps": 86.6488391936766,
+     "compile_seconds": 7.567422169999986,
+     "temp_MiB": 68.73677062988281,
+     "xla_bytes_accessed_MB": 1312.470144,
+     "us_above_floor_per_kernel": 3.647147369478248
+    },
+    "recompute_over_cached": 8.160952079020177,
+    "cached_over_loop": 2.0492314715344557
+   },
+   "2048": {
+    "floor_ms": 0.2650496,
+    "step_bytes_model": 84815872,
+    "cache_bytes": 33554432,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 35.44296600000507,
+     "achieved_GBps": 2.39302410526218,
+     "compile_seconds": 2.6784260480000057,
+     "temp_MiB": 210.51393127441406,
+     "xla_bytes_accessed_MB": 5030.400512
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6381470703130674,
+     "achieved_GBps": 51.775492895024854,
+     "compile_seconds": 5.211349182999925,
+     "temp_MiB": 0.2558746337890625,
+     "xla_bytes_accessed_MB": 90.212144,
+     "xla_bytes_vs_model": 1.0636233746438402
+    },
+    "loop": {
+     "ms_per_token_step": 0.8842780551179841,
+     "achieved_GBps": 95.91538714446953,
+     "compile_seconds": 7.581367688,
+     "temp_MiB": 251.8598175048828,
+     "xla_bytes_accessed_MB": 4717.846016,
+     "us_above_floor_per_kernel": 3.9441302873756943
+    },
+    "recompute_over_cached": 21.63600975902093,
+    "cached_over_loop": 1.8525248487530304
+   },
+   "4096": {
+    "floor_ms": 0.3699072,
+    "step_bytes_model": 118370304,
+    "cache_bytes": 67108864,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 101.09980300001098,
+     "achieved_GBps": 1.1708262576929764,
+     "compile_seconds": 2.859102430000007,
+     "temp_MiB": 805.0139312744141,
+     "xla_bytes_accessed_MB": 18611.843072
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6320557812496972,
+     "achieved_GBps": 72.52834453327418,
+     "compile_seconds": 5.436737808000089,
+     "temp_MiB": 0.2558746337890625,
+     "xla_bytes_accessed_MB": 128.48512,
+     "xla_bytes_vs_model": 1.0854506211287587
+    },
+    "loop": {
+     "ms_per_token_step": 1.2115511181108323,
+     "achieved_GBps": 97.70145248561566,
+     "compile_seconds": 7.741946799000061,
+     "temp_MiB": 890.3598175048828,
+     "xla_bytes_accessed_MB": 17970.04288,
+     "us_above_floor_per_kernel": 5.3607892873301415
+    },
+    "recompute_over_cached": 61.94629139611691,
+    "cached_over_loop": 1.3470795881849018
+   }
+  },
+  "transformer-25M-rope/B8": {
+   "256": {
+    "floor_ms": 0.2650496,
+    "step_bytes_model": 84815872,
+    "cache_bytes": 33554432,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 10.176145000002634,
+     "achieved_GBps": 8.334774317777317,
+     "compile_seconds": 3.08741714599995,
+     "temp_MiB": 36.07838439941406,
+     "xla_bytes_accessed_MB": 1164.86592
+    },
+    "token_agreement": {
+     "cached==recompute": 0.96484375,
+     "cached==loop": 1.0,
+     "loop==recompute": 0.96484375
+    },
+    "cached": {
+     "ms_per_token_step": 1.529537015624971,
+     "achieved_GBps": 55.451990460880815,
+     "compile_seconds": 4.231773486999998,
+     "temp_MiB": 4.1120758056640625,
+     "xla_bytes_accessed_MB": 43.859648,
+     "xla_bytes_vs_model": 0.5171160416767276
+    },
+    "loop": {
+     "ms_per_token_step": 0.8341612125981892,
+     "achieved_GBps": 101.67803383691412,
+     "compile_seconds": 6.577911450999977,
+     "temp_MiB": 50.05879211425781,
+     "xla_bytes_accessed_MB": 578.377792
+    },
+    "recompute_over_cached": 6.653088415676326,
+    "cached_over_loop": 1.8336227967983216
+   },
+   "512": {
+    "floor_ms": 0.3699072,
+    "step_bytes_model": 118370304,
+    "cache_bytes": 67108864,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 37.05068800002209,
+     "achieved_GBps": 3.1948206737734375,
+     "compile_seconds": 3.0736002369999937,
+     "temp_MiB": 120.14088439941406,
+     "xla_bytes_accessed_MB": 3263.942912
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6445386562500275,
+     "achieved_GBps": 71.97781794312749,
+     "compile_seconds": 4.286479896999992,
+     "temp_MiB": 4.1123199462890625,
+     "xla_bytes_accessed_MB": 80.041896,
+     "xla_bytes_vs_model": 0.6761991250778574
+    },
+    "loop": {
+     "ms_per_token_step": 0.9383345826769417,
+     "achieved_GBps": 126.14935672764561,
+     "compile_seconds": 6.5482705470000155,
+     "temp_MiB": 161.1212921142578,
+     "xla_bytes_accessed_MB": 2344.882432
+    },
+    "recompute_over_cached": 22.5295330451564,
+    "cached_over_loop": 1.7526143516509656
+   },
+   "1024": {
+    "floor_ms": 0.5796224,
+    "step_bytes_model": 185479168,
+    "cache_bytes": 134217728,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 75.8182700000134,
+     "achieved_GBps": 2.446365077968242,
+     "compile_seconds": 3.094830564000006,
+     "temp_MiB": 432.26588439941406,
+     "xla_bytes_accessed_MB": 10280.669184
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.6133776250000231,
+     "achieved_GBps": 114.96327030071298,
+     "compile_seconds": 4.326603735999981,
+     "temp_MiB": 4.1128082275390625,
+     "xla_bytes_accessed_MB": 156.590464,
+     "xla_bytes_vs_model": 0.8442482554159397
+    },
+    "loop": {
+     "ms_per_token_step": 1.3288862519684734,
+     "achieved_GBps": 139.5749017082918,
+     "compile_seconds": 6.7850200840000525,
+     "temp_MiB": 575.2462921142578,
+     "xla_bytes_accessed_MB": 8699.860992
+    },
+    "recompute_over_cached": 46.99350531777228,
+    "cached_over_loop": 1.214082561701676
+   },
+   "2048": {
+    "floor_ms": 0.9990528,
+    "step_bytes_model": 319696896,
+    "cache_bytes": 268435456,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 232.43773300009707,
+     "achieved_GBps": 1.3754087680758205,
+     "compile_seconds": 3.451930589999961,
+     "temp_MiB": 1632.515884399414,
+     "xla_bytes_accessed_MB": 35588.411392
+    },
+    "token_agreement": {
+     "cached==recompute": 0.96875,
+     "cached==loop": 1.0,
+     "loop==recompute": 0.96875
+    },
+    "cached": {
+     "ms_per_token_step": 2.078390171874389,
+     "achieved_GBps": 153.81948025268156,
+     "compile_seconds": 4.3510118430000375,
+     "temp_MiB": 4.1137847900390625,
+     "xla_bytes_accessed_MB": 305.505632,
+     "xla_bytes_vs_model": 0.9556102540326197
+    },
+    "loop": {
+     "ms_per_token_step": 1.9162670629921696,
+     "achieved_GBps": 166.8331633800598,
+     "compile_seconds": 7.009880313000053,
+     "temp_MiB": 1943.4962921142578,
+     "xla_bytes_accessed_MB": 32680.122368
+    },
+    "recompute_over_cached": 111.83546580692011,
+    "cached_over_loop": 1.0846036087626905
+   },
+   "4096": {
+    "floor_ms": 1.8379136,
+    "step_bytes_model": 588132352,
+    "cache_bytes": 536870912,
+    "weight_bytes": 51261440,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 800.5366769999682,
+     "achieved_GBps": 0.7346725876496266,
+     "compile_seconds": 4.587538451,
+     "temp_MiB": 6337.015884399414,
+     "xla_bytes_accessed_MB": 131301.015552
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 3.2483892812500414,
+     "achieved_GBps": 181.05353179027716,
+     "compile_seconds": 4.251186641000004,
+     "temp_MiB": 4.1157379150390625,
+     "xla_bytes_accessed_MB": 603.336,
+     "xla_bytes_vs_model": 1.025850725518327
+    },
+    "loop": {
+     "ms_per_token_step": 3.129384220472268,
+     "achieved_GBps": 187.9386839597608,
+     "compile_seconds": 6.962202449000074,
+     "temp_MiB": 6983.996292114258,
+     "xla_bytes_accessed_MB": 125737.803776
+    },
+    "recompute_over_cached": 246.44111517690595,
+    "cached_over_loop": 1.0380282676698018
+   }
+  },
+  "transformer-4M/B1": {
+   "256": {
+    "floor_ms": 0.0308624,
+    "step_bytes_model": 9875968,
+    "cache_bytes": 1310720,
+    "weight_bytes": 8565248,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 1.947878999999375,
+     "achieved_GBps": 5.070113698029071,
+     "compile_seconds": 2.1348455109999804,
+     "temp_MiB": 6.6338043212890625,
+     "xla_bytes_accessed_MB": 96.39736
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.3734741484379143,
+     "achieved_GBps": 7.1905015549307425,
+     "compile_seconds": 3.5898454860000584,
+     "temp_MiB": 0.5056304931640625,
+     "xla_bytes_accessed_MB": 16.50734,
+     "xla_bytes_vs_model": 1.6714655211519518
+    },
+    "loop": {
+     "ms_per_token_step": 0.6754891732276433,
+     "achieved_GBps": 14.620468234613359,
+     "compile_seconds": 4.737351513000021,
+     "temp_MiB": 5.761604309082031,
+     "xla_bytes_accessed_MB": 83.860792,
+     "us_above_floor_per_kernel": 6.139302602168033
+    },
+    "recompute_over_cached": 1.4182130782838145,
+    "cached_over_loop": 2.033302979343307
+   },
+   "512": {
+    "floor_ms": 0.0357776,
+    "step_bytes_model": 11448832,
+    "cache_bytes": 2621440,
+    "weight_bytes": 8827392,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 2.5752560000000813,
+     "achieved_GBps": 4.445706368609428,
+     "compile_seconds": 1.7849620779999213,
+     "temp_MiB": 10.008804321289062,
+     "xla_bytes_accessed_MB": 202.207264
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.3647801015626015,
+     "achieved_GBps": 8.388774123312384,
+     "compile_seconds": 3.299088433999941,
+     "temp_MiB": 0.5068511962890625,
+     "xla_bytes_accessed_MB": 19.25156,
+     "xla_bytes_vs_model": 1.6815304827601627
+    },
+    "loop": {
+     "ms_per_token_step": 0.4148039685034073,
+     "achieved_GBps": 27.60058453950389,
+     "compile_seconds": 4.805784442999993,
+     "temp_MiB": 10.762825012207031,
+     "xla_bytes_accessed_MB": 172.22672,
+     "us_above_floor_per_kernel": 3.609774938127688
+    },
+    "recompute_over_cached": 1.8869384137792955,
+    "cached_over_loop": 3.2901809172334158
+   },
+   "1024": {
+    "floor_ms": 0.045608,
+    "step_bytes_model": 14594560,
+    "cache_bytes": 5242880,
+    "weight_bytes": 9351680,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 4.575347000013608,
+     "achieved_GBps": 3.1898258208517505,
+     "compile_seconds": 1.745245187999899,
+     "temp_MiB": 28.008804321289062,
+     "xla_bytes_accessed_MB": 571.107328
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.3389997968742406,
+     "achieved_GBps": 10.899598367430317,
+     "compile_seconds": 3.3962184910000133,
+     "temp_MiB": 0.5197906494140625,
+     "xla_bytes_accessed_MB": 24.78116,
+     "xla_bytes_vs_model": 1.6979723951938257
+    },
+    "loop": {
+     "ms_per_token_step": 0.5553116929137305,
+     "achieved_GBps": 26.281744444137455,
+     "compile_seconds": 4.925024851999979,
+     "temp_MiB": 26.26258087158203,
+     "xla_bytes_accessed_MB": 506.36816,
+     "us_above_floor_per_kernel": 4.8543208848926716
+    },
+    "recompute_over_cached": 3.4169885691501163,
+    "cached_over_loop": 2.411258062743978
+   }
+  },
+  "transformer-4M/B8": {
+   "256": {
+    "floor_ms": 0.0595344,
+    "step_bytes_model": 19051008,
+    "cache_bytes": 10485760,
+    "weight_bytes": 8565248,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 4.541561999985788,
+     "achieved_GBps": 4.194814030956666,
+     "compile_seconds": 2.1183053859999745,
+     "temp_MiB": 18.010025024414062,
+     "xla_bytes_accessed_MB": 354.19552
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.2881978671872574,
+     "achieved_GBps": 14.788883358111221,
+     "compile_seconds": 2.9323892569999543,
+     "temp_MiB": 4.0605621337890625,
+     "xla_bytes_accessed_MB": 13.171907,
+     "xla_bytes_vs_model": 0.6914021032377919
+    },
+    "loop": {
+     "ms_per_token_step": 0.6380011496053981,
+     "achieved_GBps": 29.86046030133801,
+     "compile_seconds": 3.871040940999933,
+     "temp_MiB": 20.51721954345703,
+     "xla_bytes_accessed_MB": 175.332032
+    },
+    "recompute_over_cached": 3.5255158509943483,
+    "cached_over_loop": 2.019115275864321
+   },
+   "512": {
+    "floor_ms": 0.0931216,
+    "step_bytes_model": 29798912,
+    "cache_bytes": 20971520,
+    "weight_bytes": 8827392,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 8.592684999939593,
+     "achieved_GBps": 3.4679395323125997,
+     "compile_seconds": 2.1470884399999477,
+     "temp_MiB": 58.01002502441406,
+     "xla_bytes_accessed_MB": 1000.855616
+    },
+    "token_agreement": {
+     "cached==recompute": 1.0,
+     "cached==loop": 1.0,
+     "loop==recompute": 1.0
+    },
+    "cached": {
+     "ms_per_token_step": 1.3173509062491817,
+     "achieved_GBps": 22.620329829084604,
+     "compile_seconds": 2.89393811299999,
+     "temp_MiB": 4.0605621337890625,
+     "xla_bytes_accessed_MB": 24.476876,
+     "xla_bytes_vs_model": 0.8214016672823491
+    },
+    "loop": {
+     "ms_per_token_step": 0.4768145354328083,
+     "achieved_GBps": 62.4958129117253,
+     "compile_seconds": 4.224165295000034,
+     "temp_MiB": 62.01770782470703,
+     "xla_bytes_accessed_MB": 710.70784
+    },
+    "recompute_over_cached": 6.52270018502895,
+    "cached_over_loop": 2.76281616510162
+   },
+   "1024": {
+    "floor_ms": 0.160296,
+    "step_bytes_model": 51294720,
+    "cache_bytes": 41943040,
+    "weight_bytes": 9351680,
+    "prefill_ms": null,
+    "recompute": {
+     "ms_per_token_step": 25.9726970000429,
+     "achieved_GBps": 1.9749477691868225,
+     "compile_seconds": 2.2049805599999672,
+     "temp_MiB": 212.01002502441406,
+     "xla_bytes_accessed_MB": 3174.258688
+    },
+    "token_agreement": {
+     "cached==recompute": 0.97265625,
+     "cached==loop": 1.0,
+     "loop==recompute": 0.97265625
+    },
+    "cached": {
+     "ms_per_token_step": 1.2666295546868156,
+     "achieved_GBps": 40.49701809830502,
+     "compile_seconds": 2.909037739999917,
+     "temp_MiB": 4.0615386962890625,
+     "xla_bytes_accessed_MB": 47.103132,
+     "xla_bytes_vs_model": 0.9182842210660278
+    },
+    "loop": {
+     "ms_per_token_step": 0.5204360551180268,
+     "achieved_GBps": 98.56104221750579,
+     "compile_seconds": 4.138892553000005,
+     "temp_MiB": 239.51770782470703,
+     "xla_bytes_accessed_MB": 2665.827072
+    },
+    "recompute_over_cached": 20.50536157469092,
+    "cached_over_loop": 2.433785173472587
+   }
+  }
+ },
+ "kernels": {
+  "transformer-25M-rope": {
+   "launches": 157,
+   "by_kind": {
+    "copy": 2,
+    "fusion": 155
+   }
+  },
+  "transformer-4M": {
+   "launches": 105,
+   "by_kind": {
+    "copy": 2,
+    "fusion": 103
+   }
+  }
+ }
+}
