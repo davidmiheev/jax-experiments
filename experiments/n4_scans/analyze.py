@@ -224,7 +224,7 @@ def plot(summary: dict) -> None:
         ts = sorted((int(t) for t, v in by_t.items() if "tokens_per_second" in v))
         if ts:
             axes[2].plot(ts, [by_t[str(t)]["tokens_per_second"] / 1e3 for t in ts], "o" + styles[scan],
-                         color=colors.get(model, "0.5"), label=f"{model} {scan}")
+                         color=colors.get(model, "0.5"), label=model if scan == "-" else f"{model} {scan}")
     axes[2].set_xscale("log", base=2)
     axes[2].set_yscale("log")
     axes[2].set_xlabel("sequence length T (16,384 tokens per step)")

@@ -83,6 +83,24 @@ reproduce. This file is the practical brief for picking it up.
     about 45.
   - **Smooth loss curves with a centred window when timing crossings.** A
     trailing mean biased N2's and O3's steps-to-target.
+- **N4 is done** (`docs/m4-scans-and-decode.md`; Colab and Kaggle T4s).
+  - `jaxexp.ssm`: LRU, Mamba-1 (S6) and Mamba-2 (chunked SSD), ~4.08M each,
+    as pure functions; `linear_scan` runs any diagonal recurrence as
+    `lax.associative_scan` or `lax.scan`. `run.py --model lru|mamba|mamba2`.
+  - **Speed:** the associative LRU trains at 277k tokens/s at T = 256, 1024
+    and 4096 (1.19 GiB); sequential, it falls to 23k at 4096, like the GRU.
+    Mamba-2 is flat at 67–80k. Mamba-1 without a fused kernel runs at 13.7k
+    and needs remat (12.4 GiB → 2 GiB); sequential selective scans OOM.
+  - **enwik8 (3,000 steps, tuned):** LRU ≈ GRU (1.686 / 1.698 at T=256 /
+    1024); Mamba-2 1.578 / 1.567, the best 4M model, 0.12 under the GRU at
+    T=1024. Seed 0 (the LR-picking seed) beat seeds 1–2 by ~0.02.
+  - **Copying:** the LRU copies n=128 perfectly (GRU 0.20, LSTM chance), 0.15
+    at 512; Mamba-2 barely learns n=32 in 1,500 steps at any LR tried.
+  - **Run-to-run noise:** the same Mamba-2 run gave 1.567 on Colab and 1.580
+    on Kaggle.
+  - **Colab files are lost if the session's worker restarts:** the Colab MCP
+    keeps its runtime handle in memory only. Copy results out as each job
+    finishes (`tar | xz | base64` printed and checked with md5).
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
@@ -149,6 +167,9 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
     the same as the reference (a T4) when comparing against ml-ladder.
     2026-10-17: R3's fused rerun sat queued on Kaggle for 20+ minutes (no
     other kernels of this account running) and ran on Colab instead.
+    2026-10-18: four N4/O4 kernels sat queued 20 minutes to 2 hours (quota
+    free, no kernel of this account running), while others started at once.
+    Treat a Kaggle start as likely, not guaranteed.
 - **Weekly quota** (`kaggle quota`): **30 h GPU and 20 h TPU**, resetting each
   week (the 2026-10-17 00:00 UTC refresh was the next one at handover). Other
   sessions of this account share it, and use GPU heavily.
