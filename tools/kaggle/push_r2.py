@@ -51,6 +51,8 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
+  seeds 0-2, each at the model's default LR (2e-3) as in R3.
 - ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
 - ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
   protocol otherwise), one vmapped group of 4 per context.
@@ -130,7 +132,15 @@ def _n4(model: str, context: str, lrs: list[str], seeds: list[str], tag: str, gr
 
 N4_LRS = ["1e-3", "2e-3", "4e-3", "8e-3"]
 
+def _n4copy(model: str, seed: str) -> list[str]:
+    return ["--studies", "copy", "--copy-models", model, "--seeds", seed, "--out", f"n4-copy-{model}-s{seed}.json"]
+
+
 PRESETS = {
+    "n4-copy": [
+        [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
+        [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
+    ],
     "n4-mamba2": [
         [_n4("mamba2", "1024", N4_LRS, ["0"], "mamba2-1024-s0", "2")],
         [_n4("mamba2", "256", N4_LRS, ["0"], "mamba2-256-s0", "2")],
