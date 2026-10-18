@@ -42,6 +42,8 @@ Presets (each is two job lists, one per GPU):
   best LRs; Muon seeds 1-2 at 2e-2; Lion seeds 1-2 at 3.2e-3 (wd 1.0).
 - ``o3-stage4``: Lion's weight decay was best at the largest value tried (1.0; 0.3 and 0.1
   are worse): wd 3.0 at three LRs, and wd 1.0 at 2.4e-3 / 4.8e-3 around its optimum.
+- ``n2``: the gradient noise scale along a B=64 run, and steps to fixed losses at B = 16, 64,
+  256 (3 LRs each, warmup-constant): does B_simple predict the critical batch size?
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -107,7 +109,16 @@ def _o3(opt: str, lrs: list[str], seeds: list[str], tag: str, *extra: str) -> li
 ADAMW_LRS = ["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2"]
 LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
 
+N2 = "@experiments/n2_noise_scale/run.py"
+
 PRESETS = {
+    "n2": [
+        [[N2, "--studies", "batch", "--batches", "256", "--out", "n2-batch-256.json"]],
+        [
+            [N2, "--studies", "batch", "--batches", "16", "64", "--out", "n2-batch-16-64.json"],
+            [N2, "--studies", "noise", "--out", "n2-noise.json"],
+        ],
+    ],
     "o3-stage4": [
         [_o3("lion", ["1.6e-3", "3.2e-3", "6.4e-3"], ["0"], "lion-s0-wd3", "--weight-decay", "3.0")],
         [_o3("lion", ["2.4e-3", "4.8e-3"], ["0"], "lion-s0-fine", "--weight-decay", "1.0")],
