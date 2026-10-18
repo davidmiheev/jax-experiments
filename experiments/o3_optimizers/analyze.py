@@ -42,10 +42,12 @@ def rows() -> list[dict]:
 
 
 def smoothed(history) -> tuple[np.ndarray, np.ndarray]:
+    """Mean of WINDOW consecutive logs, placed at the window's centre step (a trailing mean
+    reports every crossing ~87 steps late; found and fixed in N2)."""
     steps = np.array([s for s, _ in history], float)
     loss = np.array([l for _, l in history], float)
-    kernel = np.ones(WINDOW) / WINDOW
-    return steps[WINDOW - 1 :], np.convolve(loss, kernel, mode="valid")
+    centres = (steps[: len(steps) - WINDOW + 1] + steps[WINDOW - 1 :]) / 2
+    return centres, np.convolve(loss, np.ones(WINDOW) / WINDOW, mode="valid")
 
 
 def summarise() -> dict:
