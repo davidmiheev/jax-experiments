@@ -123,7 +123,9 @@ $n$; the question is where the state runs out.
   $[T/8, T/4)$ minus those in the last quarter. It is what the second half of
   the window buys.
 - **Copying.** R3's task: n = 32, 128, 512, 1,500 steps, second-half accuracy
-  on 512 held-out sequences, seeds 0–2, each model at 2e-3 as in R3.
+  on 512 held-out sequences, seeds 0–2, each model at 2e-3 as in R3. For
+  Mamba-2, which failed it, an LR check at n=32 (seed 0, 2.5e-4 to 8e-3)
+  and one run of 6,000 steps.
 
 ### What I built
 
@@ -259,9 +261,14 @@ negative means gaining on the GRU as the context grows.*
   n=512 it gets 15%, five times chance. Its state is 256 complex numbers per
   layer; 128 symbols are $5 \times 128 = 640$ bits, 512 symbols 2,560.
 - **Mamba-2 fails even at n=32 on two seeds of three.** This is optimisation,
-  not capacity. A sweep on seed 0 at n=32 (bits are second-half accuracy):
-  5e-4: 0.137; 1e-3: 0.130; 2e-3: 0.065; 4e-3: 0.029; 8e-3: 0.030;
-  COPYLR. Its loss falls slowly through all 1,500 steps, and COPYLONG
+  not capacity. A sweep on seed 0 at n=32 (second-half accuracy):
+  2.5e-4: 0.153; 5e-4: 0.137; 1e-3: 0.130; 2e-3: 0.065; 4e-3: 0.029; 8e-3:
+  0.030. Lower LRs plateau around 0.14, higher ones stay at chance. Its loss
+  falls slowly through all 1,500 steps (3.63 → 3.21 nats at 5e-4), so the same
+  run was given 6,000 steps, four times the protocol's budget. **It then
+  copies: 0.979** (loss 1.95 nats at the end; the floor is 1.71). Mamba-2 can
+  copy 32 symbols; it needs most of 6,000 steps to get there, where the LRU
+  is done by step 375.
 - **The transformer remains the only model that copies 512.**
 
 ### What surprised me
@@ -271,8 +278,8 @@ negative means gaining on the GRU as the context grows.*
   $\ln 32 = 3.47$ on the unpredictable first half and about 0 on the copy. The
   GRU is still at 1.88 after 1,500 steps, and Mamba-2 at 3.39. The LRU is
   causal (`tests/test_n4_ssm.py` changes one input and checks every earlier
-  output is unchanged) and both scan modes agree, so this is not a leak. A fixed, input-independent linear recurrence can hold a delay line:
-  a channel with $|\lambda| \approx 1$ and a phase that rotates by a fixed angle
+  output is unchanged) and both scan modes agree, so this is not a leak.
+  A fixed, input-independent linear recurrence can hold a delay line: a channel with $|\lambda| \approx 1$ and a phase that rotates by a fixed angle
   per step keeps each past symbol at a recoverable angle. Copying is the task
   such a memory is built for, and the GRU's gates have to learn it.
 - **The best language model here is the slowest to learn to copy.** Mamba-2
@@ -281,14 +288,16 @@ negative means gaining on the GRU as the context grows.*
   input, which text rewards, while holding 32 random symbols needs decays
   held near 1 for exactly the copy's duration, a setting the LRU starts with
   and Mamba-2 must find.
-- **Mamba-1 without its kernel is a memory problem, not a speed one.** Its
+- **Mamba-1 without its kernel is a memory problem first.** Its
   associative scan materialises the [B, T, 512, 16] state at every level of
   the scan tree. Remat brings 12.4 GiB to 2 GiB, but the step is then 20×
   slower than the LRU's. Mamba-2 exists for this reason: the scalar decay per
   head turns the scan into matmuls.
-- **Run-to-run noise on the GPU is 0.014 bits/byte for Mamba-2.** The same
-  T=256 run at 1.6e-2 gave 1.567 on Colab and 1.580 on Kaggle. Gaps between
-  seeds of 0.02 are at the edge of what one run can show.
+- **Run-to-run noise on the GPU is up to 0.014 bits/byte for Mamba-2.** The
+  same T=256 run at 1.6e-2 gave 1.567 on Colab and 1.580 on Kaggle; the
+  seed-0 repeats moved by 0.008 and 0.002. So the 0.02 gap between seed 0
+  and seeds 1–2 is real, but a single-run difference under ~0.015 is not
+  evidence.
 
 ### Open threads
 
@@ -300,8 +309,9 @@ negative means gaining on the GRU as the context grows.*
   initialised in [0.9, 0.999], so its longest memory starts at about 1,000
   steps; whether training moves it, and whether r_max = 0.9999 helps T=1024,
   was not tried.
-- **Copying with more steps or a curriculum for Mamba-2,** and the copy task
-  for the transformer at the LRU's speed.
+- **Copying at n=128 and 512 with a longer budget for Mamba-2.** At n=32 it
+  needed 6,000 steps; whether it reaches n=128, where the LRU is perfect,
+  was not run.
 - **A fused kernel for Mamba-1's selective scan** (Pallas, on a TPU; Kaggle's
   GPUs cannot run Pallas, see CLAUDE.md). The question it answers: is the 20×
   gap to the LRU the missing kernel, or the [channels × state] state?

@@ -95,7 +95,8 @@ reproduce. This file is the practical brief for picking it up.
     1024); Mamba-2 1.578 / 1.567, the best 4M model, 0.12 under the GRU at
     T=1024. Seed 0 (the LR-picking seed) beat seeds 1–2 by ~0.02.
   - **Copying:** the LRU copies n=128 perfectly (GRU 0.20, LSTM chance), 0.15
-    at 512; Mamba-2 barely learns n=32 in 1,500 steps at any LR tried.
+    at 512; Mamba-2 barely learns n=32 in 1,500 steps at any LR tried, but
+    copies it (0.979) given 6,000.
   - **Run-to-run noise:** the same Mamba-2 run gave 1.567 on Colab and 1.580
     on Kaggle.
   - **Colab files are lost if the session's worker restarts:** the Colab MCP

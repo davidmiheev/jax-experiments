@@ -272,6 +272,7 @@ def study_copy(args, report) -> None:
                         "n": n,
                         "parameters": count,
                         "peak_lr": peak_lr,
+                        "steps": args.copy_steps,
                         "second_half_accuracy": float(correct[:, n - 1 :].mean()),
                         "first_half_accuracy": float(correct[:, : n - 1].mean()),
                         "chance": 1 / text.COPY_VOCAB,

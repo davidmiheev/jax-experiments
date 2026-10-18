@@ -150,14 +150,17 @@ def summarise() -> dict:
 def copy_summary() -> dict:
     """Second-half accuracy by (source, model, n, LR). Runs without a recorded LR used their
     model's default, 2e-3 (R3's and n4-copy's protocol)."""
-    ours = [r for p in sorted(RUNS.glob("n4-copy*.json")) for r in _load(p, "copy")]
+    # Copy rows before 2026-10-18 do not record their step count; the one longer run is named "long<steps>".
+    ours = [dict(r, steps=r.get("steps") or (int(p.name.split("long")[1].split("-")[0]) if "-long" in p.name else 1500))
+            for p in sorted(RUNS.glob("n4-copy*.json")) for r in _load(p, "copy")]
     r3 = [r for p in (R2 / "r3-lstm.json", R2 / "r3-transformer-fused-colab.json") for r in _load(p, "copy")]
     ladder = _load(LADDER / "c-gpu.json", "copy")
     out = {}
     for source, rows in (("jax", ours + r3), ("ml-ladder", ladder)):
         groups: dict = {}
         for r in rows:
-            key = f"{source}/{r['model']}/{r['n']}" + (f"/lr{r['peak_lr']:g}" if r.get("peak_lr") not in (None, 2e-3) else "")
+            key = (f"{source}/{r['model']}/{r['n']}" + (f"/lr{r['peak_lr']:g}" if r.get("peak_lr") not in (None, 2e-3) else "")
+                   + (f"/{r['steps']}steps" if r.get("steps", 1500) != 1500 else ""))
             groups.setdefault(key, []).append(r)
         for key in sorted(groups):
             runs = sorted(groups[key], key=lambda r: r["seed"])
