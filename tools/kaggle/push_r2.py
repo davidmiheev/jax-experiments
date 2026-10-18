@@ -57,6 +57,8 @@ Presets (each is two job lists, one per GPU):
   was the edge of T=256's first grid; seed 0 at 1.6e-2 and 3.2e-2 confirmed it as the best.
   On 2026-10-18 the kernel sat queued for 20+ minutes twice, so the extension and these seeds
   ran on Colab with the same commands.
+- ``n4-mamba2-s0``: seed 0 at each context's best LR, repeated alone: it beat seeds 1-2 by
+  ~0.02 bits/byte at both contexts, and it is the seed the LRs were chosen on.
 - ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
 - ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
   protocol otherwise), one vmapped group of 4 per context.
@@ -144,6 +146,10 @@ PRESETS = {
     "n4-copy": [
         [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
         [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
+    ],
+    "n4-mamba2-s0": [
+        [_n4("mamba2", "1024", ["4e-3"], ["0"], "mamba2-1024-s0-repeat", "1")],
+        [_n4("mamba2", "256", ["8e-3"], ["0"], "mamba2-256-s0-repeat", "1")],
     ],
     "n4-mamba2-b": [
         [_n4("mamba2", "1024", ["4e-3"], ["1", "2"], "mamba2-1024-s12", "2")],
