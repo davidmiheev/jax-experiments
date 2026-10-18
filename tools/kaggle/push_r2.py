@@ -51,6 +51,8 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
+  protocol otherwise), one vmapped group of 4 per context.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -120,7 +122,18 @@ N2 = "@experiments/n2_noise_scale/run.py"
 
 N4 = "@experiments/n4_scans/run.py"
 
+def _n4(model: str, context: str, lrs: list[str], seeds: list[str], tag: str, group: str = "4", *extra) -> list[str]:
+    return [N1, "--studies", "sweep", "--model", model, "--context", context, "--seeds", *seeds, "--lrs", *lrs,
+            "--group", group, *extra, "--out", f"n4-{tag}.json"]
+
+
+N4_LRS = ["1e-3", "2e-3", "4e-3", "8e-3"]
+
 PRESETS = {
+    "n4-lru": [
+        [_n4("lru", "1024", N4_LRS, ["0"], "lru-1024-s0")],
+        [_n4("lru", "256", N4_LRS, ["0"], "lru-256-s0")],
+    ],
     "n4-calibrate": [
         [[N4, "--out", "n4-throughput.json"]],
         [
