@@ -51,6 +51,9 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n8``: E3's DDPM in JAX, seeds 0-2: E3's own arm (T=400, eps, linear / cosine, DDPM at
+  10-400 steps) and T=1000 with eps / x0 / v x linear / cosine, DDPM and DDIM at 10-1000 steps;
+  fd by ml-ladder's own scorer.
 - ``n3``: hypergradients of the LR on the 4M at T=256 (fp32): the tuned reference run with
   checkpoints and the K-step meta-loss landscape from steps 0 / 500 / 1500 (lane 0); online
   hypergradient descent of the LR from 1e-3 and from 3.2e-2 (lane 1).
@@ -152,8 +155,13 @@ def _n4copy(model: str, seed: str) -> list[str]:
 
 O4 = "@experiments/o4_decode/run.py"
 N3 = "@experiments/n3_hypergrad/run.py"
+N8 = "@experiments/n8_diffusion/run.py"
 
 PRESETS = {
+    "n8": [
+        [[N8, "--seed", "0", "--out", "n8-s0.json"], [N8, "--seed", "2", "--out", "n8-s2.json"]],
+        [[N8, "--seed", "1", "--out", "n8-s1.json"]],
+    ],
     "n3": [
         [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
         [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--out", "n3-online-lo-s0.json"],
