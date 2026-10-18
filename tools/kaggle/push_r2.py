@@ -51,6 +51,9 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``o4``: KV-cached decoding three ways (recompute, jitted step from Python, fori_loop) for the
+  25M RoPE transformer at C = 256..4096 and the 4M (learned positions, so C <= 1024), batch 1
+  and 8, plus batch 32 at C=1024: ms/token, compile time, memory, bandwidth arithmetic.
 - ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
   seeds 0-2, each at the model's default LR (2e-3) as in R3.
 - ``n4-mamba2-b``: Mamba-2's seeds 1-2 at T=1024's best LR (4e-3) and at T=256's 8e-3. 8e-3
@@ -144,7 +147,15 @@ def _n4copy(model: str, seed: str) -> list[str]:
     return ["--studies", "copy", "--copy-models", model, "--seeds", seed, "--out", f"n4-copy-{model}-s{seed}.json"]
 
 
+O4 = "@experiments/o4_decode/run.py"
+
 PRESETS = {
+    "o4": [
+        [[O4, "--models", "transformer-25M-rope", "--out", "o4-25m.json"]],
+        [[O4, "--models", "transformer-4M", "--contexts", "256", "512", "1024", "--out", "o4-4m.json"],
+         [O4, "--models", "transformer-25M-rope", "--contexts", "1024", "--batches", "32", "--modes", "cached", "loop",
+          "--out", "o4-25m-b32.json"]],
+    ],
     "n4-copy": [
         [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
         [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
