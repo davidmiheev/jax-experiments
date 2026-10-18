@@ -1,0 +1,82 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/o4-25m-b32.json",
+  "models": [
+   "transformer-25M-rope"
+  ],
+  "contexts": [
+   1024
+  ],
+  "batches": [
+   32
+  ],
+  "modes": [
+   "cached",
+   "loop"
+  ],
+  "steps": 128,
+  "check_steps": 32,
+  "repeats": 3,
+  "recompute_max": 4096,
+  "amp": true,
+  "data_dir": null,
+  "ml_ladder": null
+ },
+ "rows": [
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 32,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 536870912,
+   "step_bytes_model": 588132352,
+   "step_ms_at_bandwidth": 1.8379136,
+   "mode": "cached",
+   "prefill_ms": 249.53679300006115,
+   "ms_per_step": 3.2948836171868834,
+   "compile_seconds": 4.398961864999933,
+   "xla_flops": 868482432.0,
+   "xla_bytes_accessed": 593597824.0,
+   "temp_bytes": 4632080,
+   "argument_bytes": 588132552,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 178.4986725880587
+  },
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 32,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 536870912,
+   "step_bytes_model": 588132352,
+   "step_ms_at_bandwidth": 1.8379136,
+   "mode": "loop",
+   "prefill_ms": 249.53679300006115,
+   "ms_per_step": 3.206842590550763,
+   "loop_total_ms": 656.805802000008,
+   "compile_seconds": 6.453860218000045,
+   "xla_flops": 56361500672.0,
+   "xla_bytes_accessed": 34739040256.0,
+   "temp_bytes": 2411983056,
+   "argument_bytes": 51376196,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 183.3991957487974
+  }
+ ],
+ "provider": "Google Colab T4 (JAX 0.11.1, flax 0.12.10 pinned); Kaggle kernel queued 2+ h"
+}

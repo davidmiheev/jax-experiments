@@ -102,6 +102,14 @@ reproduce. This file is the practical brief for picking it up.
   - **Colab files are lost if the session's worker restarts:** the Colab MCP
     keeps its runtime handle in memory only. Copy results out as each job
     finishes (`tar | xz | base64` printed and checked with md5).
+- **O4 is done** (same writeup). `jaxexp.decode`: KV-cached decoding of
+  `CharTransformer` three ways (recompute, jitted step from Python,
+  `fori_loop`), all emitting the same greedy tokens.
+  - **At batch 1 decode is launch-bound, not bandwidth-bound.** 25M model:
+    cached step from Python ≈ 1.6 ms/token at any C, loop 0.74–0.88 ms, the
+    bandwidth floor 0.17–0.27 ms. The step is 157 kernels at ~3.6 µs each.
+  - XLA command buffers (CUDA graphs) cut the Python-driven step 2.05 → 1.57
+    ms but do not move the loop. Steps of ≥ ~300 MB reach 56–59% of 320 GB/s.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB

@@ -1,0 +1,131 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/o4-cmdbuf-all-25m.json",
+  "models": [
+   "transformer-25M-rope"
+  ],
+  "contexts": [
+   1024,
+   4096
+  ],
+  "batches": [
+   1
+  ],
+  "modes": [
+   "cached",
+   "loop"
+  ],
+  "steps": 128,
+  "check_steps": 32,
+  "repeats": 3,
+  "recompute_max": 4096,
+  "amp": true,
+  "data_dir": null,
+  "ml_ladder": null
+ },
+ "rows": [
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 16777216,
+   "step_bytes_model": 68038656,
+   "step_ms_at_bandwidth": 0.2126208,
+   "mode": "cached",
+   "prefill_ms": 11.994358000265493,
+   "ms_per_step": 1.5656190078132681,
+   "compile_seconds": 5.583228464000058,
+   "xla_flops": 102867640.0,
+   "xla_bytes_accessed": 70813536.0,
+   "temp_bytes": 270352,
+   "argument_bytes": 68038732,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 43.45799052033162
+  },
+  {
+   "model": "transformer-25M-rope",
+   "context": 1024,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 896,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 16777216,
+   "step_bytes_model": 68038656,
+   "step_ms_at_bandwidth": 0.2126208,
+   "mode": "loop",
+   "prefill_ms": 11.994358000265493,
+   "ms_per_step": 0.8873802519658744,
+   "loop_total_ms": 124.69164999993154,
+   "compile_seconds": 7.251493474000199,
+   "xla_flops": 1874084096.0,
+   "xla_bytes_accessed": 1312470144.0,
+   "temp_bytes": 72075728,
+   "argument_bytes": 51265092,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 76.67361973547335
+  },
+  {
+   "model": "transformer-25M-rope",
+   "context": 4096,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 3968,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 67108864,
+   "step_bytes_model": 118370304,
+   "step_ms_at_bandwidth": 0.3699072,
+   "mode": "cached",
+   "prefill_ms": 96.72550899995258,
+   "ms_per_step": 1.6199915624994787,
+   "compile_seconds": 5.202658191999944,
+   "xla_flops": 179569296.0,
+   "xla_bytes_accessed": 128485120.0,
+   "temp_bytes": 268304,
+   "argument_bytes": 118370380,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 73.06846945385747
+  },
+  {
+   "model": "transformer-25M-rope",
+   "context": 4096,
+   "batch": 1,
+   "steps": 128,
+   "prompt": 3968,
+   "amp": true,
+   "weight_bytes": 51261440,
+   "cache_bytes": 67108864,
+   "step_bytes_model": 118370304,
+   "step_ms_at_bandwidth": 0.3699072,
+   "mode": "loop",
+   "prefill_ms": 96.72550899995258,
+   "ms_per_step": 1.3006314094506999,
+   "loop_total_ms": 261.9056980001915,
+   "compile_seconds": 7.5637901949999105,
+   "xla_flops": 17677690880.0,
+   "xla_bytes_accessed": 17970042880.0,
+   "temp_bytes": 933609936,
+   "argument_bytes": 51277380,
+   "token_agreement": {
+    "cached==loop": 1.0
+   },
+   "achieved_GBps": 91.009876541419
+  }
+ ]
+}
