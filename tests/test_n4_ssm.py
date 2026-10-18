@@ -100,3 +100,14 @@ def test_mamba2_gradients_are_finite_and_match_the_recurrence():
     for x, y in zip(jax.tree.leaves(ga), jax.tree.leaves(gs), strict=True):
         assert np.all(np.isfinite(np.asarray(x)))
         np.testing.assert_allclose(np.asarray(x), np.asarray(y), rtol=2e-3, atol=1e-6)
+
+
+def test_mamba2_causal_across_chunk_boundaries():
+    """The default chunk is 64; a change at t must not reach any earlier output, whichever chunk t is in."""
+    params = ssm.init_mamba2(jax.random.key(0), d=64, layers=2, head_dim=16, state=8)
+    ids = jax.random.randint(jax.random.key(1), (1, 200), 0, 256)
+    base = ssm.apply(params, ids, "mamba2", scan="chunked")
+    for t in (63, 64, 65, 130):
+        out = ssm.apply(params, ids.at[:, t].set((ids[:, t] + 7) % 256), "mamba2", scan="chunked")
+        np.testing.assert_array_equal(np.asarray(out[:, :t]), np.asarray(base[:, :t]))
+        assert not np.allclose(out[:, t], base[:, t])
