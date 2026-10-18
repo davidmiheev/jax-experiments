@@ -1,0 +1,2 @@
+[o4] transformer-4M        C=1024  B=1   cached       1.444 ms/step  (bandwidth floor 0.046)  compile   3.7s  temp      0.5 MiB  agree {'cached==loop': 1.0}
+[o4] transformer-4M        C=1024  B=1   loop         0.531 ms/step  (bandwidth floor 0.046)  compile   5.0s  temp     26.3 MiB  agree {'cached==loop': 1.0}
