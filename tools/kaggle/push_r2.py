@@ -46,6 +46,8 @@ Presets (each is two job lists, one per GPU):
   256 (3 LRs each, warmup-constant): does B_simple predict the critical batch size?
 - ``n2-ext``: N2's LR grids extended downward (every batch size's best LR for losses <= 1.4 was
   its lowest): B=16 at 5e-4, 1e-3; B=64 at 1e-3, 2e-3; B=256 at 2e-3, 4e-3.
+- ``n2-noise32``: the noise run again with 32 batches per measurement (8 in ``n2``; its points
+  scatter by ~2x), on seeds 0 and 1.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -114,6 +116,10 @@ LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
 N2 = "@experiments/n2_noise_scale/run.py"
 
 PRESETS = {
+    "n2-noise32": [
+        [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "0", "--out", "n2-noise32-s0.json"]],
+        [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "1", "--out", "n2-noise32-s1.json"]],
+    ],
     "n2-ext": [
         [[N2, "--studies", "batch", "--batches", "256", "--lrs", "2e-3", "4e-3", "--out", "n2-batch-256-low.json"]],
         [
