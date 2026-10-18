@@ -266,7 +266,8 @@ schedule), and decoupled weight decay $\lambda$:
   - bits/byte at the best LR over seeds 0–2, as median (min–max);
   - steps to reach AdamW's training loss, at two levels: its level at step
     1,500, and its final level. The loss is smoothed as the mean of 8
-    consecutive logs, 200 steps. With a fixed-length cosine schedule, every
+    consecutive logs (200 steps), placed at the window's centre step. With a
+    fixed-length cosine schedule, every
     run reaches the final level only near the end, so the halfway level is
     the informative one.
 
@@ -303,17 +304,17 @@ gives 1.7475.
 
 | optimiser (tuned) | peak LR | weight decay | bits/byte, seeds 0–2 | steps to AdamW's halfway loss | tokens/s (T4) |
 | --- | --- | --- | --- | --- | --- |
-| AdamW (protocol) | 8e-3 | 0.1 | 1.6335 (1.6333–1.6357) | 1,400–1,550 | 240k |
-| **Muon** (+ AdamW at 8e-3) | 2e-2 | 0.1 | **1.6190** (1.6186–1.6212) | **1,175–1,250** | 172k (0.72×) |
-| Lion | 3.2e-3 | 1.0 | 1.7056 (1.6976–1.7063) | 2,225–2,350 | 234k |
+| AdamW (protocol) | 8e-3 | 0.1 | 1.6335 (1.6333–1.6357) | 1,362–1,537 | 240k |
+| **Muon** (+ AdamW at 8e-3) | 2e-2 | 0.1 | **1.6190** (1.6186–1.6212) | **1,212–1,462** | 172k (0.72×) |
+| Lion | 3.2e-3 | 1.0 | 1.7056 (1.6976–1.7063) | 2,312–2,387 | 234k |
 
 - **Muon is best, by 0.0145 bits/byte.** Its three seeds (1.6186–1.6212) and
   AdamW's (1.6333–1.6357) do not overlap. It reaches AdamW's halfway training
-  loss about 1.22× sooner in steps (median 1,225 against 1,500).
+  loss about 1.13× sooner in steps (median 1,312 against 1,487).
 - **But Muon costs more per step.** Five Newton–Schulz iterations on every
   matrix make it run at 0.72× AdamW's throughput on the T4. Measured in time,
-  it reaches the halfway loss about 14% *later*: 1,225 steps at 1.40× the cost
-  per step is worth about 1,710 AdamW steps. Whether AdamW given 40% more
+  it reaches the halfway loss about 23% *later*: 1,312 steps at 1.40× the cost
+  per step is worth about 1,830 AdamW steps. Whether AdamW given 40% more
   steps would close the 0.0145 gap was not measured.
 - **Lion is clearly worse here, after tuning both of its knobs.**
   - Its LR curve is flat around its optimum: 1.7079, 1.7063 and 1.7096 at
@@ -321,7 +322,7 @@ gives 1.7475.
   - Weight decay matters, and 1.0 is an interior optimum. At 3.2e-3, wd 0.1
     gives 3.68 (unstable), 0.3 gives 2.07, and 1.0 gives 1.71; at 1.6e-3,
     wd 3.0 gives 1.79.
-  - The gap to AdamW is 0.072 bits/byte, and Lion needs about 1.5× as many
+  - The gap to AdamW is 0.072 bits/byte, and Lion needs about 1.6× as many
     steps to reach AdamW's halfway loss.
 - **fp16 was healthy at every tuned setting:** no skipped steps. Steps were
   skipped only in runs that diverged or nearly did (Lion at 1.28e-2 and above,
@@ -349,8 +350,8 @@ only showed up because the test computed AdamW's first step by hand. The
 first version of that test failed on gradient clipping and on Adam's ε before
 it was exact.
 
-**A step-count win can be a wall-clock loss.** Muon's 1.22× fewer steps
-become a 14% slower time on a T4, where five Newton–Schulz iterations per
+**A step-count win can be a wall-clock loss.** Muon's 1.13× fewer steps
+become a 23% slower time on a T4, where five Newton–Schulz iterations per
 matrix are not hidden behind anything.
 
 ### Open threads
