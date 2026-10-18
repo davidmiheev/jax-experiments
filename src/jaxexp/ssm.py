@@ -1,6 +1,7 @@
-"""N4: linear recurrences that train in parallel. An LRU and a selective SSM (Mamba-style S6).
+"""N4: linear recurrences that train in parallel. An LRU, a selective SSM (Mamba-style S6) and
+Mamba-2 (SSD: a scalar decay per head, computed as chunked matrix products).
 
-Both models share the byte-level shell of ml-ladder's other language models:
+All three share the byte-level shell of ml-ladder's other language models:
 embedding -> L residual blocks -> LayerNorm -> linear head. What differs is the
 sequence mixer, a *linear* recurrence
 
@@ -21,6 +22,9 @@ comparisons and as the reference in tests).
   C_t computed from the input (selection), A = -exp(A_log) initialised to -(1..N), a
   causal depthwise conv (k = 4) before it, and a SiLU gate after:
   y = (C_t . h_t + D x) * silu(z). Each block: x + Mamba(LN(x)) (no separate MLP).
+- **Mamba-2** (Dao & Gu 2024): the same selection with a_t = exp(Delta_t A_h), one scalar per
+  head, so the recurrence over [heads, head_dim, state] can be evaluated chunk by chunk as
+  masked matrix products (``ssd``) instead of a scan over [B, T, channels, state].
 
 Parameters are dicts of arrays. ``compute_dtype`` (e.g. float16) applies to the dense
 projections only; the recurrences, gates, LayerNorms and residual stream run in float32.

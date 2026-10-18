@@ -52,7 +52,9 @@ MODELS = {
     "transformer-4M": ("learned", (256, 5, 4), 1e-3, 0.1),
     "transformer-25M": ("learned", (512, 8, 8), 6e-4, 0.1),
     "transformer-25M-rope": ("rope", (512, 8, 8), 6e-4, 0.1),
-    # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each; LRs are N4's own sweeps.
+    # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each. The LR here (2e-3) is what the
+    # copy task uses, as R3 does; enwik8 runs pass N4's tuned LRs explicitly (LRU 4e-3; Mamba-2
+    # 4e-3 at T=1024, 8e-3 at T=256).
     "lru": ("lru", None, 2e-3, 0.1),
     "mamba": ("mamba", None, 2e-3, 0.1),
     "mamba2": ("mamba2", None, 2e-3, 0.1),  # scan "associative" = chunked SSD
