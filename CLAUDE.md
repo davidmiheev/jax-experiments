@@ -207,6 +207,11 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
 - **Getting the code in.** The repos are private, so ml-ladder delivered its
   source as a private Kaggle *dataset*: a `git archive` tarball,
   `kaggle datasets version`, and `dataset_sources` in the kernel metadata.
+  **"ready" does not mean the new version is served.** On 2026-10-18 a kernel
+  pushed right after `kaggle datasets status` said "ready" mounted the
+  previous version and failed on a missing file. Before pushing, check the
+  served `COMMITS`:
+  `kaggle datasets download davidmiheev/jaxexp-source -f COMMITS -p <dir>`.
 - **Where files go.**
   - Copy the source to `/kaggle/temp` and keep scratch files there.
   - Write only result JSON and logs to `/kaggle/working`, which gets
