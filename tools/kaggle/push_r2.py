@@ -51,6 +51,7 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
 - ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
   protocol otherwise), one vmapped group of 4 per context.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
@@ -130,6 +131,10 @@ def _n4(model: str, context: str, lrs: list[str], seeds: list[str], tag: str, gr
 N4_LRS = ["1e-3", "2e-3", "4e-3", "8e-3"]
 
 PRESETS = {
+    "n4-mamba2": [
+        [_n4("mamba2", "1024", N4_LRS, ["0"], "mamba2-1024-s0", "2")],
+        [_n4("mamba2", "256", N4_LRS, ["0"], "mamba2-256-s0", "2")],
+    ],
     "n4-lru": [
         [_n4("lru", "1024", N4_LRS, ["0"], "lru-1024-s0")],
         [_n4("lru", "256", N4_LRS, ["0"], "lru-256-s0")],
