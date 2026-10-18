@@ -1,0 +1,4 @@
+{"what": "GPU kernels in the compiled one-token decode step (D.step), C=1024, B=1, fp16: top-level instructions of the optimized HLO's ENTRY computation, excluding parameter / tuple / get-tuple-element / bitcast / constant", "device": "cuda:0 (Colab T4)", "jax": "0.11.1",
+ "transformer-25M-rope": {"launches": 157, "by_kind": {"copy": 2, "fusion": 155}},
+ "transformer-4M": {"launches": 105, "by_kind": {"copy": 2, "fusion": 103}},
+ "script": "jax.jit(lambda w, c, t, i: D.step(...)).lower(...).compile().as_text(); count ENTRY ops"}
