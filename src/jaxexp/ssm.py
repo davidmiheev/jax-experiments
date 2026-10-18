@@ -196,9 +196,121 @@ def _mamba_block(blk, x, dtype, scan):
     return x + _mamba_mixer(blk, _ln(blk["norm"], x), dtype, scan)
 
 
+# ---------------------------------------------------------------------------------- Mamba-2 (SSD)
+
+
+def init_mamba2(key, vocab: int = 256, d: int = 256, layers: int = 9, expand: int = 2, head_dim: int = 64,
+                state: int = 64, conv: int = 4, dt_min: float = 1e-3, dt_max: float = 1e-1) -> dict:
+    """Mamba-2 (Dao & Gu 2024): the selective SSM with a *scalar* decay per head, which lets the
+    scan be computed as chunked matrix products (SSD) instead of a [B, T, channels, state] scan.
+    One group of B, C shared by all heads; output gate y * silu(z) as in ``mamba`` (no extra norm)."""
+    inner = expand * d
+    heads = inner // head_dim
+    keys = jax.random.split(key, layers + 1)
+    params = _shell_init(keys[0], vocab, d)
+    blocks = []
+    for k in keys[1:]:
+        ks = jax.random.split(k, 5)
+        dt = jnp.exp(jax.random.uniform(ks[2], (heads,)) * (math.log(dt_max) - math.log(dt_min)) + math.log(dt_min))
+        conv_dim = inner + 2 * state
+        blocks.append({
+            "norm": _ln_init(d),
+            "in_proj": _dense(ks[0], d, 2 * inner + 2 * state + heads),
+            "conv_w": jax.random.uniform(ks[1], (conv, conv_dim), minval=-1 / math.sqrt(conv), maxval=1 / math.sqrt(conv)),
+            "conv_b": jnp.zeros((conv_dim,)),
+            "dt_bias": dt + jnp.log(-jnp.expm1(-dt)),
+            "A_log": jnp.log(jax.random.uniform(ks[3], (heads,), minval=1.0, maxval=16.0)),
+            "D": jnp.ones((heads,)),
+            "out_proj": _dense(ks[4], inner, d),
+        })
+    params["blocks"] = blocks
+    return params
+
+
+def _segsum(x):
+    """[..., T] -> [..., T, T]: out[i, j] = sum_{k=j+1..i} x_k for i >= j, -inf above the diagonal.
+    Summed directly (masked cumsum), not as a difference of two cumulative sums, which loses
+    precision when the sums are large."""
+    t = x.shape[-1]
+    xr = jnp.broadcast_to(x[..., :, None], x.shape + (t,))  # [..., k, j] = x_k
+    xr = jnp.where(jnp.tril(jnp.ones((t, t), bool), -1), xr, 0.0)  # keep k > j
+    out = jnp.cumsum(xr, axis=-2)  # [..., i, j] = sum_{j < k <= i} x_k
+    return jnp.where(jnp.tril(jnp.ones((t, t), bool)), out, -jnp.inf)
+
+
+def ssd(x, dta, b, c, chunk: int = 64):
+    """Chunked SSD: y_t = sum_{s<=t} (C_t . B_s) exp(sum_{r=s+1..t} dta_r) x_s, per head.
+    x [batch, T, H, P] (already multiplied by dt), dta [batch, T, H] (dt * A <= 0),
+    b, c [batch, T, N] (shared by heads). Returns y [batch, T, H, P]."""
+    bsz, t, h, p = x.shape
+    n = b.shape[-1]
+    q = min(chunk, t)
+    pad = (-t) % q
+    if pad:
+        x, dta = jnp.pad(x, ((0, 0), (0, pad), (0, 0), (0, 0))), jnp.pad(dta, ((0, 0), (0, pad), (0, 0)))
+        b, c = jnp.pad(b, ((0, 0), (0, pad), (0, 0))), jnp.pad(c, ((0, 0), (0, pad), (0, 0)))
+    nc = (t + pad) // q
+    x = x.reshape(bsz, nc, q, h, p)
+    b, c = b.reshape(bsz, nc, q, n), c.reshape(bsz, nc, q, n)
+    a = jnp.moveaxis(dta.reshape(bsz, nc, q, h), -1, 1)  # [b, h, c, l]
+    a_cum = jnp.cumsum(a, axis=-1)
+    # 1. within each chunk: an attention-like masked product
+    decay = jnp.exp(_segsum(a))  # [b, h, c, l, s]
+    y_diag = jnp.einsum("bcln,bcsn,bhcls,bcshp->bclhp", c, b, decay, x)
+    # 2. each chunk's final state, from its own inputs
+    to_end = jnp.exp(a_cum[..., -1:] - a_cum)  # [b, h, c, l]
+    states = jnp.einsum("bcln,bhcl,bclhp->bchpn", b, to_end, x)
+    # 3. carry states across chunks (a short recurrence over nc chunks)
+    states = jnp.concatenate([jnp.zeros_like(states[:, :1]), states], axis=1)
+    chunk_decay = jnp.exp(_segsum(jnp.pad(a_cum[..., -1], ((0, 0), (0, 0), (1, 0)))))  # [b, h, c+1, c+1]
+    states = jnp.einsum("bhzc,bchpn->bzhpn", chunk_decay, states)[:, :-1]  # state entering each chunk
+    # 4. what the carried state contributes inside each chunk
+    y_off = jnp.einsum("bcln,bchpn,bhcl->bclhp", c, states, jnp.exp(a_cum))
+    y = (y_diag + y_off).reshape(bsz, nc * q, h, p)
+    return y[:, :t]
+
+
+def ssd_sequential(x, dta, b, c):
+    """The same recurrence step by step: H_t = exp(dta_t) H_{t-1} + x_t B_t^T, y_t = H_t C_t."""
+
+    def step(state, inp):
+        xt, at, bt, ct = inp
+        state = jnp.exp(at)[..., None, None] * state + xt[..., None] * bt[:, None, None, :]
+        return state, jnp.einsum("bhpn,bn->bhp", state, ct)
+
+    bsz, t, h, p = x.shape
+    init = jnp.zeros((bsz, h, p, b.shape[-1]), x.dtype)
+    _, ys = jax.lax.scan(step, init, tuple(jnp.swapaxes(v, 0, 1) for v in (x, dta, b, c)))
+    return jnp.swapaxes(ys, 0, 1)
+
+
+def _mamba2_mixer(blk, x, dtype, scan):
+    heads = blk["A_log"].shape[0]
+    inner = blk["out_proj"]["w"].shape[0]
+    state = (blk["conv_w"].shape[1] - inner) // 2
+    proj = _apply_dense(blk["in_proj"], x, dtype)
+    z, xbc, dt_raw = proj[..., :inner], proj[..., inner : 2 * inner + 2 * state], proj[..., 2 * inner + 2 * state :]
+    k = blk["conv_w"].shape[0]
+    padded = jnp.pad(xbc, ((0, 0), (k - 1, 0), (0, 0)))
+    xbc = jax.nn.silu(sum(blk["conv_w"][j] * padded[:, j : j + xbc.shape[1]] for j in range(k)) + blk["conv_b"])
+    u, b_t, c_t = xbc[..., :inner], xbc[..., inner : inner + state], xbc[..., inner + state :]
+    dt = jax.nn.softplus(dt_raw + blk["dt_bias"])  # [B, T, H]
+    A = -jnp.exp(blk["A_log"])  # [H]
+    bsz, t, _ = u.shape
+    uh = u.reshape(bsz, t, heads, inner // heads)
+    xdt = uh * dt[..., None]
+    fn = ssd if scan in ("associative", "chunked") else ssd_sequential
+    y = fn(xdt, dt * A, b_t, c_t) + blk["D"][:, None] * uh
+    return _apply_dense(blk["out_proj"], y.reshape(bsz, t, inner) * jax.nn.silu(z), dtype)
+
+
+def _mamba2_block(blk, x, dtype, scan):
+    return x + _mamba2_mixer(blk, _ln(blk["norm"], x), dtype, scan)
+
+
 # ---------------------------------------------------------------------------------- models
 
-KINDS = {"lru": (_lru_block, init_lru), "mamba": (_mamba_block, init_mamba)}
+KINDS = {"lru": (_lru_block, init_lru), "mamba": (_mamba_block, init_mamba), "mamba2": (_mamba2_block, init_mamba2)}
 
 
 def apply(params: dict, ids, kind: str, *, scan: str = "associative", compute_dtype=None, remat: bool = False):

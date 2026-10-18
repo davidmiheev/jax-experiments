@@ -69,3 +69,34 @@ def test_initial_ranges():
     mamba = ssm.init_mamba(jax.random.key(0))
     dt = np.asarray(jax.nn.softplus(mamba["blocks"][0]["dt_proj"]["b"]))
     assert dt.min() >= 1e-3 * (1 - 1e-4) and dt.max() <= 1e-1 * (1 + 1e-4)
+
+
+@pytest.mark.parametrize("t,chunk", [(40, 16), (64, 64), (37, 8)])  # padding, one chunk, ragged
+def test_chunked_ssd_is_the_recurrence(t, chunk):
+    key = jax.random.key(0)
+    ks = jax.random.split(key, 4)
+    bsz, h, p, n = 2, 3, 4, 5
+    x = jax.random.normal(ks[0], (bsz, t, h, p))
+    dta = -jax.random.uniform(ks[1], (bsz, t, h), minval=0.01, maxval=0.5)
+    b, c = jax.random.normal(ks[2], (bsz, t, n)), jax.random.normal(ks[3], (bsz, t, n))
+    np.testing.assert_allclose(ssm.ssd(x, dta, b, c, chunk=chunk), ssm.ssd_sequential(x, dta, b, c), rtol=1e-4, atol=1e-4)
+
+
+def test_mamba2_modes_causality_and_size():
+    params = ssm.init_mamba2(jax.random.key(0), d=64, layers=2, head_dim=16, state=8)
+    ids = jax.random.randint(jax.random.key(1), (2, 50), 0, 256)
+    chunked = ssm.apply(params, ids, "mamba2", scan="chunked")
+    np.testing.assert_allclose(chunked, ssm.apply(params, ids, "mamba2", scan="sequential"), rtol=1e-4, atol=1e-4)
+    changed = ids.at[:, 30].set((ids[:, 30] + 1) % 256)
+    np.testing.assert_allclose(ssm.apply(params, changed, "mamba2")[:, :30], chunked[:, :30], rtol=1e-6, atol=1e-6)
+    assert 3.6e6 < ssm.parameter_count(ssm.init_mamba2(jax.random.key(0))) < 4.6e6
+
+
+def test_mamba2_gradients_are_finite_and_match_the_recurrence():
+    """_segsum's -inf entries must not leak NaN into the backward pass."""
+    params = ssm.init_mamba2(jax.random.key(0), d=64, layers=2, head_dim=16, state=8)
+    ids = jax.random.randint(jax.random.key(1), (2, 40), 0, 256)
+    ga, gs = (jax.grad(lambda p, m=m: ssm.apply(p, ids, "mamba2", scan=m).mean())(params) for m in ("chunked", "sequential"))
+    for x, y in zip(jax.tree.leaves(ga), jax.tree.leaves(gs), strict=True):
+        assert np.all(np.isfinite(np.asarray(x)))
+        np.testing.assert_allclose(np.asarray(x), np.asarray(y), rtol=2e-3, atol=1e-6)

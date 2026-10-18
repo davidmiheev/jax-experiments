@@ -55,6 +55,7 @@ MODELS = {
     # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each; LRs are N4's own sweeps.
     "lru": ("lru", None, 2e-3, 0.1),
     "mamba": ("mamba", None, 2e-3, 0.1),
+    "mamba2": ("mamba2", None, 2e-3, 0.1),  # scan "associative" = chunked SSD
 }
 
 

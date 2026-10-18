@@ -34,7 +34,8 @@ _spec = importlib.util.spec_from_file_location("r2_run", ROOT / "experiments" / 
 r2 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(r2)
 
-# (model, scan mode, remat): the GRU is sequential by nature; Mamba's [B, T, 512, 16] states need remat.
+# (model, scan mode, remat): the GRU is sequential by nature; Mamba-1's [B, T, 512, 16] states need remat;
+# Mamba-2 (SSD) runs its scan as chunked matrix products.
 ARMS = [
     ("transformer-4M", "-", "none"),
     ("gru", "-", "none"),
@@ -42,6 +43,8 @@ ARMS = [
     ("lru", "sequential", "none"),
     ("mamba", "associative", "dots"),
     ("mamba", "sequential", "dots"),
+    ("mamba2", "chunked", "none"),
+    ("mamba2", "sequential", "none"),
 ]
 
 
