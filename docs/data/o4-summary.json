@@ -34,7 +34,7 @@
     "step_bytes_model": 55455744,
     "cache_bytes": 4194304,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 3.110439000010956,
     "recompute": {
      "ms_per_token_step": 4.280358000016804,
      "achieved_GBps": 12.95586584107738,
@@ -71,7 +71,7 @@
     "step_bytes_model": 59650048,
     "cache_bytes": 8388608,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 5.486336999979358,
     "recompute": {
      "ms_per_token_step": 6.792775999997502,
      "achieved_GBps": 8.781394822973986,
@@ -108,7 +108,7 @@
     "step_bytes_model": 68038656,
     "cache_bytes": 16777216,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 12.131562999968537,
     "recompute": {
      "ms_per_token_step": 13.131816999987223,
      "achieved_GBps": 5.1812065306778345,
@@ -145,7 +145,7 @@
     "step_bytes_model": 84815872,
     "cache_bytes": 33554432,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 33.19314600003054,
     "recompute": {
      "ms_per_token_step": 35.44296600000507,
      "achieved_GBps": 2.39302410526218,
@@ -182,7 +182,7 @@
     "step_bytes_model": 118370304,
     "cache_bytes": 67108864,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 95.51530499993532,
     "recompute": {
      "ms_per_token_step": 101.09980300001098,
      "achieved_GBps": 1.1708262576929764,
@@ -221,7 +221,7 @@
     "step_bytes_model": 84815872,
     "cache_bytes": 33554432,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 9.199604000002637,
     "recompute": {
      "ms_per_token_step": 10.176145000002634,
      "achieved_GBps": 8.334774317777317,
@@ -257,7 +257,7 @@
     "step_bytes_model": 118370304,
     "cache_bytes": 67108864,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 27.591002999997727,
     "recompute": {
      "ms_per_token_step": 37.05068800002209,
      "achieved_GBps": 3.1948206737734375,
@@ -293,7 +293,7 @@
     "step_bytes_model": 185479168,
     "cache_bytes": 134217728,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 62.86266199998636,
     "recompute": {
      "ms_per_token_step": 75.8182700000134,
      "achieved_GBps": 2.446365077968242,
@@ -329,7 +329,7 @@
     "step_bytes_model": 319696896,
     "cache_bytes": 268435456,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 214.85784300000432,
     "recompute": {
      "ms_per_token_step": 232.43773300009707,
      "achieved_GBps": 1.3754087680758205,
@@ -365,7 +365,7 @@
     "step_bytes_model": 588132352,
     "cache_bytes": 536870912,
     "weight_bytes": 51261440,
-    "prefill_ms": null,
+    "prefill_ms": 766.6670350000686,
     "recompute": {
      "ms_per_token_step": 800.5366769999682,
      "achieved_GBps": 0.7346725876496266,
@@ -403,7 +403,7 @@
     "step_bytes_model": 9875968,
     "cache_bytes": 1310720,
     "weight_bytes": 8565248,
-    "prefill_ms": null,
+    "prefill_ms": 1.6281220000564645,
     "recompute": {
      "ms_per_token_step": 1.947878999999375,
      "achieved_GBps": 5.070113698029071,
@@ -440,7 +440,7 @@
     "step_bytes_model": 11448832,
     "cache_bytes": 2621440,
     "weight_bytes": 8827392,
-    "prefill_ms": null,
+    "prefill_ms": 2.461132999997062,
     "recompute": {
      "ms_per_token_step": 2.5752560000000813,
      "achieved_GBps": 4.445706368609428,
@@ -477,7 +477,7 @@
     "step_bytes_model": 14594560,
     "cache_bytes": 5242880,
     "weight_bytes": 9351680,
-    "prefill_ms": null,
+    "prefill_ms": 4.158007999990332,
     "recompute": {
      "ms_per_token_step": 4.575347000013608,
      "achieved_GBps": 3.1898258208517505,
@@ -516,7 +516,7 @@
     "step_bytes_model": 19051008,
     "cache_bytes": 10485760,
     "weight_bytes": 8565248,
-    "prefill_ms": null,
+    "prefill_ms": 2.9096450000452023,
     "recompute": {
      "ms_per_token_step": 4.541561999985788,
      "achieved_GBps": 4.194814030956666,
@@ -552,7 +552,7 @@
     "step_bytes_model": 29798912,
     "cache_bytes": 20971520,
     "weight_bytes": 8827392,
-    "prefill_ms": null,
+    "prefill_ms": 7.989641999984087,
     "recompute": {
      "ms_per_token_step": 8.592684999939593,
      "achieved_GBps": 3.4679395323125997,
@@ -588,7 +588,7 @@
     "step_bytes_model": 51294720,
     "cache_bytes": 41943040,
     "weight_bytes": 9351680,
-    "prefill_ms": null,
+    "prefill_ms": 20.428487999993195,
     "recompute": {
      "ms_per_token_step": 25.9726970000429,
      "achieved_GBps": 1.9749477691868225,

@@ -39,6 +39,8 @@ def summarise() -> dict:
         c = entry.setdefault(str(r["context"]), {"floor_ms": r["step_ms_at_bandwidth"], "step_bytes_model": r["step_bytes_model"],
                                                  "cache_bytes": r["cache_bytes"], "weight_bytes": r["weight_bytes"],
                                                  "prefill_ms": r.get("prefill_ms")})
+        if r.get("prefill_ms") is not None:
+            c["prefill_ms"] = r["prefill_ms"]
         c[r["mode"]] = {
             "ms_per_token_step": r["ms_per_step"],
             "achieved_GBps": r["achieved_GBps"],
