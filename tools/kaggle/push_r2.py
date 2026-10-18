@@ -38,6 +38,8 @@ Presets (each is two job lists, one per GPU):
   in stage 2, because its AdamW part uses AdamW's tuned peak.
 - ``o3-stage2``: Muon's LR sweep on seed 0 (its AdamW part at AdamW's tuned 8e-3); Lion's grid
   extended upward (stage 1's best, 3.2e-3, was its top edge); AdamW seeds 1-2 at 8e-3.
+- ``o3-stage3``: Lion's weight decay (1.0 was a heuristic, not tuned): 0.3 and 0.1 at its two
+  best LRs; Muon seeds 1-2 at 2e-2; Lion seeds 1-2 at 3.2e-3 (wd 1.0).
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -104,6 +106,16 @@ ADAMW_LRS = ["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2"]
 LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
 
 PRESETS = {
+    "o3-stage3": [
+        [
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.3", "--weight-decay", "0.3"),
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.1", "--weight-decay", "0.1"),
+        ],
+        [
+            _o3("muon", ["2e-2"], ["1", "2"], "muon-best-s12", "--adam-peak", "8e-3"),
+            _o3("lion", ["3.2e-3"], ["1", "2"], "lion-best-s12", "--weight-decay", "1.0"),
+        ],
+    ],
     "o3-stage2": [
         [_o3("muon", ["5e-3", "1e-2", "2e-2", "4e-2", "8e-2", "1.6e-1"], ["0"], "muon-s0", "--adam-peak", "8e-3")],
         [
