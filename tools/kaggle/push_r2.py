@@ -57,6 +57,8 @@ Presets (each is two job lists, one per GPU):
   was the edge of T=256's first grid; seed 0 at 1.6e-2 and 3.2e-2 confirmed it as the best.
   On 2026-10-18 the kernel sat queued for 20+ minutes twice, so the extension and these seeds
   ran on Colab with the same commands.
+- ``n4-copy-mamba2``: Mamba-2's copy task at n=32, seed 0: lr 2.5e-4 (the low edge of the
+  5e-4..8e-3 check), and 6,000 steps at 5e-4 (does it learn the copy if given longer?).
 - ``n4-mamba2-s0``: seed 0 at each context's best LR, repeated alone: it beat seeds 1-2 by
   ~0.02 bits/byte at both contexts, and it is the seed the LRs were chosen on.
 - ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
@@ -146,6 +148,12 @@ PRESETS = {
     "n4-copy": [
         [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
         [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
+    ],
+    "n4-copy-mamba2": [
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "2.5e-4",
+          "--out", "n4-copy-mamba2-lr2.5e-4-s0.json"]],
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "5e-4",
+          "--copy-steps", "6000", "--out", "n4-copy-mamba2-long6000-lr5e-4-s0.json"]],
     ],
     "n4-mamba2-s0": [
         [_n4("mamba2", "1024", ["4e-3"], ["0"], "mamba2-1024-s0-repeat", "1")],
