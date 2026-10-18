@@ -53,9 +53,9 @@ Presets (each is two job lists, one per GPU):
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
 - ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
   seeds 0-2, each at the model's default LR (2e-3) as in R3.
-- ``n4-mamba2-b``: Mamba-2's follow-ups. T=256's best LR (8e-3) was the grid's edge: seed 0
-  at 1.6e-2 and 3.2e-2, and seeds 1-2 at both 8e-3 and 1.6e-2 (so whichever wins on seed 0
-  has its seeds without a second round); seeds 1-2 at T=1024's best, 4e-3.
+- ``n4-mamba2-b``: Mamba-2's seeds 1-2 at T=1024's best LR (4e-3) and at T=256's 8e-3. 8e-3
+  was the edge of T=256's grid; seed 0 at 1.6e-2 and 3.2e-2 ran on Colab (the kernel sat
+  queued), with seeds 1-2 at 1.6e-2 to follow there if it wins.
 - ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
 - ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
   protocol otherwise), one vmapped group of 4 per context.
@@ -145,10 +145,8 @@ PRESETS = {
         [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
     ],
     "n4-mamba2-b": [
-        [_n4("mamba2", "256", ["1.6e-2", "3.2e-2"], ["0"], "mamba2-256-s0-ext", "2"),
-         _n4("mamba2", "256", ["8e-3"], ["1", "2"], "mamba2-256-s12-8e-3", "2")],
-        [_n4("mamba2", "1024", ["4e-3"], ["1", "2"], "mamba2-1024-s12", "2"),
-         _n4("mamba2", "256", ["1.6e-2"], ["1", "2"], "mamba2-256-s12-1.6e-2", "2")],
+        [_n4("mamba2", "1024", ["4e-3"], ["1", "2"], "mamba2-1024-s12", "2")],
+        [_n4("mamba2", "256", ["8e-3"], ["1", "2"], "mamba2-256-s12-8e-3", "2")],
     ],
     "n4-mamba2": [
         [_n4("mamba2", "1024", N4_LRS, ["0"], "mamba2-1024-s0", "2")],
