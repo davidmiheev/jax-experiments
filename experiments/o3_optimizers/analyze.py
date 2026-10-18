@@ -55,26 +55,35 @@ def summarise() -> dict:
         mine = [r for r in data if r.get("optimizer") == opt]
         if not mine:
             continue
-        seed0 = sorted((r for r in mine if r["seed"] == 0), key=lambda r: r["peak_lr"])
-        curve = {f"{r['peak_lr']:g}": r["bits_per_byte"] for r in seed0}
-        best = min(seed0, key=lambda r: r["bits_per_byte"])["peak_lr"]
-        lrs = [r["peak_lr"] for r in seed0]
-        at_best = sorted((r for r in mine if r["peak_lr"] == best), key=lambda r: r["seed"])
+        # A configuration is (weight decay, peak LR); the best is chosen on seed 0 over both.
+        seed0 = [r for r in mine if r["seed"] == 0]
+        best_run = min(seed0, key=lambda r: r["bits_per_byte"])
+        best, best_wd = best_run["peak_lr"], best_run["weight_decay"]
+        at_wd = sorted((r for r in seed0 if r["weight_decay"] == best_wd), key=lambda r: r["peak_lr"])
+        lrs = [r["peak_lr"] for r in at_wd]
+        wds = sorted({r["weight_decay"] for r in seed0})
+        at_best = sorted((r for r in mine if r["peak_lr"] == best and r["weight_decay"] == best_wd), key=lambda r: r["seed"])
         out["optimizers"][opt] = {
-            "weight_decay": seed0[0].get("weight_decay"),
-            "adam_peak": seed0[0].get("adam_peak"),
-            "seed0_curve": curve,
+            "weight_decay": best_wd,
+            "adam_peak": best_run.get("adam_peak"),
+            "seed0_curve": {f"{r['peak_lr']:g}": r["bits_per_byte"] for r in at_wd},
+            "seed0_by_weight_decay": {
+                f"{wd:g}": {f"{r['peak_lr']:g}": r["bits_per_byte"] for r in sorted(seed0, key=lambda r: r["peak_lr"]) if r["weight_decay"] == wd}
+                for wd in wds
+            },
             "best_lr": best,
             "best_at_grid_edge": best in (min(lrs), max(lrs)),
+            "best_weight_decay_at_grid_edge": len(wds) > 1 and best_wd in (min(wds), max(wds)),
             "best_lr_seeds": [r["seed"] for r in at_best],
             "best_lr_bits": _spread([r["bits_per_byte"] for r in at_best]),
             "best_lr_bits_by_seed": {r["seed"]: r["bits_per_byte"] for r in at_best},
-            "skipped_steps": {f"{r['peak_lr']:g}/s{r['seed']}": r["skipped_steps"] for r in mine if r["skipped_steps"]},
+            "skipped_steps": {f"{r['peak_lr']:g}/wd{r['weight_decay']:g}/s{r['seed']}": r["skipped_steps"] for r in mine if r["skipped_steps"]},
             "group_steady_tokens_per_second": _spread([r["group_steady_tokens_per_second"] for r in mine]),
         }
     if "adamw" in out["optimizers"]:
         adam = out["optimizers"]["adamw"]
-        adam_runs = [r for r in data if r.get("optimizer") == "adamw" and r["peak_lr"] == adam["best_lr"]]
+        adam_runs = [r for r in data if r.get("optimizer") == "adamw" and r["peak_lr"] == adam["best_lr"]
+                     and r["weight_decay"] == adam["weight_decay"]]
 
         def level_at(run, step):
             steps, loss = smoothed(run["train_history"])
@@ -92,14 +101,14 @@ def summarise() -> dict:
             for name, target in targets.items():
                 reached = {}
                 for r in data:
-                    if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"]:
+                    if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"] and r["weight_decay"] == entry["weight_decay"]:
                         steps, loss = smoothed(r["train_history"])
                         hit = np.nonzero(loss <= target)[0]
                         reached[r["seed"]] = int(steps[hit[0]]) if hit.size else None
                 entry["steps_to_target"][name] = reached
         ref = {r["peak_lr"]: r for r in json.loads((LADDER / "c-gpu-lr2-256.json").read_text())["enwik8"]
                if r["model"] == "transformer-4M" and r["seed"] == 0}
-        ours = {r["peak_lr"]: r for r in data if r.get("optimizer") == "adamw" and r["seed"] == 0}
+        ours = {r["peak_lr"]: r for r in data if r.get("optimizer") == "adamw" and r["seed"] == 0 and r["weight_decay"] == 0.1}
         out["adamw_vs_ml_ladder_seed0"] = {
             f"{lr:g}": {"ours": ours[lr]["bits_per_byte"], "ml_ladder": ref[lr]["bits_per_byte"]}
             for lr in sorted(set(ref) & set(ours))
@@ -123,7 +132,7 @@ def plot(summary: dict) -> None:
         axes[0].errorbar([entry["best_lr"]], [b["median"]], yerr=[[b["median"] - b["min"]], [b["max"] - b["median"]]],
                          fmt="s", color=colors[opt], ms=8, capsize=4)
         for r in data:
-            if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"]:
+            if r.get("optimizer") == opt and r["peak_lr"] == entry["best_lr"] and r["weight_decay"] == entry["weight_decay"]:
                 steps, loss = smoothed(r["train_history"])
                 axes[1].plot(steps, loss, color=colors[opt], lw=1, alpha=0.8, label=opt if r["seed"] == 0 else None)
     axes[0].set_xscale("log")
@@ -145,8 +154,11 @@ def plot(summary: dict) -> None:
 def main() -> None:
     summary = summarise()
     for opt, e in summary["optimizers"].items():
-        print(opt, "curve", {k: round(v, 4) for k, v in e["seed0_curve"].items()}, "best", e["best_lr"],
-              "EDGE" if e["best_at_grid_edge"] else "", "seeds", e["best_lr_bits"], "steps->target", e.get("steps_to_target"))
+        print(opt, "wd", e["weight_decay"], "curve", {k: round(v, 4) for k, v in e["seed0_curve"].items()}, "best", e["best_lr"],
+              "EDGE" if e["best_at_grid_edge"] else "", "WD-EDGE" if e["best_weight_decay_at_grid_edge"] else "",
+              "seeds", e["best_lr_bits"], "steps->target", e.get("steps_to_target"))
+        if len(e["seed0_by_weight_decay"]) > 1:
+            print("   by weight decay:", {wd: {k: round(v, 4) for k, v in c.items()} for wd, c in e["seed0_by_weight_decay"].items()})
     if "adamw_vs_ml_ladder_seed0" in summary:
         print("adamw vs ml-ladder (seed 0):", summary["adamw_vs_ml_ladder_seed0"], "targets", summary["targets_train_loss"])
     plot(summary)
