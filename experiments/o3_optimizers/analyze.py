@@ -136,6 +136,7 @@ def plot(summary: dict) -> None:
                 steps, loss = smoothed(r["train_history"])
                 axes[1].plot(steps, loss, color=colors[opt], lw=1, alpha=0.8, label=opt if r["seed"] == 0 else None)
     axes[0].set_xscale("log")
+    axes[0].set_ylim(1.58, 2.0)  # Lion's diverged runs (3.1, 4.0 at lr >= 1.28e-2) are off the top
     axes[0].set_xlabel("peak learning rate")
     axes[0].set_ylabel("validation bits/byte")
     axes[0].set_title("LR sweep, seed 0 (squares: seeds 0-2 at the best LR)")
