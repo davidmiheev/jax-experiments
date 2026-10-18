@@ -1,6 +1,6 @@
 # M3 — Sweeps as one program, optimisers, gradient noise (N1, O3, N2)
 
-> **Status:** N1 and O3 done; N2 not started ·
+> **Status:** N1 and O3 done; N2 in progress ·
 > **Hardware:** Kaggle T4 ×2 (sm_75, one job per GPU), JAX 0.11.1; CPU (4 cores) for the equivalence tests ·
 > **Data:** N1: [`data/n1-summary.json`](data/n1-summary.json) and [`data/n1/`](data/n1/) (one JSON and log per job); O3: [`data/o3-summary.json`](data/o3-summary.json) and [`data/o3/`](data/o3/); ml-ladder's references from its `docs/writeups/data/c-gpu-lr.json` and `c-gpu-lr2-1024.json` ·
 > **Reproduce:** `uv run python tools/kaggle/push_r2.py <preset> --push` for `n1-calibrate`, `n1`, `n1-fork` and `n1-fork-torch`, then `uv run python experiments/n1_vmap_sweep/analyze.py`; O3: presets `o3-stage1` to `o3-stage4`, then `uv run python experiments/o3_optimizers/analyze.py`. CPU tests: `uv run pytest tests/test_n1_sweep.py tests/test_o3_optimizers.py`
@@ -372,4 +372,95 @@ matrix are not hidden behind anything.
 
 ## N2 — Gradient noise scale and the critical batch size
 
-Not started. See `PLAN.md`.
+### Question
+
+ml-ladder's B5 thread names the learning-rate/batch-size scaling rule as a
+scaling-law question. The gradient noise scale (McCandlish et al., 2018)
+claims to predict, from gradients alone, the critical batch size: the batch
+beyond which doubling the batch no longer halves the steps. Measured on R2's
+4M transformer, does it?
+
+### The idea
+
+**A step averages B noisy per-example gradients.** When the noise in that
+average dominates, a bigger batch buys a proportionally better step, and
+doubling B halves the steps. When the signal dominates, extra examples are
+wasted. The crossover is where the noise in a batch-B gradient, tr Σ / B, is
+about as large as the signal |G|². That is, B ≈ tr Σ / |G|², the *simple
+noise scale*.
+
+**JAX makes the measurement one line.** `vmap(grad)` over the batch axis gives
+every example's gradient at once.
+
+**Test the prediction directly.** Train at three batch sizes, each with its
+own tuned learning rate, and count the steps to fixed losses. Fit the
+paper's step–batch relation, and compare its B_crit with B_simple measured
+at the same loss.
+
+### The math
+
+With per-example gradients $g_i$, their mean $G$ and covariance $\Sigma$:
+$\mathbb{E}\,\overline{|g_i|^2} = |G|^2 + \operatorname{tr}\Sigma$ and
+$\mathbb{E}\,|G_B|^2 = |G|^2 + \operatorname{tr}\Sigma/B$.
+
+So one batch gives unbiased
+$\widehat{\operatorname{tr}\Sigma} = (\overline{|g_i|^2} - |G_B|^2)\,B/(B-1)$ and
+$\widehat{|G|^2} = (B|G_B|^2 - \overline{|g_i|^2})/(B-1)$. Then
+$B_\text{simple} = \overline{\widehat{\operatorname{tr}\Sigma}} / \overline{\widehat{|G|^2}}$,
+a ratio of averages over batches. A ratio of single-batch estimates would be
+biased.
+
+McCandlish et al. find that the steps $S$ and examples $E$ to reach a fixed
+loss trade off as $(S/S_\text{min} - 1)(E/E_\text{min} - 1) = 1$. With
+$E = BS$, that means $S(B) = S_\text{min}(1 + B_\text{crit}/B)$, where
+$B_\text{crit} = E_\text{min}/S_\text{min}$. They report
+$B_\text{crit} \approx B_\text{simple}$ when the Hessian is close to a
+multiple of the identity, and $B_\text{simple}$ underestimating it
+otherwise.
+
+### What we measure and why
+
+- **Model and protocol:** R2's 4M transformer at T=256, AdamW as the
+  protocol, from ml-ladder's initial weights. B counts sequences of 256
+  bytes, and an "example" is one sequence.
+- **Noise run.** B=64 (the protocol's 16,384 tokens per step) at O3's tuned
+  LR of 8e-3, 6,000 steps. Every 250 steps, B_simple is computed in fp32 on 8
+  fresh batches of 64 from a sampler separate from training.
+- **Batch runs.** B = 16, 64 and 256, with 12,000, 6,000 and 3,000 steps
+  respectively. Each has a three-point LR grid centred on √-scaling from
+  8e-3 at B=64: {2, 4, 8}e-3, {4, 8, 16}e-3 and {8, 16, 32}e-3.
+- **The schedule is warmup-then-constant, not the protocol's cosine.** With a
+  cosine decay, the step at which a loss is first reached depends on the
+  run's total length.
+- **Steps to a target:** the first step at which the training loss, smoothed
+  over 8 logs (200 steps), reaches L, at the best LR for that batch size.
+  Targets L from 1.6 down to 1.2 nats.
+
+### What I built
+
+- **`jaxexp.noise`:**
+  - `make_per_example`: `vmap(grad)` in chunks, returning each example's
+    |gᵢ|² and the gradient sum;
+  - `batch_estimates`: the unbiased pair above;
+  - `noise_scale`: the ratio of averages.
+- **`tests/test_n2_noise.py`:**
+  - vmapped per-example gradients equal an explicit loop;
+  - their mean equals the batch gradient;
+  - the estimates are unbiased on a synthetic population (within 2% and 5%);
+  - a known B_simple of 10 is recovered within 5%.
+- **`jaxexp.train`:** a `warmup-constant` schedule, and an
+  `on_log(step, params)` hook whose time is excluded from the training time.
+- **`experiments/n2_noise_scale/`:** `run.py` (`noise` and `batch` studies)
+  and `analyze.py`.
+
+### Results
+
+N2_RESULTS
+
+### What surprised me
+
+N2_SURPRISES
+
+### Open threads
+
+N2_THREADS
