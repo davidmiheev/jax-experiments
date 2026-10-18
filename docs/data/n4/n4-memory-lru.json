@@ -1,0 +1,53 @@
+{
+ "memory": [
+  {
+   "model": "lru",
+   "k": 1,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 1262505048
+  },
+  {
+   "model": "lru",
+   "k": 2,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 2572939608
+  },
+  {
+   "model": "lru",
+   "k": 3,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 3859183192
+  },
+  {
+   "model": "lru",
+   "k": 1,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 362902872
+  },
+  {
+   "model": "lru",
+   "k": 2,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 794824024
+  },
+  {
+   "model": "lru",
+   "k": 3,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "temp_bytes": 1192301144
+  }
+ ],
+ "provider": "Google Colab T4 (JAX 0.11.1, flax 0.12.10 pinned); Kaggle kernel queued 16+ min"
+}

@@ -48,6 +48,22 @@ Presets (each is two job lists, one per GPU):
   its lowest): B=16 at 5e-4, 1e-3; B=64 at 1e-3, 2e-3; B=256 at 2e-3, 4e-3.
 - ``n2-noise32``: the noise run again with 32 batches per measurement (8 in ``n2``; its points
   scatter by ~2x), on seeds 0 and 1.
+- ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
+  associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
+  memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
+  seeds 0-2, each at the model's default LR (2e-3) as in R3.
+- ``n4-mamba2-b``: Mamba-2's seeds 1-2 at T=1024's best LR (4e-3) and at T=256's 8e-3. 8e-3
+  was the edge of T=256's first grid; seed 0 at 1.6e-2 and 3.2e-2 confirmed it as the best.
+  On 2026-10-18 the kernel sat queued for 20+ minutes twice, so the extension and these seeds
+  ran on Colab with the same commands.
+- ``n4-copy-mamba2``: Mamba-2's copy task at n=32, seed 0: lr 2.5e-4 (the low edge of the
+  5e-4..8e-3 check), and 6,000 steps at 5e-4 (does it learn the copy if given longer?).
+- ``n4-mamba2-s0``: seed 0 at each context's best LR, repeated alone: it beat seeds 1-2 by
+  ~0.02 bits/byte at both contexts, and it is the seed the LRs were chosen on.
+- ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
+- ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
+  protocol otherwise), one vmapped group of 4 per context.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -115,7 +131,56 @@ LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
 
 N2 = "@experiments/n2_noise_scale/run.py"
 
+N4 = "@experiments/n4_scans/run.py"
+
+def _n4(model: str, context: str, lrs: list[str], seeds: list[str], tag: str, group: str = "4", *extra) -> list[str]:
+    return [N1, "--studies", "sweep", "--model", model, "--context", context, "--seeds", *seeds, "--lrs", *lrs,
+            "--group", group, *extra, "--out", f"n4-{tag}.json"]
+
+
+N4_LRS = ["1e-3", "2e-3", "4e-3", "8e-3"]
+
+def _n4copy(model: str, seed: str) -> list[str]:
+    return ["--studies", "copy", "--copy-models", model, "--seeds", seed, "--out", f"n4-copy-{model}-s{seed}.json"]
+
+
 PRESETS = {
+    "n4-copy": [
+        [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
+        [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
+    ],
+    "n4-copy-mamba2": [
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "2.5e-4",
+          "--out", "n4-copy-mamba2-lr2.5e-4-s0.json"]],
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "5e-4",
+          "--copy-steps", "6000", "--out", "n4-copy-mamba2-long6000-lr5e-4-s0.json"]],
+    ],
+    "n4-mamba2-s0": [
+        [_n4("mamba2", "1024", ["4e-3"], ["0"], "mamba2-1024-s0-repeat", "1")],
+        [_n4("mamba2", "256", ["8e-3"], ["0"], "mamba2-256-s0-repeat", "1")],
+    ],
+    "n4-mamba2-b": [
+        [_n4("mamba2", "1024", ["4e-3"], ["1", "2"], "mamba2-1024-s12", "2")],
+        [_n4("mamba2", "256", ["8e-3"], ["1", "2"], "mamba2-256-s12-8e-3", "2"),
+         _n4("mamba2", "256", ["1.6e-2", "3.2e-2"], ["0"], "mamba2-256-s0-ext", "2")],
+    ],
+    "n4-mamba2": [
+        [_n4("mamba2", "1024", N4_LRS, ["0"], "mamba2-1024-s0", "2")],
+        [_n4("mamba2", "256", N4_LRS, ["0"], "mamba2-256-s0", "2")],
+    ],
+    "n4-lru": [
+        [_n4("lru", "1024", N4_LRS, ["0"], "lru-1024-s0")],
+        [_n4("lru", "256", N4_LRS, ["0"], "lru-256-s0")],
+    ],
+    "n4-calibrate": [
+        [[N4, "--out", "n4-throughput.json"]],
+        [
+            [N1, "--studies", "memory", "--model", "lru", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-lru.json"],
+            [N1, "--studies", "memory", "--model", "mamba", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-mamba.json"],
+        ],
+    ],
     "n2-noise32": [
         [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "0", "--out", "n2-noise32-s0.json"]],
         [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "1", "--out", "n2-noise32-s1.json"]],

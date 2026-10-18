@@ -1,0 +1,88 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/kaggle/working/n4-copy-gru-s0.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "copy"
+  ],
+  "seeds": [
+   0
+  ],
+  "contexts": [
+   256,
+   1024
+  ],
+  "models": [
+   "gru",
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "gru"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32,
+   128,
+   512
+  ],
+  "copy_steps": 1500,
+  "peak_lr": null,
+  "amp": false,
+  "remat": "none",
+  "attention": "fused",
+  "scan": "associative",
+  "log_every": 250
+ },
+ "copy": [
+  {
+   "seed": 0,
+   "model": "gru",
+   "n": 32,
+   "parameters": 4250592,
+   "second_half_accuracy": 0.88592529296875,
+   "first_half_accuracy": 0.030934979838709676,
+   "chance": 0.03125,
+   "train_seconds": 225.87448954582214,
+   "framework": "jax",
+   "init": "torch",
+   "amp": false
+  },
+  {
+   "seed": 0,
+   "model": "gru",
+   "n": 128,
+   "parameters": 4250592,
+   "second_half_accuracy": 0.2082672119140625,
+   "first_half_accuracy": 0.030880905511811024,
+   "chance": 0.03125,
+   "train_seconds": 293.5657663345337,
+   "framework": "jax",
+   "init": "torch",
+   "amp": false
+  },
+  {
+   "seed": 0,
+   "model": "gru",
+   "n": 512,
+   "parameters": 4250592,
+   "second_half_accuracy": 0.03989410400390625,
+   "first_half_accuracy": 0.03158252813111546,
+   "chance": 0.03125,
+   "train_seconds": 603.6639194488525,
+   "framework": "jax",
+   "init": "torch",
+   "amp": false
+  }
+ ],
+ "finished": "2026-10-18 14:35:47",
+ "wall_seconds": 1129.7641730308533
+}
