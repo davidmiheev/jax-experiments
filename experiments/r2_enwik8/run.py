@@ -35,6 +35,7 @@ import numpy as np
 from flax import nnx
 
 from jaxexp import recurrent as R
+from jaxexp import ssm
 from jaxexp import text
 from jaxexp import train as TR
 from jaxexp import transformer as T
@@ -51,6 +52,9 @@ MODELS = {
     "transformer-4M": ("learned", (256, 5, 4), 1e-3, 0.1),
     "transformer-25M": ("learned", (512, 8, 8), 6e-4, 0.1),
     "transformer-25M-rope": ("rope", (512, 8, 8), 6e-4, 0.1),
+    # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each; LRs are N4's own sweeps.
+    "lru": ("lru", None, 2e-3, 0.1),
+    "mamba": ("mamba", None, 2e-3, 0.1),
 }
 
 
@@ -72,6 +76,14 @@ def build(name: str, context: int, seed: int, args, ladder, vocab: int = 256):
     """(params, apply, parameter count, init label)."""
     family, size, _, _ = MODELS[name]
     dtype = jnp.float16 if args.amp else None
+    if family in ssm.KINDS:  # N4: new models, so JAX-side init (no ml-ladder twin)
+        params = ssm.KINDS[family][1](jax.random.key(seed), vocab=vocab)
+        scan, remat = getattr(args, "scan", "associative"), args.remat != "none"
+
+        def apply(p, ids):
+            return ssm.apply(p, ids, family, scan=scan, compute_dtype=dtype, remat=remat)
+
+        return params, apply, ssm.parameter_count(params), "jax"
     if family in ("rnn", "gru", "lstm"):
         hidden, layers = size
         if ladder is not None:
@@ -297,6 +309,7 @@ def main() -> None:
     parser.add_argument("--remat", choices=["none", "nothing", "dots"], default="none")
     # ml-ladder routes attention through SDPA (fused, fp32 score accumulation).
     parser.add_argument("--attention", choices=["explicit", "fused"], default="fused")
+    parser.add_argument("--scan", choices=["associative", "sequential"], default="associative", help="lru / mamba")
     parser.add_argument("--log-every", type=int, default=250)
     args = parser.parse_args()
 

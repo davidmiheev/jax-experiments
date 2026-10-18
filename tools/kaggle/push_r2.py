@@ -48,6 +48,9 @@ Presets (each is two job lists, one per GPU):
   its lowest): B=16 at 5e-4, 1e-3; B=64 at 1e-3, 2e-3; B=256 at 2e-3, 4e-3.
 - ``n2-noise32``: the noise run again with 32 batches per measurement (8 in ``n2``; its points
   scatter by ~2x), on seeds 0 and 1.
+- ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
+  associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
+  memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -115,7 +118,18 @@ LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
 
 N2 = "@experiments/n2_noise_scale/run.py"
 
+N4 = "@experiments/n4_scans/run.py"
+
 PRESETS = {
+    "n4-calibrate": [
+        [[N4, "--out", "n4-throughput.json"]],
+        [
+            [N1, "--studies", "memory", "--model", "lru", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-lru.json"],
+            [N1, "--studies", "memory", "--model", "mamba", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-mamba.json"],
+        ],
+    ],
     "n2-noise32": [
         [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "0", "--out", "n2-noise32-s0.json"]],
         [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "1", "--out", "n2-noise32-s1.json"]],
