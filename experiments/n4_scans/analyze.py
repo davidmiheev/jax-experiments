@@ -43,8 +43,10 @@ def _load(path: Path, key: str) -> list[dict]:
     return json.loads(path.read_text()).get(key, []) if path.exists() else []
 
 
-def our_rows() -> list[dict]:
-    return [r for p in sorted(RUNS.glob("n4-*.json")) for r in _load(p, "enwik8")]
+def our_rows(repeats: bool = False) -> list[dict]:
+    """enwik8 rows; ``repeats=True`` returns only the deliberate repeats of a run (``*-repeat.json``),
+    which are kept out of the seed statistics."""
+    return [r for p in sorted(RUNS.glob("n4-*.json")) if ("-repeat" in p.name) == repeats for r in _load(p, "enwik8")]
 
 
 def reference_rows() -> dict[tuple[str, int], list[dict]]:
@@ -132,24 +134,40 @@ def summarise() -> dict:
             "gap_to_gru": gap_to_gru(runs, reference_rows()[("gru", t)], t),
             "tokens_per_second_ml_ladder": _spread([r["tokens_per_second"] for r in runs]),
         }
+    out["repeats"] = {
+        f"{r['model']}-{r['context']}/s{r['seed']}/lr{r['peak_lr']:g}": {
+            "repeat": r["bits_per_byte"],
+            "original": next((o["bits_per_byte"] for o in data if (o["model"], o["context"], o["seed"], o["peak_lr"])
+                              == (r["model"], r["context"], r["seed"], r["peak_lr"])), None),
+        }
+        for r in our_rows(repeats=True)
+    }
     out["copy"] = copy_summary()
     out["throughput"] = throughput_summary()
     return out
 
 
 def copy_summary() -> dict:
-    ours = [r for p in sorted(RUNS.glob("n4-copy*.json")) for r in _load(p, "copy")]
+    """Second-half accuracy by (source, model, n, LR). Runs without a recorded LR used their
+    model's default, 2e-3 (R3's and n4-copy's protocol)."""
+    # Copy rows before 2026-10-18 do not record their step count; the one longer run is named "long<steps>".
+    ours = [dict(r, steps=r.get("steps") or (int(p.name.split("long")[1].split("-")[0]) if "-long" in p.name else 1500))
+            for p in sorted(RUNS.glob("n4-copy*.json")) for r in _load(p, "copy")]
     r3 = [r for p in (R2 / "r3-lstm.json", R2 / "r3-transformer-fused-colab.json") for r in _load(p, "copy")]
     ladder = _load(LADDER / "c-gpu.json", "copy")
     out = {}
     for source, rows in (("jax", ours + r3), ("ml-ladder", ladder)):
-        for model in sorted({r["model"] for r in rows}):
-            for n in sorted({r["n"] for r in rows if r["model"] == model}):
-                runs = sorted((r for r in rows if r["model"] == model and r["n"] == n), key=lambda r: r["seed"])
-                out[f"{source}/{model}/{n}"] = {
-                    "by_seed": {r["seed"]: r["second_half_accuracy"] for r in runs},
-                    "second_half_accuracy": _spread([r["second_half_accuracy"] for r in runs]),
-                }
+        groups: dict = {}
+        for r in rows:
+            key = (f"{source}/{r['model']}/{r['n']}" + (f"/lr{r['peak_lr']:g}" if r.get("peak_lr") not in (None, 2e-3) else "")
+                   + (f"/{r['steps']}steps" if r.get("steps", 1500) != 1500 else ""))
+            groups.setdefault(key, []).append(r)
+        for key in sorted(groups):
+            runs = sorted(groups[key], key=lambda r: r["seed"])
+            out[key] = {
+                "by_seed": {r["seed"]: r["second_half_accuracy"] for r in runs},
+                "second_half_accuracy": _spread([r["second_half_accuracy"] for r in runs]),
+            }
     return out
 
 
@@ -219,7 +237,7 @@ def plot(summary: dict) -> None:
         ts = sorted((int(t) for t, v in by_t.items() if "tokens_per_second" in v))
         if ts:
             axes[2].plot(ts, [by_t[str(t)]["tokens_per_second"] / 1e3 for t in ts], "o" + styles[scan],
-                         color=colors.get(model, "0.5"), label=f"{model} {scan}")
+                         color=colors.get(model, "0.5"), label=model if scan == "-" else f"{model} {scan}")
     axes[2].set_xscale("log", base=2)
     axes[2].set_yscale("log")
     axes[2].set_xlabel("sequence length T (16,384 tokens per step)")
@@ -240,6 +258,7 @@ def main() -> None:
               "bins", {k: round(v, 3) for k, v in e["bits_by_position_bins"].items()},
               "gain", round(e["context_gain"]["median"], 3),
               "vs GRU", {k: round(v, 3) for k, v in e["gap_to_gru"]["bins"].items()}, "trend", round(e["gap_to_gru"]["trend"], 3))
+    print("repeats:", summary["repeats"])
     for key, e in summary["copy"].items():
         print(f"copy {key:<28}", {k: round(v, 3) for k, v in e["by_seed"].items()})
     plot(summary)

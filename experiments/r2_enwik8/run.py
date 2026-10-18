@@ -52,7 +52,9 @@ MODELS = {
     "transformer-4M": ("learned", (256, 5, 4), 1e-3, 0.1),
     "transformer-25M": ("learned", (512, 8, 8), 6e-4, 0.1),
     "transformer-25M-rope": ("rope", (512, 8, 8), 6e-4, 0.1),
-    # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each; LRs are N4's own sweeps.
+    # N4: linear recurrences (jaxexp.ssm), ~4.08M parameters each. The LR here (2e-3) is what the
+    # copy task uses, as R3 does; enwik8 runs pass N4's tuned LRs explicitly (LRU 4e-3; Mamba-2
+    # 4e-3 at T=1024, 8e-3 at T=256).
     "lru": ("lru", None, 2e-3, 0.1),
     "mamba": ("mamba", None, 2e-3, 0.1),
     "mamba2": ("mamba2", None, 2e-3, 0.1),  # scan "associative" = chunked SSD
@@ -241,6 +243,7 @@ def study_copy(args, report) -> None:
             batch = max(8, args.tokens_per_step // length)
             for name in args.copy_models:
                 _, _, peak_lr, weight_decay = MODELS[name]
+                peak_lr = args.copy_lr or peak_lr
                 params, apply, count, init = build(name, length - 1, seed, args, ladder, vocab=text.COPY_VOCAB)
                 batches = text.CopyBatches(n, batch, seed)
                 result = TR.train(
@@ -268,6 +271,8 @@ def study_copy(args, report) -> None:
                         "model": name,
                         "n": n,
                         "parameters": count,
+                        "peak_lr": peak_lr,
+                        "steps": args.copy_steps,
                         "second_half_accuracy": float(correct[:, n - 1 :].mean()),
                         "first_half_accuracy": float(correct[:, : n - 1].mean()),
                         "chance": 1 / text.COPY_VOCAB,
@@ -305,6 +310,7 @@ def main() -> None:
     parser.add_argument("--eval-tokens", type=int, default=262144)
     parser.add_argument("--copy-lengths", nargs="+", type=int, default=[32, 128, 512])
     parser.add_argument("--copy-steps", type=int, default=1500)
+    parser.add_argument("--copy-lr", type=float, default=None, help="override the model's LR on the copy task (N4)")
     parser.add_argument("--peak-lr", type=float, default=None)
     parser.add_argument("--amp", action="store_true", help="fp16 matmuls + dynamic loss scaling (as autocast)")
     parser.add_argument("--remat", choices=["none", "nothing", "dots"], default="none")
