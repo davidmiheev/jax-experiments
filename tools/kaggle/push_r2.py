@@ -54,8 +54,9 @@ Presets (each is two job lists, one per GPU):
 - ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
   seeds 0-2, each at the model's default LR (2e-3) as in R3.
 - ``n4-mamba2-b``: Mamba-2's seeds 1-2 at T=1024's best LR (4e-3) and at T=256's 8e-3. 8e-3
-  was the edge of T=256's grid; seed 0 at 1.6e-2 and 3.2e-2 ran on Colab (the kernel sat
-  queued), with seeds 1-2 at 1.6e-2 to follow there if it wins.
+  was the edge of T=256's first grid; seed 0 at 1.6e-2 and 3.2e-2 confirmed it as the best.
+  On 2026-10-18 the kernel sat queued for 20+ minutes twice, so the extension and these seeds
+  ran on Colab with the same commands.
 - ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
 - ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
   protocol otherwise), one vmapped group of 4 per context.

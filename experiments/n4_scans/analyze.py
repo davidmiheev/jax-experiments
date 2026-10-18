@@ -77,6 +77,19 @@ def context_gain(runs: list[dict], context: int) -> dict:
     return _spread(gains)
 
 
+def gap_to_gru(runs: list[dict], gru: list[dict], context: int) -> dict:
+    """Median curve minus the GRU's median curve, binned. Both are evaluated on the same validation
+    windows, so the text's own difficulty at each position (which moves both curves by ~0.03
+    bits from bin to bin) cancels. ``trend`` is the gap in the last quarter minus the gap at
+    positions [T/8, T/4): negative means the model gains on the GRU as the context grows."""
+    diff = np.median([r["bits_by_position"] for r in runs], 0) - np.median([g["bits_by_position"] for g in gru], 0)
+    bins = {}
+    for lo, hi in BINS:
+        if lo < context:
+            bins[f"{lo}-{min(hi, context)}"] = float(diff[lo : min(hi, context)].mean())
+    return {"bins": bins, "trend": float(diff[3 * context // 4 :].mean() - diff[context // 8 : context // 4].mean())}
+
+
 def summarise() -> dict:
     data = our_rows()
     out: dict = {"enwik8": {}, "references": {}}
@@ -100,6 +113,7 @@ def summarise() -> dict:
                 "best_lr_bits_by_seed": {r["seed"]: r["bits_per_byte"] for r in at_best},
                 "bits_by_position_bins": by_position(at_best, t),
                 "context_gain": context_gain(at_best, t),
+                "gap_to_gru": gap_to_gru(at_best, reference_rows()[("gru", t)], t),
                 "skipped_steps": {f"{r['peak_lr']:g}/s{r['seed']}": r["skipped_steps"] for r in mine if r.get("skipped_steps")},
                 "group_steady_tokens_per_second": _spread([r["group_steady_tokens_per_second"] for r in mine]),
             }
@@ -115,6 +129,7 @@ def summarise() -> dict:
             "bits": _spread([r["bits_per_byte"] for r in runs]),
             "bits_by_position_bins": by_position(runs, t),
             "context_gain": context_gain(runs, t),
+            "gap_to_gru": gap_to_gru(runs, reference_rows()[("gru", t)], t),
             "tokens_per_second_ml_ladder": _spread([r["tokens_per_second"] for r in runs]),
         }
     out["copy"] = copy_summary()
@@ -223,7 +238,8 @@ def main() -> None:
               "EDGE" if e.get("best_at_grid_edge") else "",
               "bits", {k: round(v, 4) for k, v in e.get("best_lr_bits", e.get("bits")).items()},
               "bins", {k: round(v, 3) for k, v in e["bits_by_position_bins"].items()},
-              "gain", round(e["context_gain"]["median"], 3))
+              "gain", round(e["context_gain"]["median"], 3),
+              "vs GRU", {k: round(v, 3) for k, v in e["gap_to_gru"]["bins"].items()}, "trend", round(e["gap_to_gru"]["trend"], 3))
     for key, e in summary["copy"].items():
         print(f"copy {key:<28}", {k: round(v, 3) for k, v in e["by_seed"].items()})
     plot(summary)
