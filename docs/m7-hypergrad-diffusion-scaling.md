@@ -247,3 +247,109 @@ N8SURPRISES
 ### Open threads
 
 N8THREADS
+
+## O6 — A scaling law on tokens
+
+### Question
+
+G1 tried to measure the Chinchilla exponent on enwik8's characters and could
+not. Its compute-optimal $N^*$ grew as $C^{1.24}$, because the corpus ran
+out: the largest IsoFLOP point repeated the training split 39.7 times. With
+ml-ladder's byte-exact BPE tokenizer and a corpus 11× larger, does the
+optimum become free to move? Does its exponent come with a range narrow
+enough to mean something?
+
+### The idea
+
+**Chinchilla's two approaches.** At a fixed compute budget $C \approx 6ND$,
+train models of several sizes $N$, each on $D = C / (6N)$ tokens. The loss
+against $\log N$ is a valley (an IsoFLOP curve), and its bottom is the
+compute-optimal size $N^*(C)$. Repeating this at several budgets gives
+$N^* \propto C^a$ (approach 2). Alternatively, fit one surface
+$L(N, D) = E + A/N^\alpha + B/D^\beta$ through every run; it implies
+$a = \beta / (\alpha + \beta)$ (approach 3).
+
+**A corpus that does not run out.** enwik8 is the first $10^8$ bytes of
+enwik9. Training on enwik9 minus the bytes enwik8 holds out (90M–100M) gives
+about 990M bytes, which is 353M BPE tokens. Validation is ml-ladder's own
+held-out text, scored in bits per byte.
+
+### The math
+
+**Approach 2.** Per budget, fit $L = c_0 + c_1 \log N + c_2 (\log N)^2$ through
+all runs; the vertex $\log N^* = -c_1 / 2c_2$ counts only if it lies strictly
+inside the sizes sampled. Then $\log N^* = a \log C + k$ over the interior
+contours, and $D^* = C / 6N^*$ gives $b = 1 - a$.
+
+**Approach 3.** Hoffmann et al.'s fit: minimise the Huber loss
+($\delta = 10^{-3}$) of $\log L$ against
+$\operatorname{LSE}(a - \alpha \log N,\; b - \beta \log D,\; e)$ from a grid of
+243 starting points, by L-BFGS-B.
+
+**What C counts.** $6ND$ with non-embedding $N$ is Kaplan's convention, and
+the budgets here are defined by it. A training token really costs
+
+$$6\,(N + N_{\text{head}}) + 12\, n_{\text{layer}}\, T\, d$$
+
+FLOPs: the 4096-way output layer ($N_{\text{head}} = 4096\,d$, 0.4M to 2.1M
+here) and causal attention (XLA computes all $T \times T$ scores). That is
+3.2× the nominal cost for the smallest model and 1.17× for the largest. The
+parametric law $L(N, D)$ does not depend on how compute is counted, so the
+compute-optimal $N$ under the true cost comes from minimising
+$L(N, C / \text{cost}(N))$ over $N$.
+
+### What we measure and why
+
+- **The tokenizer is ml-ladder's.** It must give 31,095,000 tokens on
+  enwik8's training split and 2.8865 bytes per validation token.
+- **LR per size.** Peak LR on a factor-2 grid at $2 \times 10^7$ tokens,
+  seed 0, extended until every optimum is interior. G1 found per-size tuning
+  essential.
+- **IsoFLOP contours** at $C = 3 \times 10^{13}$, $10^{14}$,
+  $3 \times 10^{14}$, $10^{15}$, $3 \times 10^{15}$ and $10^{16}$ (nominal
+  6ND), seeds 0–2. Each of nine sizes runs where
+  $2 \times 10^6 \le D \le$ the corpus.
+- **Fixed for every run:** T = 256, 64 sequences per step, AdamW (0.9, 0.95),
+  weight decay 0.1, clipping at 1, 5% warmup then cosine to 10% over each
+  run's own length, fp16 matmuls with loss scaling, fused attention.
+- **Uncertainty:** 5th–95th percentiles over 400 bootstrap resamples of the
+  runs, for both approaches.
+- **The parameter count:** approach 3 is repeated with the output layer
+  counted in $N$, because that choice has been shown to move the exponent
+  at small scale (Pearce and Song 2024).
+
+### What I built
+
+- **`jaxexp.bpe`:**
+  - ml-ladder's `train_bpe` and `bpe_encode`;
+  - `enwik9`, checked against enwik8 by SHA (enwik8 must be its first
+    $10^8$ bytes);
+  - `corpus`, which encodes in 100 MB chunks, checks that the tokens spell
+    every byte exactly once, and caches the result as uint16 under one file
+    lock.
+- **`experiments/o6_scaling/run.py`:**
+  - nine RoPE transformers, s0–s8: widths 96–512, 2–8 layers, 0.22M–25.2M
+    non-embedding parameters;
+  - the studies `tokenize`, `lr` and `isoflop`.
+- **`analyze.py`:** both approaches, both parameter counts, the true-cost
+  optimum and the bootstrap. `synthetic_check.py` runs it on data drawn from
+  a known law at this design. It recovers $a = 0.483$ as 0.468 (IsoFLOP) and
+  0.460 (parametric, bootstrap 0.43–0.51).
+- **`tests/test_o6_bpe.py`:** the tokens spell every byte once, and the
+  vocabulary and encoding equal ml-ladder's.
+- **The token caches** are built once on CPU and shipped as a private Kaggle
+  dataset. One kernel that downloaded and tokenized enwik9 itself ran 3 h
+  against 45 min expected, with no output, and was deleted. The runner now
+  bounds every job's wall time.
+
+### Results
+
+O6RESULTS
+
+### What surprised me
+
+O6SURPRISES
+
+### Open threads
+
+O6THREADS
