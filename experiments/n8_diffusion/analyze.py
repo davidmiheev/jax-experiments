@@ -61,11 +61,12 @@ def summarise() -> dict:
         key = f"T{r['T']}/{r['sampler']}" + ("/torch" if r.get("framework") == "torch" else "")
         out["cost"].setdefault(key, {}).setdefault(str(r["steps"]), {"seconds": [], "compile": []})
         out["cost"][key][str(r["steps"])]["seconds"].append(r["sample_seconds"])
-        out["cost"][key][str(r["steps"])]["compile"].append(r["compile_seconds"])
+        if "compile_seconds" in r:  # the PyTorch control is not compiled
+            out["cost"][key][str(r["steps"])]["compile"].append(r["compile_seconds"])
     for key, by_steps in out["cost"].items():
         for s, v in by_steps.items():
             by_steps[s] = {"seconds": _spread(v["seconds"]), "ms_per_step": 1e3 * float(np.median(v["seconds"])) / int(s),
-                           "compile_seconds": _spread(v["compile"])}
+                           "compile_seconds": _spread(v["compile"]) if v["compile"] else None}
     out["train_mse"] = {}
     for r in data:
         key = f"T{r['T']}/{r['schedule']}/{r['parameterisation']}" + ("/torch" if r.get("framework") == "torch" else "")
@@ -128,7 +129,7 @@ def main() -> None:
         for key, entry in s[section].items():
             line = "  ".join(f"{st}:{v['median']:.2f}" for st, v in sorted(entry["fd"].items(), key=lambda x: int(x[0])))
             extra = ""
-            if section == "e3":
+            if "ml_ladder" in entry:
                 extra = "  E3: " + "  ".join(f"{st}:{v['median']:.2f}" for st, v in entry["ml_ladder"].items() if v)
             print(f"{key:<26} knee {entry['knee_steps']}  {line}{extra}")
     for key, by_steps in s["cost"].items():
