@@ -13,6 +13,8 @@ Studies:
 - ``reference``: 3,000 steps of the tuned protocol (peak 8e-3, 5% warmup, cosine to 10%; the
   best LR at T=256 in ml-ladder's ``c-gpu-lr2-256.json`` and O3), in this fp32 setting. Saves
   checkpoints at ``--starts`` and reports bits/byte. The baseline for ``online``.
+  ``--constant-lr x`` runs the same training stream at a constant LR instead (the control for
+  ``online``, which starts from a constant LR and has no schedule).
 - ``landscape``: from each start (step 0, and the reference's checkpoints), for each K in
   ``--ks``: the meta-loss after K steps at a constant LR on a log grid, and its hypergradient
   d L / d log lr. The same K training batches and the same 64 meta-validation windows at every
@@ -21,7 +23,9 @@ Studies:
 - ``online``: 3,000 steps whose LR is set by hypergradient descent: every K steps, the
   hypergradient of the meta-loss after that segment (fresh meta-validation windows each
   time) updates log lr by Adam (step ``--meta-lr``). No schedule; the LR is what it learns.
-  A segment whose loss or hypergradient is not finite is undone and the LR halved.
+  A segment whose loss or hypergradient is not finite is undone and the LR halved. With
+  ``--clip-hypergrad c``, each hypergradient is clipped to [-c, c] before the meta-optimiser
+  sees it: one exploding hypergradient otherwise fills Adam's second moment and freezes the LR.
 
     python experiments/n3_hypergrad/run.py --studies reference landscape --out runs/n3.json
 """
@@ -109,7 +113,8 @@ def study_reference(args, report, setup: Setup, checkpoints: dict):
         checkpoints[0] = (params, state)
     for t0 in range(0, args.steps, chunk):
         windows = setup.next_windows(chunk)
-        lrs = np.array([TR.lr_at(t, args.steps, PEAK) for t in range(t0, t0 + chunk)], np.float32)
+        lrs = np.array([args.constant_lr if args.constant_lr else TR.lr_at(t, args.steps, PEAK)
+                        for t in range(t0, t0 + chunk)], np.float32)
         params, state, losses = setup.unroll_j(params, state, jnp.asarray(windows), jnp.asarray(lrs))
         history.append([t0, float(np.mean(losses))])
         if t0 + chunk in args.starts:
@@ -117,10 +122,11 @@ def study_reference(args, report, setup: Setup, checkpoints: dict):
         if (t0 // chunk) % 10 == 0:
             print(f"[reference] step {t0:5d} loss {history[-1][1]:.4f} ({time.time() - started:.0f}s)", flush=True)
     seconds = time.time() - started
-    row = {"seed": args.seed, "peak_lr": PEAK, "steps": args.steps, "train_history": history, "train_seconds": seconds,
+    row = {"seed": args.seed, "peak_lr": args.constant_lr or PEAK, "steps": args.steps, "train_history": history,
+           "schedule": "constant" if args.constant_lr else "warmup-cosine", "train_seconds": seconds,
            "steps_per_second": args.steps / seconds, **setup.bits(params)}
     report.setdefault("reference", []).append(row)
-    print(f"[reference] s{args.seed} {row['bits_per_byte']:.4f} bits/byte, {row['steps_per_second']:.2f} steps/s", flush=True)
+    print(f"[reference] s{args.seed} {row['schedule']} {row['peak_lr']:g}: {row['bits_per_byte']:.4f} bits/byte, {row['steps_per_second']:.2f} steps/s", flush=True)
     _save(args, report)
 
 
@@ -169,15 +175,19 @@ def study_online(args, report, setup: Setup):
             log_lr = log_lr - jnp.log(2.0)
             continue
         params, state = new_params, new_state
+        if args.clip_hypergrad:
+            g = jnp.clip(g, -args.clip_hypergrad, args.clip_hypergrad)
         upd, meta_state = meta_opt.update(g, meta_state, log_lr)
         log_lr = optax.apply_updates(log_lr, upd)
         if seg % 10 == 0:
             print(f"[online] step {seg * k:5d} lr {trajectory[-1]['lr']:.2e} meta {float(loss):.4f} "
                   f"({time.time() - started:.0f}s)", flush=True)
     row = {"seed": args.seed, "k": k, "init_lr": args.online_init, "meta_lr": args.meta_lr, "steps": steps,
+           "clip_hypergrad": args.clip_hypergrad,
            "trajectory": trajectory, "train_seconds": time.time() - started, **setup.bits(params)}
     report.setdefault("online", []).append(row)
-    print(f"[online] s{args.seed} K={k} init {args.online_init:g}: {row['bits_per_byte']:.4f} bits/byte", flush=True)
+    print(f"[online] s{args.seed} K={k} init {args.online_init:g} clip {args.clip_hypergrad}: "
+          f"{row['bits_per_byte']:.4f} bits/byte", flush=True)
     _save(args, report)
 
 
@@ -195,6 +205,9 @@ def main() -> None:
     parser.add_argument("--online-k", type=int, default=30)
     parser.add_argument("--online-init", type=float, default=1e-3)
     parser.add_argument("--meta-lr", type=float, default=0.05, help="Adam step on log lr")
+    parser.add_argument("--constant-lr", type=float, default=None,
+                        help="reference: a constant LR instead of the tuned schedule (the control for online runs)")
+    parser.add_argument("--clip-hypergrad", type=float, default=None, help="online: clip each hypergradient to [-c, c]")
     parser.add_argument("--data-dir", default=None)
     parser.add_argument("--ml-ladder", default=str(ROOT.parent / "ml-ladder"))
     args = parser.parse_args()
