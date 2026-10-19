@@ -21,7 +21,9 @@ Studies:
 - ``online``: 3,000 steps whose LR is set by hypergradient descent: every K steps, the
   hypergradient of the meta-loss after that segment (fresh meta-validation windows each
   time) updates log lr by Adam (step ``--meta-lr``). No schedule; the LR is what it learns.
-  A segment whose loss or hypergradient is not finite is undone and the LR halved.
+  A segment whose loss or hypergradient is not finite is undone and the LR halved. With
+  ``--clip-hypergrad c``, each hypergradient is clipped to [-c, c] before the meta-optimiser
+  sees it: one exploding hypergradient otherwise fills Adam's second moment and freezes the LR.
 
     python experiments/n3_hypergrad/run.py --studies reference landscape --out runs/n3.json
 """
@@ -169,15 +171,19 @@ def study_online(args, report, setup: Setup):
             log_lr = log_lr - jnp.log(2.0)
             continue
         params, state = new_params, new_state
+        if args.clip_hypergrad:
+            g = jnp.clip(g, -args.clip_hypergrad, args.clip_hypergrad)
         upd, meta_state = meta_opt.update(g, meta_state, log_lr)
         log_lr = optax.apply_updates(log_lr, upd)
         if seg % 10 == 0:
             print(f"[online] step {seg * k:5d} lr {trajectory[-1]['lr']:.2e} meta {float(loss):.4f} "
                   f"({time.time() - started:.0f}s)", flush=True)
     row = {"seed": args.seed, "k": k, "init_lr": args.online_init, "meta_lr": args.meta_lr, "steps": steps,
+           "clip_hypergrad": args.clip_hypergrad,
            "trajectory": trajectory, "train_seconds": time.time() - started, **setup.bits(params)}
     report.setdefault("online", []).append(row)
-    print(f"[online] s{args.seed} K={k} init {args.online_init:g}: {row['bits_per_byte']:.4f} bits/byte", flush=True)
+    print(f"[online] s{args.seed} K={k} init {args.online_init:g} clip {args.clip_hypergrad}: "
+          f"{row['bits_per_byte']:.4f} bits/byte", flush=True)
     _save(args, report)
 
 
@@ -195,6 +201,7 @@ def main() -> None:
     parser.add_argument("--online-k", type=int, default=30)
     parser.add_argument("--online-init", type=float, default=1e-3)
     parser.add_argument("--meta-lr", type=float, default=0.05, help="Adam step on log lr")
+    parser.add_argument("--clip-hypergrad", type=float, default=None, help="online: clip each hypergradient to [-c, c]")
     parser.add_argument("--data-dir", default=None)
     parser.add_argument("--ml-ladder", default=str(ROOT.parent / "ml-ladder"))
     args = parser.parse_args()
