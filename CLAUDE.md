@@ -144,6 +144,20 @@ reproduce. This file is the practical brief for picking it up.
   - **`jaxexp.data` downloads atomically now** (per-process `.part`, then
     `os.replace`). Two lanes once fetched MNIST into one directory and one
     read the other's partial file.
+- **O6 is done** (same writeup). `jaxexp.bpe` holds ml-ladder's BPE-4096
+  (exact: 31,095,000 enwik8 tokens) and a 353M-token stream: enwik9 without
+  enwik8's held-out bytes.
+  - **Sizes and LRs.** Nine RoPE sizes, s0–s8, from 0.22M to 25.2M
+    non-embedding parameters; the best LR halves every 3–5× in N
+    (`docs/data/o6/lr-table.json`).
+  - **IsoFLOP:** $3 \times 10^{13}$–$10^{16}$, 105 runs. Five contours are
+    interior.
+  - **The exponent depends on what N counts.** $N^* \propto C^{0.69}$
+    (IsoFLOP; parametric 0.63) with non-embedding N. Counting the
+    4096-way output layer gives 0.51 (0.475–0.569): Kaplan versus Chinchilla
+    from the same runs.
+  - **Counting compute doesn't matter much.** The true FLOPs are 1.17–3.2× the
+    nominal 6ND, but correcting for it moves the exponent by only 0.03.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
@@ -235,6 +249,19 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   `kaggle kernels status`, and download with `kaggle kernels output`.
   `kaggle kernels logs` is available too. `kaggle kernels delete -y <ref>`
   removes a kernel (CLI 2.2.4); earlier CLI versions had no delete.
+  - **A running kernel shows nothing.** `logs` and the output listing are
+    empty until it finishes, and the Kaggle MCP may not cancel sessions
+    (`kernelSessions.cancel` was denied on 2026-10-19).
+  - **Deleting is the only way to stop one.** On 2026-10-19, o6b ran 3 h
+    against ~45 min expected. Deleting it stopped the session, and its GPU
+    hours were taken off the quota (19.57 h used before, 17.55 h after).
+  - **Bound every job.** Presets can set a per-job limit (`TIMEOUTS` in
+    `push_r2.py`); a job that exceeds it is killed and the lane moves on.
+- **Large inputs go in as datasets, not downloads.** O6's enwik9 token
+  caches (353M tokens, 706 MB) are the private dataset
+  `davidmiheev/jaxexp-bpe`, built on CPU by
+  `experiments/o6_scaling/run.py --studies tokenize`. `--cache-from
+  /kaggle/input` copies them into the job's cache directory.
 - **Credentials** live outside any repo, in `~/.kaggle/` (`access_token`,
   `kaggle.json`) with mode 600. Never commit them. If the session has none,
   ask the user.

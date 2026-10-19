@@ -1,0 +1,27 @@
+[{"stream_name":"stdout","time":6.440894783,"data":"source: ['jax-experiments', 'ml-ladder'] jax-experiments f7fe3ee61be765caceb25cc4236d807664b08360\n"}
+,{"stream_name":"stdout","time":6.440946318,"data":"ml-ladder 42489dede3959c3f784fb73b929b9369ccaeb53a\n"}
+,{"stream_name":"stdout","time":6.4409509289999995,"data":"\n"}
+,{"stream_name":"stdout","time":18.195655086,"data":"[gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 1e16 --seeds 2 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-1e16-s2.json\n"}
+,{"stream_name":"stdout","time":18.196169497,"data":"[gpu1] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 1e16 --seeds 1 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-1e16-s1.json\n"}
+,{"stream_name":"stdout","time":6434.309258678,"data":"[gpu0] exit 0 for o6-iso-1e16-s2.json\n"}
+,{"stream_name":"stdout","time":6434.309819302,"data":"[gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 3e15 --seeds 0 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-3e15-s0.json\n"}
+,{"stream_name":"stdout","time":6677.20514424,"data":"[gpu1] exit 0 for o6-iso-1e16-s1.json\n"}
+,{"stream_name":"stdout","time":6677.205504321,"data":"[gpu1] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 1e15 --seeds 2 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-1e15-s2.json\n"}
+,{"stream_name":"stdout","time":8541.004257791,"data":"[gpu1] exit 0 for o6-iso-1e15-s2.json\n"}
+,{"stream_name":"stdout","time":8541.004887151,"data":"[gpu1] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 3e14 --seeds 2 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-3e14-s2.json\n"}
+,{"stream_name":"stdout","time":9677.438324051,"data":"[gpu1] exit 0 for o6-iso-3e14-s2.json\n"}
+,{"stream_name":"stdout","time":9677.43863308,"data":"[gpu1] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 1e14 --seeds 2 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-1e14-s2.json\n"}
+,{"stream_name":"stdout","time":10085.831991311,"data":"[gpu1] exit 0 for o6-iso-1e14-s2.json\n"}
+,{"stream_name":"stdout","time":10085.832359421,"data":"[gpu1] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 1e14 --seeds 0 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-1e14-s0.json\n"}
+,{"stream_name":"stdout","time":10132.33831211,"data":"[gpu0] exit 0 for o6-iso-3e15-s0.json\n"}
+,{"stream_name":"stdout","time":10132.338583954,"data":"[gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies isoflop --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --budgets 3e13 --seeds 1 --sizes s0 s1 s2 s3 s4 s5 s6 s7 s8 --lr-table docs/data/o6/lr-table.json --out /kaggle/working/o6-iso-3e13-s1.json\n"}
+,{"stream_name":"stdout","time":10302.167721157,"data":"[gpu0] exit 0 for o6-iso-3e13-s1.json\n"}
+,{"stream_name":"stdout","time":10516.435934127,"data":"[gpu1] exit 0 for o6-iso-1e14-s0.json\n"}
+,{"stream_name":"stdout","time":10516.436057459,"data":"all done in 10498 s\n"}
+,{"stream_name":"stderr","time":10518.575334876,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":10518.575359482,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":10518.845464911,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":10518.845491359,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":10519.630125128,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":10520.164443844,"data":"[NbConvertApp] Writing 303806 bytes to __results__.html\n"}
+]

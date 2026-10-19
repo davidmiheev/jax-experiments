@@ -51,6 +51,19 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``o6c`` / ``o6d``: O6's IsoFLOP study: C = 3e13, 1e14, 3e14, 1e15, 3e15 and 1e16 FLOPs
+  (6ND), seeds 0-2, each size at its tuned LR (``docs/data/o6/lr-table.json``) where
+  2e6 <= D <= the corpus. The token caches come from the private dataset ``jaxexp-bpe`` (built on CPU
+  by ``run.py --studies tokenize``), so no kernel downloads or tokenizes enwik9.
+- ``n3e``: N3's constant-LR controls for its online runs: the same training stream at a
+  constant 1e-3 and 2e-3, seeds 0-2.
+- ``o6e``: ``o6b`` again (that kernel ran ~3 h against ~45 min expected, with no output, and
+  was deleted), with the token caches from ``jaxexp-bpe`` and a 1.5 h limit per job.
+- ``o6b``: O6's LR grid extended upward (s0-s4 were best at 8e-3, the grid's top): 1.6e-2 for
+  s0-s4 and 3.2e-2 for s0-s2; s8 (512 wide, 8 layers, for C = 1e16) at 1e-3..4e-3 (lane 0).
+  N8's seed 0 again, with the MNIST download fixed (lane 1).
+- ``o6a``: O6's tokenizer check and caches (enwik8 against ml-ladder's 31,095,000 tokens;
+  enwik9 without enwik8's validation bytes), then each model size's LR on 2e7 tokens, seed 0.
 - ``n8b``: as ``n8``, with E3's own PyTorch model trained in the same job and scored by the
   same scorer (the control), and the x0-clipped DDPM / DDIM samplers at T=1000.
 - ``n8``: E3's DDPM in JAX, seeds 0-2: E3's own arm (T=400, eps, linear / cosine, DDPM at
@@ -165,8 +178,57 @@ def _n4copy(model: str, seed: str) -> list[str]:
 O4 = "@experiments/o4_decode/run.py"
 N3 = "@experiments/n3_hypergrad/run.py"
 N8 = "@experiments/n8_diffusion/run.py"
+O6 = "@experiments/o6_scaling/run.py"
+O6_DATA = ["--cache-dir", "/kaggle/temp/bpe"]
+O6_CACHED = [*O6_DATA, "--cache-from", "/kaggle/input"]  # with the private dataset jaxexp-bpe mounted
+EXTRA_DATASETS = {"o6c": ["jaxexp-bpe"], "o6d": ["jaxexp-bpe"], "o6e": ["jaxexp-bpe"]}
+# Per-job wall-clock limits. o6b ran ~3 h against ~45 min expected, with no log to say why, and
+# was deleted; since then each O6 preset bounds every job (the longest IsoFLOP job is ~2 h).
+TIMEOUTS = {"o6c": 3 * 3600, "o6d": 3 * 3600, "o6e": 5400, "n3e": 2400}
+
+def _iso(budget: str, seed: int) -> list[str]:
+    """One IsoFLOP contour for one seed: every size whose D = C / (6N) is in [2e6, corpus]."""
+    return [O6, "--studies", "isoflop", *O6_CACHED, "--budgets", budget, "--seeds", str(seed),
+            "--sizes", *[f"s{i}" for i in range(9)], "--lr-table", "docs/data/o6/lr-table.json",
+            "--out", f"o6-iso-{budget}-s{seed}.json"]
+
+
+def _n3const(lr: str, seed: int) -> list[str]:
+    return [N3, "--studies", "reference", "--constant-lr", lr, "--seed", str(seed), "--out", f"n3-const-{lr}-s{seed}.json"]
+
 
 PRESETS = {
+    # lanes balanced by the o6a throughputs (~3 h each)
+    "n3e": [
+        [_n3const("1e-3", 0), _n3const("2e-3", 0), _n3const("1e-3", 1)],
+        [_n3const("2e-3", 1), _n3const("1e-3", 2), _n3const("2e-3", 2)],
+    ],
+    "o6c": [
+        [_iso("1e16", 2), _iso("3e15", 0), _iso("3e13", 1)],
+        [_iso("1e16", 1), _iso("1e15", 2), _iso("3e14", 2), _iso("1e14", 2), _iso("1e14", 0)],
+    ],
+    "o6d": [
+        [_iso("1e16", 0), _iso("1e15", 1), _iso("3e14", 1), _iso("1e14", 1), _iso("3e13", 2), _iso("3e13", 0)],
+        [_iso("3e15", 2), _iso("3e15", 1), _iso("1e15", 0), _iso("3e14", 0)],
+    ],
+    "o6e": [  # o6b again, with the token caches from jaxexp-bpe and a per-job limit
+        [[O6, "--studies", "lr", *O6_CACHED, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
+         [O6, "--studies", "lr", *O6_CACHED, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
+         [O6, "--studies", "lr", *O6_CACHED, "--sizes", "s8", "--lrs", "1e-3", "2e-3", "4e-3", "--out", "o6-lr-e.json"]],
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"]],
+    ],
+    "o6b": [
+        [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s8", "--lrs", "1e-3", "2e-3", "4e-3", "--out", "o6-lr-e.json"]],
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"]],
+    ],
+    "o6a": [
+        [[O6, "--studies", "tokenize", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "s3", "s7",
+          "--lrs", "1e-3", "2e-3", "4e-3", "8e-3", "--out", "o6-lr-a.json"]],
+        [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s4", "s5", "s6",
+          "--lrs", "1e-3", "2e-3", "4e-3", "8e-3", "--out", "o6-lr-b.json"]],
+    ],
     "n8b": [
         [[N8, "--seed", "0", "--out", "n8b-s0.json"], [N8, "--seed", "2", "--out", "n8b-s2.json"]],
         [[N8, "--seed", "1", "--out", "n8b-s1.json"]],
@@ -570,6 +632,7 @@ import os, subprocess, sys, tarfile, time, urllib.request, zipfile, io, json
 from pathlib import Path
 
 JOBS = {jobs}
+JOB_TIMEOUT = {timeout}  # seconds per job (None: no limit); a hung job must not hold the GPU for 12 h
 SRC, DATA, OUT = Path("/kaggle/temp/src"), Path("/kaggle/temp/data/text"), Path("/kaggle/working")
 SRC.mkdir(parents=True, exist_ok=True); DATA.mkdir(parents=True, exist_ok=True)
 import shutil
@@ -607,7 +670,11 @@ def run_lane(gpu, jobs):
         extra = common if not script.startswith("../") else common[:2]
         cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + extra + args
         print(f"[gpu{{gpu}}]", " ".join(cmd), flush=True)
-        rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+        try:
+            rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT,
+                                timeout=JOB_TIMEOUT).returncode
+        except subprocess.TimeoutExpired:
+            rc = f"timeout after {{JOB_TIMEOUT}} s"
         print(f"[gpu{{gpu}}] exit {{rc}} for {{out}}", flush=True)
 
 import threading
@@ -628,7 +695,8 @@ def main() -> None:
     out = ROOT / "runs" / f"kaggle-{args.preset}"
     out.mkdir(parents=True, exist_ok=True)
     (out / "kernel.py").write_text(
-        KERNEL.format(preset=args.preset, jobs=json.dumps(PRESETS[args.preset]), common=json.dumps(COMMON), run=RUN)
+        KERNEL.format(preset=args.preset, jobs=json.dumps(PRESETS[args.preset]), common=json.dumps(COMMON), run=RUN,
+                      timeout=TIMEOUTS.get(args.preset))
     )
     meta = {
         "id": f"{args.user}/{slug}",
@@ -641,7 +709,7 @@ def main() -> None:
         "enable_tpu": False,
         "machine_shape": "NvidiaTeslaT4",
         "enable_internet": True,
-        "dataset_sources": [f"{args.user}/jaxexp-source"],
+        "dataset_sources": [f"{args.user}/jaxexp-source", *(f"{args.user}/{d}" for d in EXTRA_DATASETS.get(args.preset, []))],
         "competition_sources": [],
         "kernel_sources": [],
     }
