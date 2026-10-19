@@ -56,6 +56,9 @@ Presets (each is two job lists, one per GPU):
 - ``n8``: E3's DDPM in JAX, seeds 0-2: E3's own arm (T=400, eps, linear / cosine, DDPM at
   10-400 steps) and T=1000 with eps / x0 / v x linear / cosine, DDPM and DDIM at 10-1000 steps;
   fd by ml-ladder's own scorer.
+- ``n3d``: online runs again with each hypergradient clipped to [-1, 1] (in ``n3c`` one
+  exploding hypergradient filled the meta-Adam's second moment and froze the LR): from 1e-3 on
+  seeds 0-2 and from 8e-3 on seed 0.
 - ``n3b`` / ``n3c``: the landscape on a 9-point grid (2.5e-4 .. 6.4e-2; ``n3`` found the K-step
   optimum at its 1e-3 edge from step 1500) with batches keyed by (seed, start, K), seeds 0-2;
   online runs from the tuned 8e-3, from 3.2e-2 with the divergence guard, and from 1e-3 on
@@ -175,6 +178,12 @@ PRESETS = {
     "n3b": [
         [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
         [[N3, "--studies", "reference", "landscape", "--seed", "1", "--out", "n3-landscape-s1.json"]],
+    ],
+    "n3d": [
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s0.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "8e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-tuned-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "1", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s1.json"],
+         [N3, "--studies", "online", "--seed", "2", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s2.json"]],
     ],
     "n3c": [
         [[N3, "--studies", "reference", "landscape", "--seed", "2", "--out", "n3-landscape-s2.json"],
