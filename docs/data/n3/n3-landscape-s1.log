@@ -1,0 +1,16 @@
+[reference] step     0 loss 3.4469 (17s)
+[reference] step   500 loss 1.6447 (109s)
+[reference] step  1000 loss 1.3928 (204s)
+[reference] step  1500 loss 1.2733 (299s)
+[reference] step  2000 loss 1.2052 (396s)
+[reference] step  2500 loss 1.1575 (492s)
+[reference] s1 1.6338 bits/byte, 5.18 steps/s
+[landscape] start     0 K=10   best lr 2.0e-03 (loss 3.0648; before 5.7001); schedule lr 2.9e-04; 127s
+[landscape] start     0 K=30   best lr 2.0e-03 (loss 2.7414; before 5.7077); schedule lr 8.3e-04; 279s
+[landscape] start     0 K=100  best lr 2.0e-03 (loss 2.5949; before 5.6906); schedule lr 2.7e-03; 787s
+[landscape] start   500 K=10   best lr 2.0e-03 (loss 1.6130; before 1.6641); schedule lr 7.7e-03; 81s
+[landscape] start   500 K=30   best lr 1.0e-03 (loss 1.6091; before 1.6910); schedule lr 7.7e-03; 231s
+[landscape] start   500 K=100  best lr 2.0e-03 (loss 1.5294; before 1.6531); schedule lr 7.7e-03; 751s
+[landscape] start  1500 K=10   best lr 1.0e-03 (loss 1.2678; before 1.2838); schedule lr 4.7e-03; 77s
+[landscape] start  1500 K=30   best lr 1.0e-03 (loss 1.2214; before 1.2615); schedule lr 4.6e-03; 227s
+[landscape] start  1500 K=100  best lr 1.0e-03 (loss 1.2410; before 1.3072); schedule lr 4.5e-03; 748s

@@ -51,6 +51,16 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n3d``: online runs again with each hypergradient clipped to [-1, 1] (in ``n3c`` one
+  exploding hypergradient filled the meta-Adam's second moment and froze the LR): from 1e-3 on
+  seeds 0-2 and from 8e-3 on seed 0.
+- ``n3b`` / ``n3c``: the landscape on a 9-point grid (2.5e-4 .. 6.4e-2; ``n3`` found the K-step
+  optimum at its 1e-3 edge from step 1500) with batches keyed by (seed, start, K), seeds 0-2;
+  online runs from the tuned 8e-3, from 3.2e-2 with the divergence guard, and from 1e-3 on
+  seeds 1-2. ``n3``'s own outputs are in ``docs/data/n3/first-run/``.
+- ``n3``: hypergradients of the LR on the 4M at T=256 (fp32): the tuned reference run with
+  checkpoints and the K-step meta-loss landscape from steps 0 / 500 / 1500 (lane 0); online
+  hypergradient descent of the LR from 1e-3 and from 3.2e-2 (lane 1).
 - ``o4``: KV-cached decoding three ways (recompute, jitted step from Python, fori_loop) for the
   25M RoPE transformer at C = 256..4096 and the 4M (learned positions, so C <= 1024), batch 1
   and 8, plus batch 32 at C=1024: ms/token, compile time, memory, bandwidth arithmetic.
@@ -148,8 +158,31 @@ def _n4copy(model: str, seed: str) -> list[str]:
 
 
 O4 = "@experiments/o4_decode/run.py"
+N3 = "@experiments/n3_hypergrad/run.py"
 
 PRESETS = {
+    "n3b": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
+        [[N3, "--studies", "reference", "landscape", "--seed", "1", "--out", "n3-landscape-s1.json"]],
+    ],
+    "n3d": [
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s0.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "8e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-tuned-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "1", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s1.json"],
+         [N3, "--studies", "online", "--seed", "2", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s2.json"]],
+    ],
+    "n3c": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "2", "--out", "n3-landscape-s2.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "3.2e-2", "--out", "n3-online-hi-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "8e-3", "--out", "n3-online-tuned-s0.json"],
+         [N3, "--studies", "online", "--seed", "1", "--online-init", "1e-3", "--out", "n3-online-lo-s1.json"],
+         [N3, "--studies", "online", "--seed", "2", "--online-init", "1e-3", "--out", "n3-online-lo-s2.json"]],
+    ],
+    "n3": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--out", "n3-online-lo-s0.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "3.2e-2", "--out", "n3-online-hi-s0.json"]],
+    ],
     "o4": [
         [[O4, "--models", "transformer-25M-rope", "--out", "o4-25m.json"]],
         [[O4, "--models", "transformer-4M", "--contexts", "256", "512", "1024", "--out", "o4-4m.json"],
