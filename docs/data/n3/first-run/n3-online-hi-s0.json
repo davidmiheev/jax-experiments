@@ -1,0 +1,1012 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "studies": [
+   "online"
+  ],
+  "out": "/kaggle/working/n3-online-hi-s0.json",
+  "seed": 0,
+  "init": "torch",
+  "starts": [
+   0,
+   500,
+   1500
+  ],
+  "ks": [
+   10,
+   30,
+   100
+  ],
+  "grid": [
+   "1e-3",
+   "2e-3",
+   "4e-3",
+   "8e-3",
+   "1.6e-2",
+   "3.2e-2",
+   "6.4e-2"
+  ],
+  "steps": 3000,
+  "online_k": 30,
+  "online_init": 0.032,
+  "meta_lr": 0.05,
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder"
+ },
+ "parameters": 4145920,
+ "online": [
+  {
+   "seed": 0,
+   "k": 30,
+   "init_lr": 0.032,
+   "meta_lr": 0.05,
+   "steps": 3000,
+   "trajectory": [
+    {
+     "step": 0,
+     "lr": 0.03200000524520874,
+     "meta_loss": 3.4230737686157227,
+     "hypergrad": NaN,
+     "train_loss": 5.0691633224487305
+    },
+    {
+     "step": 30,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 60,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 90,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 120,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 150,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 180,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 210,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 240,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 270,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 300,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 330,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 360,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 390,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 420,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 450,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 480,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 510,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 540,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 570,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 600,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 630,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 660,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 690,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 720,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 750,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 780,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 810,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 840,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 870,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 900,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 930,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 960,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 990,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1020,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1050,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1080,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1110,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1140,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1170,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1200,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1230,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1260,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1290,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1320,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1350,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1380,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1410,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1440,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1470,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1500,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1530,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1560,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1590,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1620,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1650,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1680,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1710,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1740,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1770,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1800,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1830,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1860,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1890,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1920,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1950,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 1980,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2010,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2040,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2070,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2100,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2130,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2160,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2190,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2220,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2250,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2280,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2310,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2340,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2370,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2400,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2430,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2460,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2490,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2520,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2550,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2580,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2610,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2640,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2670,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2700,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2730,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2760,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2790,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2820,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2850,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2880,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2910,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2940,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    },
+    {
+     "step": 2970,
+     "lr": NaN,
+     "meta_loss": NaN,
+     "hypergrad": NaN,
+     "train_loss": NaN
+    }
+   ],
+   "train_seconds": 1777.9455666542053,
+   "bits_per_byte": NaN,
+   "bits_by_position": [
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN,
+    NaN
+   ]
+  }
+ ]
+}
