@@ -51,6 +51,11 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``n8b``: as ``n8``, with E3's own PyTorch model trained in the same job and scored by the
+  same scorer (the control), and the x0-clipped DDPM / DDIM samplers at T=1000.
+- ``n8``: E3's DDPM in JAX, seeds 0-2: E3's own arm (T=400, eps, linear / cosine, DDPM at
+  10-400 steps) and T=1000 with eps / x0 / v x linear / cosine, DDPM and DDIM at 10-1000 steps;
+  fd by ml-ladder's own scorer.
 - ``n3d``: online runs again with each hypergradient clipped to [-1, 1] (in ``n3c`` one
   exploding hypergradient filled the meta-Adam's second moment and froze the LR): from 1e-3 on
   seeds 0-2 and from 8e-3 on seed 0.
@@ -159,8 +164,17 @@ def _n4copy(model: str, seed: str) -> list[str]:
 
 O4 = "@experiments/o4_decode/run.py"
 N3 = "@experiments/n3_hypergrad/run.py"
+N8 = "@experiments/n8_diffusion/run.py"
 
 PRESETS = {
+    "n8b": [
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"], [N8, "--seed", "2", "--out", "n8b-s2.json"]],
+        [[N8, "--seed", "1", "--out", "n8b-s1.json"]],
+    ],
+    "n8": [
+        [[N8, "--seed", "0", "--out", "n8-s0.json"], [N8, "--seed", "2", "--out", "n8-s2.json"]],
+        [[N8, "--seed", "1", "--out", "n8-s1.json"]],
+    ],
     "n3b": [
         [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
         [[N3, "--studies", "reference", "landscape", "--seed", "1", "--out", "n3-landscape-s1.json"]],
