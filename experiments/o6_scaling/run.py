@@ -141,6 +141,9 @@ def main() -> None:
     parser.add_argument("--corpus", choices=["enwik8", "enwik9"], default="enwik9")
     parser.add_argument("--data-dir", default=None, help="directory holding enwik8 (and enwik9)")
     parser.add_argument("--cache-dir", default=None, help="token caches (default: <data-dir>/bpe)")
+    parser.add_argument("--cache-from", default=None,
+                        help="copy prebuilt caches (bpe-4096.json, bpe-val.npy, bpe-train-*.npy), found anywhere "
+                             "under this directory, into --cache-dir first (e.g. /kaggle/input)")
     parser.add_argument("--sizes", nargs="+", default=list(SIZES), choices=list(SIZES))
     parser.add_argument("--lrs", nargs="+", type=float, default=[1e-3, 2e-3, 4e-3, 8e-3])
     parser.add_argument("--tokens", type=float, default=2e7, help="lr study: tokens per run")
@@ -154,6 +157,17 @@ def main() -> None:
     ATTENTION[0] = args.attention
     data_dir = Path(args.data_dir) if args.data_dir else ROOT / "data" / "text"
     cache_dir = Path(args.cache_dir) if args.cache_dir else data_dir / "bpe"
+    if args.cache_from:
+        import shutil
+
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        with bpe._locked(cache_dir / "bpe.lock"):
+            for src in sorted(Path(args.cache_from).rglob("bpe-*")):
+                if not (src.suffix in (".npy", ".json") and src.is_file()):
+                    continue
+                if not (cache_dir / src.name).exists():
+                    shutil.copyfile(src, cache_dir / f"{src.name}.part")
+                    (cache_dir / f"{src.name}.part").rename(cache_dir / src.name)
     report = json.loads(Path(args.out).read_text()) if Path(args.out).exists() else {}
     report.update({"device": str(jax.devices()[0]),
                    "environment": {"python": platform.python_version(), "jax": jax.__version__},

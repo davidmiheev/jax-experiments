@@ -54,7 +54,8 @@ Presets (each is two job lists, one per GPU):
 - ``o6c`` / ``o6d``: O6's IsoFLOP study: C = 3e13, 1e14, 3e14, 1e15, 3e15 and 1e16 FLOPs
   (6ND), seeds 0-2, each size at its tuned LR (``docs/data/o6/lr-table.json``) where
   2e6 <= D <= the corpus. Also N3's constant-LR controls (1e-3 and 2e-3, seeds 0-2) for its
-  online runs.
+  online runs. The token caches come from the private dataset ``jaxexp-bpe`` (built on CPU
+  by ``run.py --studies tokenize``), so no kernel downloads or tokenizes enwik9.
 - ``o6b``: O6's LR grid extended upward (s0-s4 were best at 8e-3, the grid's top): 1.6e-2 for
   s0-s4 and 3.2e-2 for s0-s2; s8 (512 wide, 8 layers, for C = 1e16) at 1e-3..4e-3 (lane 0).
   N8's seed 0 again, with the MNIST download fixed (lane 1).
@@ -176,10 +177,12 @@ N3 = "@experiments/n3_hypergrad/run.py"
 N8 = "@experiments/n8_diffusion/run.py"
 O6 = "@experiments/o6_scaling/run.py"
 O6_DATA = ["--cache-dir", "/kaggle/temp/bpe"]
+O6_CACHED = [*O6_DATA, "--cache-from", "/kaggle/input"]  # with the private dataset jaxexp-bpe mounted
+EXTRA_DATASETS = {"o6c": ["jaxexp-bpe"], "o6d": ["jaxexp-bpe"]}
 
 def _iso(budget: str, seed: int) -> list[str]:
     """One IsoFLOP contour for one seed: every size whose D = C / (6N) is in [2e6, corpus]."""
-    return [O6, "--studies", "isoflop", *O6_DATA, "--budgets", budget, "--seeds", str(seed),
+    return [O6, "--studies", "isoflop", *O6_CACHED, "--budgets", budget, "--seeds", str(seed),
             "--sizes", *[f"s{i}" for i in range(9)], "--lr-table", "docs/data/o6/lr-table.json",
             "--out", f"o6-iso-{budget}-s{seed}.json"]
 
@@ -684,7 +687,7 @@ def main() -> None:
         "enable_tpu": False,
         "machine_shape": "NvidiaTeslaT4",
         "enable_internet": True,
-        "dataset_sources": [f"{args.user}/jaxexp-source"],
+        "dataset_sources": [f"{args.user}/jaxexp-source", *(f"{args.user}/{d}" for d in EXTRA_DATASETS.get(args.preset, []))],
         "competition_sources": [],
         "kernel_sources": [],
     }
