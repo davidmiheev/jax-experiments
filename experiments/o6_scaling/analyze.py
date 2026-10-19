@@ -13,6 +13,15 @@
   ranges reported are the 5th to 95th percentiles. G1's lesson: a parameter whose range
   is wide is not a finding.
 
+- **Two parameter counts.** ``N`` is non-embedding (Kaplan's convention; the budgets are
+  defined by it). The parametric fit is repeated with the 4096-way output layer counted
+  ("with head"), which at these sizes is 0.4M-2.1M parameters, more than the blocks for the
+  smallest models.
+- **The true cost.** A training token costs 6 (N + head) FLOPs in the matmuls plus
+  12 layers T d in causal attention (XLA computes the full T x T scores), 1.17x to 3.2x the
+  nominal 6 N. The parametric law does not depend on how compute is counted, so the
+  compute-optimal N under the true cost is found by minimising L(N, C / cost(N)) over N.
+
 Losses are in bits per byte (a constant multiple of nats per token on this fixed held-out
 text, so the exponents are the same).
 
@@ -37,6 +46,18 @@ BOOT = 400
 
 def _load(key: str) -> list[dict]:
     return [r for p in sorted(RUNS.glob("o6-*.json")) for r in json.loads(p.read_text()).get(key, [])]
+
+
+VOCAB, CONTEXT = 4096, 256
+
+
+def head_params(width: int) -> int:
+    return VOCAB * width + VOCAB
+
+
+def flops_per_token(n_non_embedding: float, width: float, layers: float) -> float:
+    """Training FLOPs per token: 6 x (blocks + output layer) + 12 L T d for attention."""
+    return 6.0 * (n_non_embedding + head_params(width)) + 12.0 * layers * CONTEXT * width
 
 
 def lr_table() -> dict:
@@ -85,9 +106,11 @@ def _huber(r, delta=1e-3):
     return np.where(a <= delta, 0.5 * r * r, delta * (a - 0.5 * delta))
 
 
-def parametric_fit(rows: list[dict]) -> dict:
-    """log L = LSE(a - alpha log N, b - beta log D, e), with A = e^a, B = e^b, E = e^e."""
-    logn = np.log([r["non_embedding"] for r in rows])
+def parametric_fit(rows: list[dict], count: str = "non_embedding", starts: list | None = None) -> dict:
+    """log L = LSE(a - alpha log N, b - beta log D, e), with A = e^a, B = e^b, E = e^e.
+    ``count``: "non_embedding" or "with_head" (the output layer counted in N)."""
+    n = [r["non_embedding"] + (head_params(r["width"]) if count == "with_head" else 0) for r in rows]
+    logn = np.log(n)
     logd = np.log([r["tokens"] for r in rows])
     logl = np.log([r["bits_per_byte"] for r in rows])
 
@@ -96,43 +119,74 @@ def parametric_fit(rows: list[dict]) -> dict:
         pred = logsumexp(np.stack([a - alpha * logn, b - beta * logd, np.full_like(logn, e)]), axis=0)
         return _huber(pred - logl).sum()
 
+    if starts is None:  # Hoffmann et al.'s grid of initialisations
+        starts = [[a0, b0, e0, al, be] for a0 in (0.0, 5.0, 10.0) for b0 in (0.0, 5.0, 10.0)
+                  for e0 in (-1.0, -0.5, 0.0) for al in (0.1, 0.3, 0.6) for be in (0.1, 0.3, 0.6)]
     best = None
-    for a0 in (0.0, 5.0, 10.0):
-        for b0 in (0.0, 5.0, 10.0):
-            for e0 in (-1.0, -0.5, 0.0):
-                for al in (0.1, 0.3, 0.6):
-                    for be in (0.1, 0.3, 0.6):
-                        res = minimize(objective, [a0, b0, e0, al, be], method="L-BFGS-B",
-                                       bounds=[(-10, 30), (-10, 30), (-3, 1), (0.0, 2.0), (0.0, 2.0)])
-                        if best is None or res.fun < best.fun:
-                            best = res
+    for x0 in starts:
+        res = minimize(objective, x0, method="L-BFGS-B",
+                       bounds=[(-10, 30), (-10, 30), (-3, 1), (0.0, 2.0), (0.0, 2.0)])
+        if best is None or res.fun < best.fun:
+            best = res
     a, b, e, alpha, beta = best.x
-    return {"A": float(math.exp(a)), "B": float(math.exp(b)), "E": float(math.exp(e)), "alpha": float(alpha),
-            "beta": float(beta), "a_implied": float(beta / (alpha + beta)), "objective": float(best.fun)}
+    return {"count": count, "x": [float(v) for v in best.x], "A": float(math.exp(a)), "B": float(math.exp(b)), "E": float(math.exp(e)),
+            "alpha": float(alpha), "beta": float(beta), "a_implied": float(beta / (alpha + beta)),
+            "objective": float(best.fun)}
+
+
+def true_cost_optimum(fit: dict, budgets=(1e14, 1e15, 1e16)) -> dict:
+    """The compute-optimal non-embedding N under the true FLOP count, from a non-embedding fit:
+    minimise L(N, C / flops_per_token(N)) over N, with width and depth following the sizes'
+    shape (layers = width / 64)."""
+    def loss(n, c):
+        width = (n * 64 / 12) ** (1 / 3)  # 12 L d^2 = n with L = d / 64
+        layers = width / 64
+        d = c / flops_per_token(n, width, layers)
+        return fit["E"] + fit["A"] / n ** fit["alpha"] + fit["B"] / d ** fit["beta"]
+
+    grid = np.geomspace(1e4, 1e10, 4000)
+    n_star = {}
+    for c in budgets:
+        n_star[c] = float(grid[int(np.argmin([loss(n, c) for n in grid]))])
+    lc, ln = np.log(list(n_star)), np.log(list(n_star.values()))
+    return {"n_star": {f"{c:g}": v for c, v in n_star.items()}, "a_true_cost": float(np.polyfit(lc, ln, 1)[0])}
+
+
+def _near(x: list, rng) -> list:
+    """The full-data optimum and four perturbations of it: the resamples' starting points."""
+    x = np.asarray(x)
+    return [x.tolist()] + [(x + rng.normal(0, [1.0, 1.0, 0.2, 0.05, 0.05])).tolist() for _ in range(4)]
 
 
 def bootstrap(rows: list[dict], seed: int = 0) -> dict:
     rng = np.random.default_rng(seed)
-    iso, par = [], []
+    full, full_head = parametric_fit(rows), parametric_fit(rows, "with_head")
+    iso, par, head, true_a = [], [], [], []
     for _ in range(BOOT):
         sample = [rows[i] for i in rng.integers(0, len(rows), size=len(rows))]
         f = isoflop_fit(sample)
         if "a" in f:
             iso.append((f["a"], f["b"]))
-        p = parametric_fit(sample)
+        p = parametric_fit(sample, starts=_near(full["x"], rng))
         par.append((p["alpha"], p["beta"], p["E"], p["a_implied"]))
+        true_a.append(true_cost_optimum(p)["a_true_cost"])
+        h = parametric_fit(sample, "with_head", starts=_near(full_head["x"], rng))
+        head.append((h["alpha"], h["beta"], h["E"], h["a_implied"]))
 
     def rng5_95(values):
         v = np.asarray(values)
         return [float(np.percentile(v, 5)), float(np.percentile(v, 95))] if len(v) else None
 
-    iso, par = np.asarray(iso), np.asarray(par)
+    iso, par, head = np.asarray(iso), np.asarray(par), np.asarray(head)
     return {
         "isoflop_a": rng5_95(iso[:, 0]) if len(iso) else None,
         "isoflop_b": rng5_95(iso[:, 1]) if len(iso) else None,
         "isoflop_resamples_with_two_interior_contours": int(len(iso)),
         "alpha": rng5_95(par[:, 0]), "beta": rng5_95(par[:, 1]), "E": rng5_95(par[:, 2]),
-        "a_implied": rng5_95(par[:, 3]), "resamples": BOOT,
+        "a_implied": rng5_95(par[:, 3]), "a_true_cost": rng5_95(true_a),
+        "with_head": {"alpha": rng5_95(head[:, 0]), "beta": rng5_95(head[:, 1]), "E": rng5_95(head[:, 2]),
+                      "a_implied": rng5_95(head[:, 3])},
+        "resamples": BOOT,
     }
 
 
@@ -142,6 +196,10 @@ def summarise() -> dict:
     if rows:
         out["isoflop"] = isoflop_fit(rows)
         out["parametric"] = parametric_fit(rows)
+        out["parametric_with_head"] = parametric_fit(rows, "with_head")
+        out["true_cost"] = true_cost_optimum(out["parametric"])
+        out["flops_per_token_over_6n"] = {r["size"]: flops_per_token(r["non_embedding"], r["width"], r["layers"])
+                                          / (6 * r["non_embedding"]) for r in rows}
         out["bootstrap"] = bootstrap(rows)
         out["runs"] = len(rows)
     return out
@@ -196,7 +254,7 @@ def main() -> None:
     if s["lr"]:
         (RUNS / "lr-table.json").write_text(json.dumps({k: v["best_lr"] for k, v in s["lr"].items()}, indent=1) + "\n")
     if "isoflop" in s:
-        print(json.dumps({k: s[k] for k in ("isoflop", "parametric", "bootstrap")}, indent=1))
+        print(json.dumps({k: s[k] for k in ("isoflop", "parametric", "parametric_with_head", "true_cost", "bootstrap")}, indent=1))
     plot(s)
     (ROOT / "docs" / "data" / "o6-summary.json").write_text(json.dumps(s, indent=1) + "\n")
     print("wrote docs/data/o6-summary.json")
