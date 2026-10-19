@@ -106,7 +106,8 @@ def summarise() -> dict:
             "per_step_hypergrad_negative_fraction": float((per_step < 0).mean()),
         })
     for r in _rows("reference"):
-        out["reference"].append({"seed": r["seed"], "bits_per_byte": r["bits_per_byte"], "steps_per_second": r["steps_per_second"]})
+        out["reference"].append({"seed": r["seed"], "schedule": r.get("schedule", "warmup-cosine"), "peak_lr": r.get("peak_lr", PEAK),
+                                 "bits_per_byte": r["bits_per_byte"], "steps_per_second": r["steps_per_second"]})
     for r in _rows("online"):
         lrs = np.array([t["lr"] for t in r["trajectory"]])
         gs = [t["hypergrad"] for t in r["trajectory"]]
