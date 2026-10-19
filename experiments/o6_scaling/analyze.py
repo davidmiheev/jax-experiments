@@ -235,8 +235,13 @@ def plot(summary: dict) -> None:
     axes[0].legend(fontsize=8)
     good = [(float(c), v) for c, v in summary["isoflop"]["contours"].items() if v.get("interior")]
     if good:
-        axes[1].plot([c for c, _ in good], [v["n_star"] for _, v in good], "o-", label="N*")
-        axes[1].plot([c for c, _ in good], [v["d_star"] for _, v in good], "s-", label="D* (tokens)")
+        cs = np.array([c for c, _ in good])
+        axes[1].plot(cs, [v["n_star"] for _, v in good], "o", color="tab:blue", label="N* (IsoFLOP vertex)")
+        axes[1].plot(cs, [v["d_star"] for _, v in good], "s", color="tab:orange", label="D* (tokens)")
+        for key, color in (("n_star", "tab:blue"), ("d_star", "tab:orange")):
+            k, c0 = np.polyfit(np.log(cs), np.log([v[key] for _, v in good]), 1)
+            axes[1].plot(cs, np.exp(c0) * cs**k, "-", color=color, alpha=0.6,
+                         label=f"{'N*' if key == 'n_star' else 'D*'} ~ C^{k:.2f}")
     axes[1].set_xscale("log")
     axes[1].set_yscale("log")
     axes[1].set_xlabel("compute C = 6ND (FLOPs)")

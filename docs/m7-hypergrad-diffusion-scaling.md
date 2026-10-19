@@ -1,9 +1,9 @@
 # M7 — Hypergradients, diffusion samplers, a scaling law (N3, N8, O6)
 
-> **Status:** N3 and N8 done; O6 to follow ·
-> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; N3's constant-LR controls on a Colab T4 (same JAX, Flax and Optax versions); CPU (4 cores) for the tests and N8's seed-2 diagnosis ·
-> **Data:** N3: [`data/n3-summary.json`](data/n3-summary.json) and [`data/n3/`](data/n3/) (one JSON and log per job; the first run, whose landscape batches were not yet keyed, in `data/n3/first-run/`); N8: [`data/n8-summary.json`](data/n8-summary.json) and [`data/n8/`](data/n8/) (one JSON and log per seed, sample grids as `.npy`, the CPU diagnosis of seed 2, and the first run, without the PyTorch control, in `data/n8/first-run/`) ·
-> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b`, `n3c` and `n3d`; the controls are `experiments/n3_hypergrad/run.py --studies reference --constant-lr <1e-3|2e-3> --seed <0|1|2>`; then `uv run python experiments/n3_hypergrad/analyze.py`. N8: preset `n8b` (its seed 0 lane failed on the MNIST race and was rerun as a lane of O6's `o6e`), then `uv run python experiments/n8_diffusion/analyze.py`; the seed-2 diagnosis is `PYTHONPATH=src python experiments/n8_diffusion/diag_seed2.py <out.json>` (CPU, ~1 h). CPU tests: `uv run pytest tests/test_n3_hypergrad.py tests/test_n8_diffusion.py`
+> **Status:** N3, N8 and O6 done ·
+> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; N3's constant-LR controls on a Colab T4 (same JAX, Flax and Optax versions); CPU (4 cores) for the tests, N8's seed-2 diagnosis and O6's token caches ·
+> **Data:** N3: [`data/n3-summary.json`](data/n3-summary.json) and [`data/n3/`](data/n3/) (one JSON and log per job; the first run, whose landscape batches were not yet keyed, in `data/n3/first-run/`); N8: [`data/n8-summary.json`](data/n8-summary.json) and [`data/n8/`](data/n8/) (one JSON and log per seed, sample grids as `.npy`, the CPU diagnosis of seed 2, and the first run, without the PyTorch control, in `data/n8/first-run/`); O6: [`data/o6-summary.json`](data/o6-summary.json) and [`data/o6/`](data/o6/) (the LR sweeps, the 18 IsoFLOP jobs, `lr-table.json`, and the kernels' logs) ·
+> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b`, `n3c` and `n3d`; the controls are `experiments/n3_hypergrad/run.py --studies reference --constant-lr <1e-3|2e-3> --seed <0|1|2>`; then `uv run python experiments/n3_hypergrad/analyze.py`. N8: preset `n8b` (its seed 0 lane failed on the MNIST race and was rerun as a lane of O6's `o6e`), then `uv run python experiments/n8_diffusion/analyze.py`; the seed-2 diagnosis is `PYTHONPATH=src python experiments/n8_diffusion/diag_seed2.py <out.json>` (CPU, ~1 h). O6: `run.py --studies tokenize` on CPU builds the token caches (uploaded as the private Kaggle dataset `jaxexp-bpe`); presets `o6a` and `o6e` (LR), `o6c` and `o6d` (IsoFLOP); then `uv run python experiments/o6_scaling/analyze.py` (~20 min, mostly the bootstrap). CPU tests: `uv run pytest tests/test_n3_hypergrad.py tests/test_n8_diffusion.py tests/test_o6_bpe.py`
 
 ## N3 — Learning the learning rate: hypergradients through training
 
@@ -579,12 +579,101 @@ $L(N, C / \text{cost}(N))$ over $N$.
 
 ### Results
 
-O6RESULTS
+![O6: IsoFLOP curves (all three seeds; stars mark each parabola's vertex) and the compute-optimal N and D over the interior contours.](figures/o6-scaling.png)
+
+**The tokenizer is ml-ladder's:** 31,095,000 tokens on enwik8's training
+split and 2.8865 bytes per validation token, as recorded. The enwik9 training
+stream is 353,060,729 tokens.
+
+**LR per size** (peak, $2 \times 10^7$ tokens, seed 0; every optimum is
+interior after the grid's extension): 1.6e-2 for s0–s2, 8e-3 for s3–s4
+(s4: 1.5565 at 8e-3, 1.5578 at 4e-3), 4e-3 for s5–s6 and 2e-3 for s7–s8.
+The best LR halves for every 3–5× in parameters.
+
+**The IsoFLOP contours.** 105 runs, 11.0 GPU-hours on T4s. At each contour's
+best size the three seeds span at most 0.017 bits/byte (0.001–0.005 above
+$3 \times 10^{14}$); far from the optimum, up to 0.047. Medians of seeds 0–2:
+
+| C (6ND) | best size | its bits/byte | vertex $N^*$ | $D^*$ | tokens / parameter |
+|---|---|---|---|---|---|
+| $3 \times 10^{13}$ | s0 (0.22M, the smallest) | 1.7531 | 0.18M — not interior | | |
+| $10^{14}$ | s1 (0.40M) | 1.6277 | 0.41M | 40M | 97 |
+| $3 \times 10^{14}$ | s2 (0.93M) | 1.5019 | 0.80M | 62M | 78 |
+| $10^{15}$ | s3 (1.78M) | 1.4137 | 2.27M | 73M | 32 |
+| $3 \times 10^{15}$ | s5 (6.16M) | 1.3336 | 4.35M | 115M | 26 |
+| $10^{16}$ | s6 (10.6M) | 1.2454 | 9.18M | 181M | 20 |
+
+**The exponent depends on what N counts.**
+
+| method | $a$ in $N^* \propto C^a$ | 5–95% (400 resamples) |
+|---|---|---|
+| IsoFLOP vertices (approach 2), non-embedding N | 0.686 | 0.667–0.711 |
+| parametric (approach 3), non-embedding N | 0.628 | 0.586–0.710 |
+| the same law, optimum under the true FLOP count | 0.653 | 0.606–0.747 |
+| parametric, output layer counted in N | 0.506 | 0.475–0.569 |
+
+- **Five of six contours are interior**, over two decades of compute
+  ($10^{14}$–$10^{16}$). The optimum is free to move, which G1's corpus
+  never allowed. The approach-2 exponent does not depend on which sizes
+  enter each parabola: the nearest 3, 4 or 5 sizes give 0.701, 0.681 and
+  0.683. Dropping $10^{16}$ gives 0.711; keeping only
+  $C \ge 3 \times 10^{14}$ gives 0.686.
+- **In Kaplan's convention the exponent is Kaplan-like.** With N counting
+  only the blocks, $a = 0.63$–$0.69$ by either approach: models should grow
+  much faster than data. Chinchilla's 0.5 is outside every bootstrap
+  range. Tokens per parameter fall from 97 to 20 across the range.
+- **Counting the output layer gives Chinchilla's exponent.** The same 105
+  runs, fit with the 4096-way output layer counted in N, give
+  $a = 0.506$ (0.475–0.569). That layer is 0.4M–2.1M parameters here: more
+  than the blocks for s0–s1, and 8% of N plus the output layer at s8. Both fits describe
+  the data equally well (2.2% RMS relative residual each). This is Pearce
+  and Song's (2024) reconciliation of Kaplan and Chinchilla, reproduced at
+  small scale: at small N, the exponent is partly a statement about what
+  you count.
+- **Counting compute properly matters less.** The true FLOPs are 3.2× the
+  nominal 6ND for s0 and 1.17× for s8. Re-deriving the optimum under the
+  true cost moves $a$ from 0.628 to 0.653, inside the ranges.
+- **The parametric law:** $\alpha = 0.36$ (0.25–0.43), $\beta = 0.61$
+  (0.55–0.69), and $E = 1.06$ (0.97–1.12) bits/byte with non-embedding N.
+  Counting the output layer, $\alpha = 0.61$ (0.49–0.67), $\beta = 0.62$
+  (0.56–0.69), and $E = 1.11$ (1.06–1.16). β is twice Chinchilla's 0.28.
+  The 2.2% residual is several times the seed spread near the optima, so
+  the four-term law is only an approximation here. E is not an entropy
+  estimate: it extrapolates beyond two decades of both $N$ and $D$.
 
 ### What surprised me
 
-O6SURPRISES
+- **One dataset, two famous exponents.** I expected the true-FLOP
+  correction (up to 3.2×) to be the convention that mattered. It moved the
+  exponent by 0.03. Counting the output layer as a parameter moved it by
+  0.12, from Kaplan's side of the argument to Chinchilla's, with an equally
+  good fit. At these sizes "how many parameters" is not a settled quantity:
+  for the smallest models the 4096-way output layer is larger than all the
+  blocks together.
+- **The optimum moves fast.** Tokens per parameter at the IsoFLOP vertex fall
+  from 97 to 20 over two decades of compute. The smallest models want far
+  more data per parameter than the "20 tokens per parameter" rule of thumb.
+  That rule only appears at the top of the range.
+- **The data were very quiet.** At each contour's optimum the three seeds
+  differ by at most 0.017 bits/byte, and by 0.001–0.005 from
+  $3 \times 10^{14}$ up. The uncertainty in the exponent comes from the
+  fitting choices (what N counts, how the valley is fitted), not from
+  seeds.
 
 ### Open threads
 
-O6THREADS
+- **LR at the vertex.** Each size's LR was tuned once, at $2 \times 10^7$
+  tokens, but runs here train on $2.7 \times 10^6$ to $2.8 \times 10^8$. Halving
+  and doubling the LR at each contour's best size would show whether the
+  vertices move.
+- **Batch size and step count.** Every run uses 16,384 tokens per step, so
+  the shortest take 165 steps, 8 of them warmup. Large models at small
+  budgets are short of steps rather than of tokens, which could steepen
+  the left side of each valley and so raise $a$. A batch that grows with the
+  budget would test it.
+- **Contours of equal true compute.** Define the budgets by the true FLOP
+  count instead of 6ND, as a direct check of the re-derived optimum.
+- **Tied embeddings** make the output layer and the embedding one matrix and
+  change what N counts again. **Larger budgets** run into the corpus once
+  more: extrapolating $D^* \propto C^{0.31}$, the optimum at $10^{17}$ wants
+  about 370M tokens, more than these 353M.
