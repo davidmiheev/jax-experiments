@@ -1,0 +1,56 @@
+[o6] corpus {'vocab': 4096, 'fit_bytes': 20000000, 'corpus': 'enwik9', 'train_tokens': 353060729, 'val_tokens': 692874, 'bytes_per_token_val': 2.8865277092227446, 'seconds': 0.42762017250061035, 'eval_windows': 321, 'eval_bytes': 262507}
+  [o6 s0 lr=0.016 s0] step     0 loss 8.8255 (4s)
+  [o6 s0 lr=0.016 s0] step   136 loss 4.3485 (7s)
+  [o6 s0 lr=0.016 s0] step   272 loss 3.7469 (11s)
+  [o6 s0 lr=0.016 s0] step   408 loss 3.1357 (14s)
+  [o6 s0 lr=0.016 s0] step   544 loss 3.5254 (17s)
+  [o6 s0 lr=0.016 s0] step   680 loss 3.2891 (21s)
+  [o6 s0 lr=0.016 s0] step   816 loss 3.2990 (24s)
+  [o6 s0 lr=0.016 s0] step   952 loss 3.0532 (27s)
+  [o6 s0 lr=0.016 s0] step  1088 loss 3.3220 (31s)
+  [o6 s0 lr=0.016 s0] step  1224 loss 3.0398 (34s)
+  [o6 s0 lr=0.016 s0] step  1360 loss 3.2132 (37s)
+  [o6 s0 lr=0.016 s0] step  1363 loss 3.1308 (37s)
+[o6] C=3e+13 s0 N=  223,680 D=2.23e+07 s0: 1.7446 bits/byte
+  [o6 s1 lr=0.016 s0] step     0 loss 8.7745 (4s)
+  [o6 s1 lr=0.016 s0] step    77 loss 4.7198 (6s)
+  [o6 s1 lr=0.016 s0] step   154 loss 3.9918 (8s)
+  [o6 s1 lr=0.016 s0] step   231 loss 3.9235 (10s)
+  [o6 s1 lr=0.016 s0] step   308 loss 3.8680 (12s)
+  [o6 s1 lr=0.016 s0] step   385 loss 3.8056 (14s)
+  [o6 s1 lr=0.016 s0] step   462 loss 3.4344 (16s)
+  [o6 s1 lr=0.016 s0] step   539 loss 3.4820 (18s)
+  [o6 s1 lr=0.016 s0] step   616 loss 3.3352 (20s)
+  [o6 s1 lr=0.016 s0] step   693 loss 3.2468 (22s)
+  [o6 s1 lr=0.016 s0] step   769 loss 3.3779 (24s)
+[o6] C=3e+13 s1 N=  396,544 D=1.26e+07 s0: 1.8073 bits/byte
+  [o6 s2 lr=0.016 s0] step     0 loss 8.8134 (5s)
+  [o6 s2 lr=0.016 s0] step    32 loss 5.5148 (7s)
+  [o6 s2 lr=0.016 s0] step    64 loss 5.1588 (8s)
+  [o6 s2 lr=0.016 s0] step    96 loss 4.4968 (10s)
+  [o6 s2 lr=0.016 s0] step   128 loss 4.6420 (12s)
+  [o6 s2 lr=0.016 s0] step   160 loss 3.9844 (13s)
+  [o6 s2 lr=0.016 s0] step   192 loss 3.7833 (15s)
+  [o6 s2 lr=0.016 s0] step   224 loss 3.9385 (16s)
+  [o6 s2 lr=0.016 s0] step   256 loss 3.7536 (18s)
+  [o6 s2 lr=0.016 s0] step   288 loss 3.8455 (20s)
+  [o6 s2 lr=0.016 s0] step   320 loss 3.7905 (21s)
+  [o6 s2 lr=0.016 s0] step   328 loss 3.7159 (22s)
+[o6] C=3e+13 s2 N=  927,840 D=5.39e+06 s0: 2.0318 bits/byte
+  [o6 s3 lr=0.008 s0] step     0 loss 8.8019 (6s)
+  [o6 s3 lr=0.008 s0] step    17 loss 6.3893 (7s)
+  [o6 s3 lr=0.008 s0] step    34 loss 5.5658 (8s)
+  [o6 s3 lr=0.008 s0] step    51 loss 5.2144 (9s)
+  [o6 s3 lr=0.008 s0] step    68 loss 4.6672 (10s)
+  [o6 s3 lr=0.008 s0] step    85 loss 4.8688 (11s)
+  [o6 s3 lr=0.008 s0] step   102 loss 4.7567 (12s)
+  [o6 s3 lr=0.008 s0] step   119 loss 4.5002 (13s)
+  [o6 s3 lr=0.008 s0] step   136 loss 4.3927 (14s)
+  [o6 s3 lr=0.008 s0] step   153 loss 4.0659 (15s)
+  [o6 s3 lr=0.008 s0] step   170 loss 4.4485 (16s)
+[o6] C=3e+13 s3 N=1,779,456 D=2.8e+06 s0: 2.2511 bits/byte
+[o6] skip s4 at C=3e+13: 1.58e+06 tokens
+[o6] skip s5 at C=3e+13: 8.11e+05 tokens
+[o6] skip s6 at C=3e+13: 4.7e+05 tokens
+[o6] skip s7 at C=3e+13: 2.96e+05 tokens
+[o6] skip s8 at C=3e+13: 1.98e+05 tokens
