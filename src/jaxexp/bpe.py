@@ -106,7 +106,7 @@ def corpus(data_dir: Path, cache_dir: Path, which: str = "enwik9") -> dict:
     cache_dir.mkdir(parents=True, exist_ok=True)
     raw8 = text.enwik8(data_dir)
     train8, val8 = text.split(raw8)
-    with _locked(cache_dir / f"bpe-{which}.lock"):
+    with _locked(cache_dir / "bpe.lock"):  # one lock for the tokenizer and every cache
         tok_path = cache_dir / "bpe-4096.json"
         if tok_path.exists():
             tokenizer = Tokenizer.from_file(str(tok_path))
