@@ -134,7 +134,10 @@ def plot(summary: dict) -> None:
 
     land = _rows("landscape")
     starts = sorted({r["start"] for r in land})
-    fig, axes = plt.subplots(1, len(starts) + 2, figsize=(4.4 * (len(starts) + 2), 4), constrained_layout=True)
+    fig = plt.figure(figsize=(13.5, 8.4), constrained_layout=True)
+    grid = fig.add_gridspec(2, 6)
+    axes = [fig.add_subplot(grid[0, 2 * i : 2 * i + 2]) for i in range(len(starts))]
+    axes += [fig.add_subplot(grid[1, 0:3]), fig.add_subplot(grid[1, 3:6])]
     colors = {10: "tab:blue", 30: "tab:orange", 100: "tab:green"}
     for ax, start in zip(axes, starts):
         for r in sorted((r for r in land if r["start"] == start and r["seed"] == 0), key=lambda r: r["k"]):

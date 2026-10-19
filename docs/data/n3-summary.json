@@ -1710,6 +1710,48 @@
  "reference": [
   {
    "seed": 0,
+   "schedule": "constant",
+   "peak_lr": 0.001,
+   "bits_per_byte": 1.8228930359648323,
+   "steps_per_second": 4.847082476893556
+  },
+  {
+   "seed": 1,
+   "schedule": "constant",
+   "peak_lr": 0.001,
+   "bits_per_byte": 1.814492594230848,
+   "steps_per_second": 4.805286219950686
+  },
+  {
+   "seed": 2,
+   "schedule": "constant",
+   "peak_lr": 0.001,
+   "bits_per_byte": 1.8041543210781166,
+   "steps_per_second": 4.869036522086543
+  },
+  {
+   "seed": 0,
+   "schedule": "constant",
+   "peak_lr": 0.002,
+   "bits_per_byte": 1.7461015250043754,
+   "steps_per_second": 4.8635463488355075
+  },
+  {
+   "seed": 1,
+   "schedule": "constant",
+   "peak_lr": 0.002,
+   "bits_per_byte": 1.77733285516844,
+   "steps_per_second": 4.853157737651054
+  },
+  {
+   "seed": 2,
+   "schedule": "constant",
+   "peak_lr": 0.002,
+   "bits_per_byte": 1.7603594569572887,
+   "steps_per_second": 4.832124911810223
+  },
+  {
+   "seed": 0,
    "schedule": "warmup-cosine",
    "peak_lr": 0.008,
    "bits_per_byte": 1.63034839595324,

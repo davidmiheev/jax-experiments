@@ -1,9 +1,9 @@
 # M7 — Hypergradients, diffusion samplers, a scaling law (N3, N8, O6)
 
-> **Status:** N3 in progress; N8 and O6 to follow ·
-> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; CPU (4 cores) for the tests ·
+> **Status:** N3 done; N8 and O6 to follow ·
+> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; N3's constant-LR controls on a Colab T4 (same JAX, Flax and Optax versions); CPU (4 cores) for the tests ·
 > **Data:** N3: [`data/n3-summary.json`](data/n3-summary.json) and [`data/n3/`](data/n3/) (one JSON and log per job; the first run, whose landscape batches were not yet keyed, in `data/n3/first-run/`) ·
-> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b` and `n3c`, then `uv run python experiments/n3_hypergrad/analyze.py`. CPU tests: `uv run pytest tests/test_n3_hypergrad.py`
+> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b`, `n3c` and `n3d`; the controls are `experiments/n3_hypergrad/run.py --studies reference --constant-lr <1e-3|2e-3> --seed <0|1|2>`; then `uv run python experiments/n3_hypergrad/analyze.py`. CPU tests: `uv run pytest tests/test_n3_hypergrad.py`
 
 ## N3 — Learning the learning rate: hypergradients through training
 
@@ -115,7 +115,8 @@ and the shorter the horizon, the further below.
   - `make_meta_loss`: the validation loss after K steps, as a function of
     $\log \eta$ (one value, or one per step).
 - **`experiments/n3_hypergrad/run.py`** (studies `reference`, `landscape`,
-  `online`), `analyze.py`, and the Kaggle presets `n3b` and `n3c`.
+  `online`; `--clip-hypergrad` for the online runs, `--constant-lr` for the
+  control), `analyze.py`, and the Kaggle presets `n3b`, `n3c` and `n3d`.
 - **Tests:** `tests/test_n3_hypergrad.py`, 4 tests.
   - **A NaN the tests found.** The attention key bias has a gradient of
     exactly zero, because softmax ignores a shift shared by all keys. Its
@@ -191,8 +192,8 @@ validation bytes.
 | 8e-3 | clipped to ±1 | 0 | 2.3581 | 3.9e-3 / 1.5e-3 / 1.3e-3 |
 | 8e-3 | raw | 0 | 2.2609 | 4.5e-3 / 2.3e-3 / 2.3e-3 |
 | 3.2e-2 | raw | 0 | 3.0003 | 8.4e-3 / 1.1e-3 / 1.1e-3 |
-| constant 1e-3 (no hypergradient) | — | 0, 1, 2 | N3CONST1 | — |
-| constant 2e-3 (no hypergradient) | — | 0, 1, 2 | N3CONST2 | — |
+| constant 1e-3 (no hypergradient) | — | 0, 1, 2 | 1.8145 (1.8042–1.8229) | — |
+| constant 2e-3 (no hypergradient) | — | 0, 1, 2 | 1.7604 (1.7461–1.7773) | — |
 | tuned schedule (peak 8e-3) | — | 0, 1, 2 | 1.6338 (1.6303–1.6358) | 8.0e-3 / 4.7e-3 / 8.0e-4 |
 
 - **Hypergradient descent learns to anneal, greedily.** With clipping, the
@@ -200,11 +201,17 @@ validation bytes.
   steadily, to 5.6–6.7e-4 at step 1,500 and 2.2–3.2e-4 at the end: a decay
   schedule, discovered online. It ends 0.17 bits/byte behind the tuned
   schedule, whose LR is 3–8× higher throughout.
+- **And it gains nothing over leaving the LR alone.** Seed by seed, the
+  clipped online run from 1e-3 minus a constant 1e-3 on the same training
+  stream is −0.002, −0.011 and +0.000 bits/byte. A constant 2e-3 beats every
+  online run (1.7461–1.7773). Rising a little and then annealing, it ends
+  where it would have ended had it never moved.
 - **Raw hypergradients break the meta-optimiser rather than the model.** One
   exploding value ($10^{13}$ to $10^{27}$) fills Adam's second moment, and every
   later update of $\log \eta$ is then about zero: the LR freezes. Seed 1
   (raw, from 1e-3) met one value of −539 at step 210; its LR then crept up to
-  1.6e-3 and stayed there, and it finished at 1.7746, *better* than any clipped run. Seed 2 never exploded and
+  1.6e-3 and stayed there, and it finished at 1.7746, *better* than any clipped run,
+  and level with a constant 2e-3 on that seed (1.7773). Seed 2 never exploded and
   annealed like the clipped runs (1.7880). Seed 0 is the first run's: it never
   exploded, annealed to 1.8e-4 and finished at 1.8388 (`data/n3/first-run/`).
 - **Starting at the tuned peak, without warmup, is worse than starting low.**
