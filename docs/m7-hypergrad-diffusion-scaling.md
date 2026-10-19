@@ -135,3 +135,115 @@ N3SURPRISES
 ### Open threads
 
 N3THREADS
+
+## N8 — Diffusion samplers: DDIM, x0 and v, and the cosine schedule's first step
+
+### Question
+
+E3 trained a 245k-parameter DDPM on MNIST at T = 400 and sampled it with
+DDPM's ancestral sampler. Its open threads were DDIM's deterministic sampler,
+T = 1000 and v-prediction. Three questions:
+
+- **Does the JAX port reproduce E3?** Same U-Net, data subset, optimiser,
+  schedules and sampler; scored by E3's own Fréchet distance.
+- **How few steps can each sampler take?** DDPM against DDIM at 10 to 1,000
+  steps, for ε-, $x_0$- and v-prediction, linear and cosine schedules, T = 1000.
+- **What does a sampler cost when the whole loop is one compiled program?**
+
+### The idea
+
+**One network, three targets.** The forward process is
+$x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon$. The
+network can be trained to output ε (DDPM), $x_0$, or
+$v = \sqrt{\bar\alpha_t}\, \epsilon - \sqrt{1-\bar\alpha_t}\, x_0$ (Salimans
+and Ho 2022). Any one of them, with $x_t$, determines the other two, so every
+sampler runs on every parameterisation.
+
+**Two samplers on the same network.** DDPM's ancestral step adds fresh noise
+at every step. DDIM with $\eta = 0$ is deterministic: it predicts $x_0$ and
+re-noises it to the next retained timestep along the predicted ε. Both can
+skip timesteps; E3 strides DDPM by recomputing the effective $\alpha$ between
+retained steps.
+
+### The math
+
+From an ε-prediction, the clean image is
+
+$$\hat x_0 = \frac{x_t - \sqrt{1-\bar\alpha_t}\,\hat\epsilon}{\sqrt{\bar\alpha_t}},$$
+
+and DDIM's update to the previous retained timestep $s < t$ is
+
+$$x_s = \sqrt{\bar\alpha_s}\, \hat x_0 + \sqrt{1-\bar\alpha_s}\, \hat\epsilon.$$
+
+An error $\delta$ in $\hat\epsilon$ moves $x_s$ by
+
+$$\left(\sqrt{\bar\alpha_s}\,\sqrt{\frac{1-\bar\alpha_t}{\bar\alpha_t}} - \sqrt{1-\bar\alpha_s}\right)\delta .$$
+
+At the first step, $t = T - 1$. **The cosine schedule ends at
+$\bar\alpha_T = 2.4 \times 10^{-9}$** (T = 1000; linear: $4.0 \times 10^{-5}$).
+With 10 steps, the first jump goes to $s = 888$, where $\bar\alpha_s = 0.030$.
+That multiplies $\delta$ by about 3,500 under the cosine schedule and by 1.9
+under the linear one. At 1,000 steps the factor is 31 (cosine) against 0.01
+(linear). ε-prediction is therefore fragile exactly where few-step sampling
+needs it. $x_0$- and v-prediction never divide by $\sqrt{\bar\alpha_t}$.
+Clipping $\hat x_0$ to the data range $[-1, 1]$, then recomputing
+$\hat\epsilon$ from it, bounds the damage.
+
+### What we measure and why
+
+- **E3's arm** (T = 400, ε, linear and cosine; DDPM at 10, 25, 50, 100 and
+  400 steps), seeds 0–2. E3's protocol throughout:
+  - the same 12,000 training and 2,000 test images per seed (`rng.choice`
+    with `default_rng(seed)`);
+  - AdamW at 2e-3, weight decay $10^{-5}$, batch 128, 16 epochs;
+  - 500 samples per score.
+- **An in-job PyTorch control.** E3's own `UNet`, schedules, training loop
+  and sampler, run in the same job on the same GPU and scored by the same
+  scorer. ml-ladder's E3 numbers were recorded on a CPU, so this control
+  separates "JAX differs" from "the hardware differs".
+- **T = 1000.** Every combination of {ε, $x_0$, v} × {linear, cosine} is
+  trained under E3's protocol. Each is sampled by DDPM and DDIM, each with and
+  without $x_0$ clipping, at 10, 20, 50, 100 and 1,000 steps. The LR is E3's
+  for every arm; it was not re-tuned per parameterisation.
+- **The score.** ml-ladder's `generative` fd: a Fréchet distance in the
+  feature space of a small classifier, trained per seed on that seed's
+  training images (CPU, 2 epochs), between 500 samples and 500 test images.
+  The floor is fd between two disjoint sets of 500 test images.
+- **Cost.** Wall time of one compiled sampling run of 500 images, after a
+  warm-up call.
+
+### What I built
+
+- **`jaxexp.diffusion`:**
+  - E3's schedules (verbatim) and its U-Net, written as pure functions with
+    PyTorch's layer semantics and initialisation;
+  - `from_torch`, which loads E3's weights;
+  - the loss for each parameterisation;
+  - `sample`, which runs DDPM or DDIM (optionally clipped) as one
+    `lax.scan` over E3's timestep subsequence.
+- **`experiments/n8_diffusion/run.py`:**
+  - arms `e3`, `e3torch` and `t1000`, scored by ml-ladder's scorer;
+  - `analyze.py`;
+  - `diag_seed2.py`, a CPU diagnosis of one outlying seed.
+- **Tests:** `tests/test_n8_diffusion.py`, 46 tests.
+  - The JAX U-Net matches E3's PyTorch U-Net on loaded weights.
+  - Each parameterisation's output converts back to (ε, $x_0$).
+  - If the data is a single image, the exact denoiser is known in closed
+    form. With it, every sampler, parameterisation and step count (10, 50,
+    1,000) ends at that image, to $10^{-4}$.
+- **A race fixed on the way.** n8b's two GPU lanes downloaded MNIST into the
+  same directory at once, and one read the other's partial file (SHA
+  mismatch). `jaxexp.data` now downloads to a per-process temporary file and
+  renames it into place.
+
+### Results
+
+N8RESULTS
+
+### What surprised me
+
+N8SURPRISES
+
+### Open threads
+
+N8THREADS
