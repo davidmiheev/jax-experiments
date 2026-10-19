@@ -45,7 +45,7 @@ def summarise() -> dict:
     out: dict = {"real_vs_real_fd": _spread(list(floors().values())) if floors() else None, "e3": {}, "t1000": {}, "cost": {}}
     e3 = json.loads((LADDER / "e-metrics.json").read_text())["rungs"]["E3"]["metrics"]
     for r in data:
-        key = f"T{r['T']}/{r['schedule']}/{r['parameterisation']}/{r['sampler']}"
+        key = f"T{r['T']}/{r['schedule']}/{r['parameterisation']}/{r['sampler']}" + ("/torch" if r.get("framework") == "torch" else "")
         bucket = out["e3" if r["T"] == 400 else "t1000"].setdefault(key, {})
         bucket.setdefault(str(r["steps"]), []).append(r["fd"])
     for section in ("e3", "t1000"):
@@ -54,11 +54,11 @@ def summarise() -> dict:
             full = spread[max(spread, key=int)]["median"]
             knee = min((int(s) for s, v in spread.items() if v["median"] <= 1.1 * full), default=None)
             out[section][key] = {"fd": spread, "knee_steps": knee}
-            if section == "e3":
+            if section == "e3" and not key.endswith("/torch"):
                 schedule = key.split("/")[1]
                 out[section][key]["ml_ladder"] = {s: e3.get(f"{schedule}/steps/{s}/fd") for s in by_steps}
     for r in data:
-        key = f"T{r['T']}/{r['sampler']}"
+        key = f"T{r['T']}/{r['sampler']}" + ("/torch" if r.get("framework") == "torch" else "")
         out["cost"].setdefault(key, {}).setdefault(str(r["steps"]), {"seconds": [], "compile": []})
         out["cost"][key][str(r["steps"])]["seconds"].append(r["sample_seconds"])
         out["cost"][key][str(r["steps"])]["compile"].append(r["compile_seconds"])
@@ -68,7 +68,8 @@ def summarise() -> dict:
                            "compile_seconds": _spread(v["compile"])}
     out["train_mse"] = {}
     for r in data:
-        out["train_mse"].setdefault(f"T{r['T']}/{r['schedule']}/{r['parameterisation']}", {})[r["seed"]] = r["train_mse"]
+        key = f"T{r['T']}/{r['schedule']}/{r['parameterisation']}" + ("/torch" if r.get("framework") == "torch" else "")
+        out["train_mse"].setdefault(key, {})[r["seed"]] = r["train_mse"]
     return out
 
 
@@ -86,9 +87,12 @@ def plot(summary: dict) -> None:
         steps = sorted(entry["fd"], key=int)
         color = "tab:blue" if schedule == "linear" else "tab:orange"
         med = [entry["fd"][s]["median"] for s in steps]
+        if key.endswith("/torch"):
+            ax.plot([int(s) for s in steps], med, "s:", color=color, label=f"E3's PyTorch, same scorer, {schedule}")
+            continue
         ax.plot([int(s) for s in steps], med, "o-", color=color, label=f"JAX {schedule}")
         ref = [entry["ml_ladder"][s]["median"] if entry["ml_ladder"].get(s) else np.nan for s in steps]
-        ax.plot([int(s) for s in steps], ref, "x--", color=color, label=f"E3 (PyTorch) {schedule}")
+        ax.plot([int(s) for s in steps], ref, "x--", color=color, label=f"E3 as recorded {schedule}")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("sampling steps (DDPM, T=400)")
@@ -103,8 +107,9 @@ def plot(summary: dict) -> None:
             if sched != schedule:
                 continue
             steps = sorted(entry["fd"], key=int)
+            style = {"ddpm": "s--", "ddim": "o-", "ddpm-clip": "s:", "ddim-clip": "o:"}[sampler]
             ax.plot([int(s) for s in steps], [entry["fd"][s]["median"] for s in steps],
-                    "o-" if sampler == "ddim" else "s--", color=colors[p], label=f"{p} {sampler}")
+                    style, color=colors[p], label=f"{p} {sampler}")
         if summary["real_vs_real_fd"]:
             ax.axhline(summary["real_vs_real_fd"]["median"], color="0.5", lw=0.8, ls=":", label="real vs real")
         ax.set_xscale("log")

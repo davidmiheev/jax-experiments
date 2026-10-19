@@ -12,7 +12,9 @@
   of them back to (eps, x0) for the samplers.
 - ``sample``: ``ddpm`` (E3's strided ancestral sampler: each step uses the effective alpha
   between retained timesteps, and adds noise except at the last one) or ``ddim`` (the
-  deterministic eta = 0 update x_prev = sqrt(abar_prev) x0 + sqrt(1 - abar_prev) eps). The
+  deterministic eta = 0 update x_prev = sqrt(abar_prev) x0 + sqrt(1 - abar_prev) eps); with
+  ``-clip``, the x0 estimate is clipped to [-1, 1] and eps recomputed from it before the update
+  (E3's sampler does not clip). The
   timestep subsequence is E3's: ``linspace(T - 1, 0, steps)`` truncated to integers. The loop is
   a ``lax.scan``, so a whole sampling run is one compiled program.
 
@@ -28,7 +30,7 @@ import jax.numpy as jnp
 import numpy as np
 
 PARAMETERISATIONS = ("eps", "x0", "v")
-SAMPLERS = ("ddpm", "ddim")
+SAMPLERS = ("ddpm", "ddim", "ddpm-clip", "ddim-clip")
 
 
 # ------------------------------------------------------------------------------- schedules
@@ -231,13 +233,20 @@ def sample(params, key, shape, abar, *, steps: int, sampler: str = "ddpm", param
         abar_prev = jnp.where(p >= 0, abar[jnp.maximum(p, 0)], 1.0)
         out = apply(params, x, jnp.full((shape[0],), t))
         eps, x0 = predict_eps_x0(out, x, abar_t, parameterisation)
-        if sampler == "ddpm":
+        if sampler.endswith("-clip"):
+            # The standard guard: keep the clean-image estimate in the data's range [-1, 1] and
+            # recompute the noise estimate from it. Near t = T, x0 = (x_t - sqrt(1 - abar) eps) /
+            # sqrt(abar) multiplies the network's error by 1 / sqrt(abar), which is 2e4 on the
+            # cosine schedule at T = 1000.
+            x0 = jnp.clip(x0, -1.0, 1.0)
+            eps = (x - jnp.sqrt(abar_t) * x0) / jnp.sqrt(1.0 - abar_t)
+        if sampler.startswith("ddpm"):
             alpha = abar_t / abar_prev
             beta = 1.0 - alpha
             mean = (x - beta / jnp.sqrt(1.0 - abar_t) * eps) / jnp.sqrt(alpha)
             var = jnp.maximum(beta * (1.0 - abar_prev) / (1.0 - abar_t), 0.0)
             x = mean + jnp.where(p >= 0, jnp.sqrt(var), 0.0) * jax.random.normal(k, shape)
-        elif sampler == "ddim":
+        elif sampler.startswith("ddim"):
             x = jnp.sqrt(abar_prev) * x0 + jnp.sqrt(1.0 - abar_prev) * eps
         else:
             raise ValueError(f"unknown sampler {sampler!r}")

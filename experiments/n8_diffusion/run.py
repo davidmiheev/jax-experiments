@@ -11,8 +11,10 @@ Arms (``--arms``):
 
 - ``e3``: E3's own setting, T = 400, eps-prediction, linear and cosine, DDPM sampling at
   {10, 25, 50, 100, 400} steps: the reproduction, against ``e-metrics.json``.
-- ``t1000``: T = 1000; {linear, cosine} x {eps, x0, v}; DDPM and DDIM at
-  {10, 20, 50, 100, 1000} steps.
+- ``e3torch``: the control for ``e3``: E3's own PyTorch model, schedule, sampler and
+  training loop on the same GPU, scored by the same scorer instance as the JAX models.
+- ``t1000``: T = 1000; {linear, cosine} x {eps, x0, v}; DDPM and DDIM, each also with the x0
+  estimate clipped to [-1, 1] (``-clip``), at {10, 20, 50, 100, 1000} steps.
 
 Each sampling run is one ``lax.scan``; its wall time (after compilation, which is timed
 separately) is recorded per step count.
@@ -23,19 +25,25 @@ separately) is recorded per step count.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import os
 import platform
 import sys
 import time
 from pathlib import Path
 
-import jax
-import jax.numpy as jnp
-import numpy as np
-import optax
+# The e3torch arm trains PyTorch on the same GPU: let XLA allocate as it goes instead of
+# reserving most of the card up front.
+os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
 
-from jaxexp import data
-from jaxexp import diffusion as D
+import jax  # noqa: E402
+import jax.numpy as jnp  # noqa: E402
+import numpy as np  # noqa: E402
+import optax  # noqa: E402
+
+from jaxexp import data  # noqa: E402
+from jaxexp import diffusion as D  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -116,7 +124,8 @@ def run_model(args, scorer, x_train, real, *, total, schedule, parameterisation,
             seconds = time.time() - t0
             samples = np.clip((drawn + 1) / 2, 0, 1).transpose(0, 3, 1, 2).astype(np.float32)
             row = {"seed": args.seed, "T": total, "schedule": schedule, "parameterisation": parameterisation,
-                   "sampler": sampler, "steps": steps, "fd": scorer.fd(real, samples), "sample_seconds": seconds,
+                   "sampler": sampler, "framework": "jax", "steps": steps, "fd": scorer.fd(real, samples),
+                   "sample_seconds": seconds,
                    "compile_seconds": compile_and_run - seconds, "train_mse": losses[-1],
                    "train_seconds": train_seconds, "parameters": D.parameter_count(params)}
             rows.append(row)
@@ -128,10 +137,68 @@ def run_model(args, scorer, x_train, real, *, total, schedule, parameterisation,
     return rows, losses
 
 
+def run_torch_e3(args, scorer, x_train, real, *, schedule, steps_list):
+    """The control: E3's own PyTorch classes (``make_schedule``, ``Diffusion``, ``make_denoiser``)
+    and its training loop, restated from ``run`` without the plots, on this GPU, scored by the
+    same scorer instance as the JAX models."""
+    import torch
+
+    ladder = Path(args.ml_ladder)
+    sys.path.insert(0, str(ladder / "src"))
+    spec = importlib.util.spec_from_file_location("e3_ddpm", ladder / "parts" / "e_generative" / "e3_ddpm.py")
+    e3 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(e3)
+    from mlladder import torchkit
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    diffusion = e3.Diffusion(e3.make_schedule(schedule, 400), device=device)
+    torchkit.seed_torch(args.seed)
+    model = e3.make_denoiser(channels=32, image_channels=1)().to(device)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-3, weight_decay=1e-5)
+    train_tensor = torch.from_numpy(x_train * 2 - 1).to(device)
+    started, losses = time.time(), []
+    for _ in range(args.epochs):
+        model.train()
+        permutation = torch.randperm(len(train_tensor), device=device)
+        epoch = []
+        for start in range(0, len(train_tensor), 128):
+            batch = train_tensor[permutation[start : start + 128]]
+            t = torch.randint(0, 400, (len(batch),), device=device)
+            noise = torch.randn_like(batch)
+            loss = torch.nn.functional.mse_loss(model(diffusion.add_noise(batch, t, noise), t), noise)
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            optimizer.step()
+            epoch.append(loss.item())
+        losses.append(float(np.mean(epoch)))
+    train_seconds = time.time() - started
+    rows = []
+    for steps in steps_list:
+        generator = torch.Generator(device=device).manual_seed(args.seed)
+        t0 = time.time()
+        drawn = diffusion.sample(model, shape=(args.samples, 1, 28, 28), device=device, steps=steps, generator=generator)
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        seconds = time.time() - t0
+        samples = ((drawn + 1) / 2).clamp(0, 1).cpu().numpy()
+        row = {"seed": args.seed, "T": 400, "schedule": schedule, "parameterisation": "eps", "sampler": "ddpm",
+               "framework": "torch", "steps": steps, "fd": scorer.fd(real, samples), "sample_seconds": seconds,
+               "train_mse": losses[-1], "train_seconds": train_seconds}
+        rows.append(row)
+        print(f"[n8] s{args.seed} TORCH T=400 {schedule:<6} eps ddpm {steps:>4} steps  fd {row['fd']:7.3f}  "
+              f"{seconds * 1e3:8.1f} ms", flush=True)
+    del model
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+    return rows, losses
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--arms", nargs="+", default=["e3", "t1000"], choices=["e3", "t1000"])
+    parser.add_argument("--arms", nargs="+", default=["e3", "e3torch", "t1000"], choices=["e3", "e3torch", "t1000"])
+    parser.add_argument("--samplers", nargs="+", default=list(D.SAMPLERS), choices=list(D.SAMPLERS),
+                        help="samplers for the T=1000 arm")
     parser.add_argument("--epochs", type=int, default=16)
     parser.add_argument("--samples", type=int, default=500)
     parser.add_argument("--schedules", nargs="+", default=["linear", "cosine"])
@@ -150,8 +217,15 @@ def main() -> None:
     if "e3" in args.arms:
         plan += [(400, s, "eps", ["ddpm"], [10, 25, 50, 100, 400]) for s in args.schedules]
     if "t1000" in args.arms:
-        plan += [(1000, s, p, ["ddpm", "ddim"], [10, 20, 50, 100, 1000])
+        plan += [(1000, s, p, list(args.samplers), [10, 20, 50, 100, 1000])
                  for s in args.schedules for p in args.parameterisations]
+    if "e3torch" in args.arms:
+        for schedule in args.schedules:
+            rows, losses = run_torch_e3(args, scorer, x_train, real, schedule=schedule, steps_list=[10, 25, 50, 100, 400])
+            report["rows"] += rows
+            report["train_curves"][f"torch/T400/{schedule}/eps"] = losses
+            Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+            Path(args.out).write_text(json.dumps(report, indent=1))
     for total, schedule, p, samplers, steps_list in plan:
         rows, losses = run_model(args, scorer, x_train, real, total=total, schedule=schedule, parameterisation=p,
                                  samplers=samplers, steps_list=steps_list)
