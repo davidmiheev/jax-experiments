@@ -1,9 +1,9 @@
 # M7 — Hypergradients, diffusion samplers, a scaling law (N3, N8, O6)
 
-> **Status:** N3 done; N8 and O6 to follow ·
-> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; N3's constant-LR controls on a Colab T4 (same JAX, Flax and Optax versions); CPU (4 cores) for the tests ·
-> **Data:** N3: [`data/n3-summary.json`](data/n3-summary.json) and [`data/n3/`](data/n3/) (one JSON and log per job; the first run, whose landscape batches were not yet keyed, in `data/n3/first-run/`) ·
-> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b`, `n3c` and `n3d`; the controls are `experiments/n3_hypergrad/run.py --studies reference --constant-lr <1e-3|2e-3> --seed <0|1|2>`; then `uv run python experiments/n3_hypergrad/analyze.py`. CPU tests: `uv run pytest tests/test_n3_hypergrad.py`
+> **Status:** N3 and N8 done; O6 to follow ·
+> **Hardware:** Kaggle T4 ×2 (one job per GPU), JAX 0.11.1; N3's constant-LR controls on a Colab T4 (same JAX, Flax and Optax versions); CPU (4 cores) for the tests and N8's seed-2 diagnosis ·
+> **Data:** N3: [`data/n3-summary.json`](data/n3-summary.json) and [`data/n3/`](data/n3/) (one JSON and log per job; the first run, whose landscape batches were not yet keyed, in `data/n3/first-run/`); N8: [`data/n8-summary.json`](data/n8-summary.json) and [`data/n8/`](data/n8/) (one JSON and log per seed, sample grids as `.npy`, the CPU diagnosis of seed 2, and the first run, without the PyTorch control, in `data/n8/first-run/`) ·
+> **Reproduce:** N3: `uv run python tools/kaggle/push_r2.py <preset> --push` for `n3b`, `n3c` and `n3d`; the controls are `experiments/n3_hypergrad/run.py --studies reference --constant-lr <1e-3|2e-3> --seed <0|1|2>`; then `uv run python experiments/n3_hypergrad/analyze.py`. N8: preset `n8b` (its seed 0 lane failed on the MNIST race and was rerun as a lane of O6's `o6e`), then `uv run python experiments/n8_diffusion/analyze.py`; the seed-2 diagnosis is `PYTHONPATH=src python experiments/n8_diffusion/diag_seed2.py <out.json>` (CPU, ~1 h). CPU tests: `uv run pytest tests/test_n3_hypergrad.py tests/test_n8_diffusion.py`
 
 ## N3 — Learning the learning rate: hypergradients through training
 
@@ -366,7 +366,7 @@ $\hat\epsilon$ from it, bounds the damage.
 
 ### Results
 
-![N8: fd (median of seeds 0–2) against sampling steps. Left: E3's arm in JAX, E3's PyTorch model trained in the same job, and E3 as recorded. Middle and right: T = 1000, every parameterisation and sampler.](figures/n8-diffusion.png)
+![N8: fd (median of seeds 0–2) against sampling steps. Top left: E3's arm in JAX, E3's PyTorch model trained in the same job, and E3 as recorded. Top right and bottom left: T = 1000, every parameterisation and sampler (dotted grey: two sets of real test images).](figures/n8-diffusion.png)
 
 fd is a median over seeds 0–2 with min–max; lower is better. Two disjoint
 sets of 500 test images score 0.17 (0.10–0.28), the floor. Seed noise is

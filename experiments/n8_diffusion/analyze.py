@@ -80,7 +80,9 @@ def plot(summary: dict) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.2), constrained_layout=True)
+    fig, grid = plt.subplots(2, 2, figsize=(12, 9), constrained_layout=True)
+    axes = [grid[0, 0], grid[0, 1], grid[1, 0]]
+    legend_ax = grid[1, 1]
     # E3 reproduction.
     ax = axes[0]
     for key, entry in summary["e3"].items():
@@ -117,7 +119,12 @@ def plot(summary: dict) -> None:
         ax.set_yscale("log")
         ax.set_xlabel("sampling steps (T=1000)")
         ax.set_title(f"T=1000, {schedule} schedule")
-        ax.legend(fontsize=7, ncol=2)
+        ax.set_ylabel("fd, median of seeds 0-2")
+    # one legend for both T=1000 panels
+    handles, labels = axes[1].get_legend_handles_labels()
+    legend_ax.axis("off")
+    legend_ax.legend(handles, labels, loc="center", ncol=2, fontsize=10,
+                     title="T=1000 panels: parameterisation, sampler")
     FIG.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIG / "n8-diffusion.png", dpi=130)
 

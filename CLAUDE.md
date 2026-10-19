@@ -126,6 +126,24 @@ reproduce. This file is the practical brief for picking it up.
   - **Online, the method gains nothing.** Hypergradient descent of the LR
     (K=30) anneals greedily and ends at a constant 1e-3's loss (1.80 bits/byte;
     the tuned schedule reaches 1.634, a constant 2e-3 1.76).
+- **N8 is done** (same writeup). `jaxexp.diffusion`: E3's DDPM U-Net (245k)
+  as pure functions, matching E3's PyTorch net on loaded weights. It supports
+  ε / $x_0$ / v targets, and DDPM / DDIM samplers (optionally $x_0$-clipped),
+  each run as one `lax.scan`.
+  - **Reproduces E3 within seed noise** (fd 2.22 linear against an in-job
+    PyTorch control's 2.43).
+  - **Seed noise is large.** One configuration often spans 2–5× in fd across
+    seeds. Seed 2's E3 model is bad on every run, including CPU: its final
+    weights (constant LR, no averaging) are a bad draw. Compare samplers
+    within one trained model.
+  - **Cosine + ε collapses at few steps** ($\bar\alpha_T = 2.4 \times 10^{-9}$
+    amplifies the first step's error about 3,500× at 10 steps). Clipping
+    $\hat x_0$ fixes it. $x_0$-prediction with DDIM converges in 10–20 steps.
+  - **Cost:** 28 ms per sampling step for 500 images, 1.4× E3's PyTorch loop
+    on the T4.
+  - **`jaxexp.data` downloads atomically now** (per-process `.part`, then
+    `os.replace`). Two lanes once fetched MNIST into one directory and one
+    read the other's partial file.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
