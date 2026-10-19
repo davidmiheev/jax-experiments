@@ -1,0 +1,11 @@
+[online] step     0 lr 3.20e-02 meta 3.4231 (49s)
+[online] step   300 lr nan meta nan (224s)
+[online] step   600 lr nan meta nan (399s)
+[online] step   900 lr nan meta nan (574s)
+[online] step  1200 lr nan meta nan (748s)
+[online] step  1500 lr nan meta nan (923s)
+[online] step  1800 lr nan meta nan (1098s)
+[online] step  2100 lr nan meta nan (1272s)
+[online] step  2400 lr nan meta nan (1447s)
+[online] step  2700 lr nan meta nan (1621s)
+[online] s0 K=30 init 0.032: nan bits/byte

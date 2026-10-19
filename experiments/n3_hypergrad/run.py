@@ -21,6 +21,7 @@ Studies:
 - ``online``: 3,000 steps whose LR is set by hypergradient descent: every K steps, the
   hypergradient of the meta-loss after that segment (fresh meta-validation windows each
   time) updates log lr by Adam (step ``--meta-lr``). No schedule; the LR is what it learns.
+  A segment whose loss or hypergradient is not finite is undone and the LR halved.
 
     python experiments/n3_hypergrad/run.py --studies reference landscape --out runs/n3.json
 """
@@ -80,10 +81,21 @@ class Setup:
             out.append(np.concatenate([x, y[:, -1:]], axis=1))
         return np.stack(out)
 
-    def meta_windows(self, n: int = BATCH) -> np.ndarray:
+    def meta_windows(self, n: int = BATCH, rng: np.random.Generator | None = None) -> np.ndarray:
         region = self.val[META_OFFSET:]
-        starts = self.meta_rng.integers(0, len(region) - CONTEXT - 1, size=n)
+        starts = (rng or self.meta_rng).integers(0, len(region) - CONTEXT - 1, size=n)
         return np.stack([region[s : s + CONTEXT + 1] for s in starts])
+
+    def keyed_windows(self, seed: int, start: int, k: int) -> tuple[np.ndarray, np.ndarray]:
+        """The landscape's K training batches and meta-validation windows for (seed, start, K),
+        drawn from their own generators, so that a rerun with another LR grid sees the same bytes."""
+        key = 1_000_003 * (seed + 1) + 1009 * start + k
+        batches = text.Batches(self.train, CONTEXT, BATCH, key)
+        out = []
+        for _ in range(k):
+            x, y = batches()
+            out.append(np.concatenate([x, y[:, -1:]], axis=1))
+        return np.stack(out), self.meta_windows(rng=np.random.default_rng(key + 1))
 
     def bits(self, params) -> dict:
         nats = TR.per_position_loss(params, self.apply, self.eval_windows, 64)
@@ -118,8 +130,7 @@ def study_landscape(args, report, setup: Setup, checkpoints: dict):
     for start in args.starts:
         params, state = checkpoints[start]
         for k in args.ks:
-            windows = jnp.asarray(setup.next_windows(k))
-            val = jnp.asarray(setup.meta_windows())
+            windows, val = (jnp.asarray(a) for a in setup.keyed_windows(args.seed, start, k))
             before = float(setup.loss_fn(params, val))
             points, started = [], time.time()
             for lr in grid:
@@ -148,9 +159,16 @@ def study_online(args, report, setup: Setup):
     for seg in range(steps // k):
         windows = jnp.asarray(setup.next_windows(k))
         val = jnp.asarray(setup.meta_windows())
-        (loss, (params, state, train_losses)), g = setup.meta_vg(log_lr, params, state, windows, val)
+        (loss, (new_params, new_state, train_losses)), g = setup.meta_vg(log_lr, params, state, windows, val)
+        diverged = not (np.isfinite(float(loss)) and np.isfinite(float(g)))
         trajectory.append({"step": seg * k, "lr": float(jnp.exp(log_lr)), "meta_loss": float(loss),
-                           "hypergrad": float(g), "train_loss": float(jnp.mean(train_losses))})
+                           "hypergrad": float(g), "train_loss": float(jnp.mean(train_losses)), "diverged": diverged})
+        if diverged:
+            # Undo the segment and halve the LR (the meta-optimiser's state is kept): without this
+            # guard, a run started above the stable LR is NaN before the hypergradient can act.
+            log_lr = log_lr - jnp.log(2.0)
+            continue
+        params, state = new_params, new_state
         upd, meta_state = meta_opt.update(g, meta_state, log_lr)
         log_lr = optax.apply_updates(log_lr, upd)
         if seg % 10 == 0:
@@ -171,7 +189,8 @@ def main() -> None:
     parser.add_argument("--init", choices=["torch", "jax"], default="torch")
     parser.add_argument("--starts", nargs="+", type=int, default=[0, 500, 1500])
     parser.add_argument("--ks", nargs="+", type=int, default=[10, 30, 100])
-    parser.add_argument("--grid", nargs="+", default=["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2", "6.4e-2"])
+    parser.add_argument("--grid", nargs="+",
+                        default=["2.5e-4", "5e-4", "1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2", "6.4e-2"])
     parser.add_argument("--steps", type=int, default=STEPS, help="training length (3,000 = ml-ladder's protocol)")
     parser.add_argument("--online-k", type=int, default=30)
     parser.add_argument("--online-init", type=float, default=1e-3)
