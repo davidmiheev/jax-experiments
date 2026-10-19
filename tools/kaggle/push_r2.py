@@ -51,6 +51,9 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``o6b``: O6's LR grid extended upward (s0-s4 were best at 8e-3, the grid's top): 1.6e-2 for
+  s0-s4 and 3.2e-2 for s0-s2; s8 (512 wide, 8 layers, for C = 1e16) at 1e-3..4e-3 (lane 0).
+  N8's seed 0 again, with the MNIST download fixed (lane 1).
 - ``o6a``: O6's tokenizer check and caches (enwik8 against ml-ladder's 31,095,000 tokens;
   enwik9 without enwik8's validation bytes), then each model size's LR on 2e7 tokens, seed 0.
 - ``n8b``: as ``n8``, with E3's own PyTorch model trained in the same job and scored by the
@@ -168,6 +171,12 @@ O6 = "@experiments/o6_scaling/run.py"
 O6_DATA = ["--cache-dir", "/kaggle/temp/bpe"]
 
 PRESETS = {
+    "o6b": [
+        [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s8", "--lrs", "1e-3", "2e-3", "4e-3", "--out", "o6-lr-e.json"]],
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"]],
+    ],
     "o6a": [
         [[O6, "--studies", "tokenize", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "s3", "s7",
           "--lrs", "1e-3", "2e-3", "4e-3", "8e-3", "--out", "o6-lr-a.json"]],

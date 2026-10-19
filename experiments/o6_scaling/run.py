@@ -59,6 +59,7 @@ SIZES = {
     "s5": (320, 5, 5),
     "s6": (384, 6, 6),
     "s7": (448, 7, 7),
+    "s8": (512, 8, 8),  # added for C = 1e16, whose optimum is near s7
 }
 
 
