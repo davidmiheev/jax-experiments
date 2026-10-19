@@ -133,7 +133,7 @@ def plot(summary: dict) -> None:
 
     land = _rows("landscape")
     starts = sorted({r["start"] for r in land})
-    fig, axes = plt.subplots(1, len(starts) + 1, figsize=(4.4 * (len(starts) + 1), 4), constrained_layout=True)
+    fig, axes = plt.subplots(1, len(starts) + 2, figsize=(4.4 * (len(starts) + 2), 4), constrained_layout=True)
     colors = {10: "tab:blue", 30: "tab:orange", 100: "tab:green"}
     for ax, start in zip(axes, starts):
         for r in sorted((r for r in land if r["start"] == start and r["seed"] == 0), key=lambda r: r["k"]):
@@ -144,8 +144,27 @@ def plot(summary: dict) -> None:
         ax.set_xscale("log")
         ax.set_xlabel("constant LR over the K steps")
         ax.set_title(f"start: step {start}")
+        if start > 0:  # the large-LR blow-ups would flatten the region that matters
+            lo = min(p["meta_loss"] - r["meta_loss_before"] for r in land if r["start"] == start and r["seed"] == 0
+                     for p in r["points"])
+            ax.set_ylim(lo - 0.02, lo + 0.35)
         ax.legend(fontsize=8)
     axes[0].set_ylabel("meta-loss after K steps minus before (nats)")
+    ax = axes[-2]
+    k_show = 30
+    for start, color in zip(starts, ("tab:red", "tab:purple", "tab:brown")):
+        for r in (r for r in summary["landscape"] if r["start"] == start and r["k"] == k_show and r["seed"] == 0):
+            c = r["grid_fd_vs_hypergrad"]
+            ax.plot([q["lr"] for q in c], [abs(q["hypergrad"]) if math.isfinite(q["hypergrad"]) else np.nan for q in c],
+                    "o-", color=color, label=f"hypergradient, from step {start}")
+            ax.plot([q["lr"] for q in c], [abs(q["fd"]) for q in c], "x--", color=color, alpha=0.6,
+                    label=f"finite difference of the curve, from step {start}")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("constant LR over the K steps")
+    ax.set_ylabel("|d meta-loss / d log lr| (nats)")
+    ax.set_title(f"Hypergradient vs the curve (K={k_show}, seed 0)")
+    ax.legend(fontsize=6)
     ax = axes[-1]
     t = np.arange(STEPS)
     ax.plot(t, [schedule_lr(s) for s in t], "k-", lw=2, label="tuned schedule (8e-3)")
