@@ -238,12 +238,119 @@ $\hat\epsilon$ from it, bounds the damage.
 
 ### Results
 
-N8RESULTS
+![N8: fd (median of seeds 0–2) against sampling steps. Left: E3's arm in JAX, E3's PyTorch model trained in the same job, and E3 as recorded. Middle and right: T = 1000, every parameterisation and sampler.](figures/n8-diffusion.png)
+
+fd is a median over seeds 0–2 with min–max; lower is better. Two disjoint
+sets of 500 test images score 0.17 (0.10–0.28), the floor. Seed noise is
+large: the same configuration often spans a factor of 2–5 across seeds. So
+comparisons between *separately trained models* (parameterisation, schedule,
+framework) need a pattern that holds seed by seed. Comparisons *within one
+model* (sampler, clipping, step count) are paired and much cleaner.
+
+**E3 reproduces, within seed noise.** E3's arm at 400 DDPM steps:
+
+| | linear | cosine |
+|---|---|---|
+| JAX (this port) | 2.22 (1.78–6.94) | 2.65 (0.87–20.04) |
+| E3's PyTorch, same job, same scorer | 2.43 (1.57–2.76) | 2.03 (1.24–2.41) |
+| E3 as recorded (ml-ladder, CPU) | 1.56 (1.42–2.23) | 2.27 (1.25–2.50) |
+
+The final training MSE matches E3's (seed 0: 0.0284 linear in both JAX and
+PyTorch; cosine 0.0471 against 0.0465). The JAX medians lie inside PyTorch's
+range. **Seed 2's JAX models are the outliers (6.94 and 20.04), and the
+diagnosis shows the cause is the seed, not JAX.** Retrained on CPU, seed 2's
+linear model again samples thin, faint digits (fd 4.05; mean pixel 0.080
+against MNIST's 0.131). Changing only the training key gives 2.40; changing
+only the data order gives 1.64; another sampling key changes nothing
+(4.04). E3 trains at a constant LR with no weight averaging, so the final
+weights are a draw from the end of a noisy trajectory, and seed 2's draw is
+a bad one. The first run of this study (`data/n8/first-run/`) drew the same
+outlier (4.93 and 17.22).
+
+**Cosine ε collapses at few steps; clipping $\hat x_0$ fixes it.** T = 1000,
+cosine, ε-prediction:
+
+| steps | DDPM | DDIM | DDPM, $x_0$ clipped | DDIM, $x_0$ clipped |
+|---|---|---|---|---|
+| 10 | 88.5 (32.4–113.0) | 150.9 (79.0–193.1) | 3.77 (2.45–5.59) | 4.22 (2.67–7.82) |
+| 20 | 10.8 (8.6–14.6) | 128.6 (63.1–167.5) | 2.72 (1.89–3.25) | 3.57 (2.07–5.52) |
+| 100 | 5.54 (2.76–10.70) | 34.9 (14.0–48.1) | 2.47 (1.63–2.87) | 3.13 (1.97–4.52) |
+| 1000 | 2.00 (1.84–3.16) | 5.19 (3.54–17.78) | 2.38 (1.75–3.19) | 3.24 (1.91–4.47) |
+
+Model by model, clipping divides the 10-step DDPM fd by 12 to 33. This is
+the amplification of the first step in action: a gain of about 3,500 at
+10 steps (see The math). E3's sampler does not clip, and E3's own cosine
+fd at 10 steps ranged from 9.0 to 153 across its seeds.
+
+**$x_0$-prediction is the few-step choice; v is the best at full length.**
+T = 1000:
+
+| | 10 steps | 20 steps | 100 steps | 1,000 steps |
+|---|---|---|---|---|
+| ε, linear, DDPM | 4.44 (3.31–5.36) | 3.20 (2.41–3.73) | 2.16 (1.74–3.03) | 2.32 (1.73–3.34) |
+| $x_0$, linear, DDIM | 1.77 (1.61–3.54) | 1.57 (1.38–3.38) | 1.54 (1.35–3.28) | 1.57 (1.32–3.41) |
+| $x_0$, cosine, DDIM | 2.30 (2.26–2.81) | 2.10 (2.05–2.66) | 2.03 (1.98–2.61) | 2.02 (2.00–2.65) |
+| v, linear, DDPM | 3.02 (2.61–4.96) | 1.90 (1.71–3.57) | 1.40 (1.19–3.29) | 1.44 (1.17–3.35) |
+| v, cosine, DDIM | 2.81 (2.00–3.11) | 2.32 (1.69–2.61) | 1.92 (1.57–2.46) | 1.84 (1.55–2.44) |
+
+- **Steps to converge.** With DDIM, $x_0$-prediction reaches within 10% of
+  its own 1,000-step fd by 10–20 steps on every seed and both schedules.
+  Under the linear schedule ε-prediction needs 50 steps with DDIM and 50–100
+  with DDPM. Under the cosine schedule it needs 100–1,000 (DDIM) or the full
+  1,000 (DDPM).
+- **On every seed the best sampler at 20 steps or fewer predicts $x_0$ or v,
+  never ε.** Overall bests: linear v-DDPM, 1.40 at 100 steps; linear
+  $x_0$-DDPM, 1.52 at 50.
+- **Clipping is a fix for ε, not a free improvement.** Within each model,
+  clipping changes $x_0$-prediction's fd by at most 5% (its estimate rarely
+  leaves $[-1, 1]$). It never helps v-prediction at 20 steps or more: 0–16%
+  *worse*, on every seed.
+- **DDIM against DDPM depends on the model.** For $x_0$ under the cosine
+  schedule DDIM is better on every seed at 10–20 steps (0.54–0.92× DDPM's
+  fd), but not at 100 or more (seed 1: 1.11–1.13×). For linear ε, linear
+  $x_0$ and v it is better on some seeds and worse on others; for unclipped
+  cosine ε it is far worse.
+- **T = 1000 does not beat T = 400 for E3's own model.** Linear ε-DDPM at
+  full length: 2.32 (1.73–3.34) at T = 1000, against 2.22 (1.78–6.94) at
+  T = 400.
+
+**Cost.** One sampling run of 500 images costs 28 ms per step in JAX (27–29
+across samplers and step counts), against 40–41 ms for E3's PyTorch loop on
+the same T4: 1.4× faster. Clipping and DDIM are free. Because the loop is one
+`lax.scan`, compiling takes 1.4–3.6 s whatever the step count. Training
+takes about the same in both (16 epochs: 47–55 s in JAX, 45 s in PyTorch).
 
 ### What surprised me
 
-N8SURPRISES
+- **A bad seed that reproduces.** XLA on a GPU is not deterministic, yet
+  seed 2's E3 models were bad in both GPU runs and again on a CPU. Its
+  training loss was normal (0.0282 against 0.0275–0.0284), so nothing in
+  training flagged it. What stays fixed under all that run-to-run noise is
+  the trajectory's seed, and the final weights of constant-LR training
+  without averaging are a lottery ticket that the seed draws.
+- **The cosine schedule is the fragile one.** It is usually introduced as
+  the better schedule. With ε-prediction and few steps it is the worst
+  configuration here by an order of magnitude, because it drives
+  $\bar\alpha_T$ to $2.4 \times 10^{-9}$, and the first step divides by its
+  square root.
+- **Clipping $\hat x_0$ is not a free improvement.** It rescues cosine ε and
+  never helps v at 20 steps or more.
+- **More diffusion steps did not help E3's model.** T = 1000 matched
+  T = 400 at full length, and the gains of this study came from the
+  parameterisation and the sampler, not from T.
 
 ### Open threads
 
-N8THREADS
+- **Weight averaging.** An EMA of the weights is standard practice and should
+  remove the final-iterate lottery. The one tried here (decay 0.999 over
+  only 1,500 steps, no bias correction) still carried 22% of the initial
+  weights and was worse (`data/n8/seed2-diagnosis.json`). A shorter decay or
+  a bias-corrected average is the next thing to try.
+- **Tune each parameterisation.** All arms used E3's LR. The three losses
+  differ in scale (final MSE, linear schedule: ε 0.029, $x_0$ 0.154, v 0.183),
+  so one LR need not suit all three. "Tune every arm" was not followed here.
+- **More seeds or more samples.** Differences under about 1 fd between
+  separately trained models are inside the seed noise of three seeds and
+  500 samples.
+- **Higher-order samplers** (DPM-Solver, Heun) are the obvious next arm for
+  the few-step regime.
