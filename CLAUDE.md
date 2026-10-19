@@ -201,6 +201,19 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   `kaggle kernels status`, and download with `kaggle kernels output`.
   `kaggle kernels logs` is available too. `kaggle kernels delete -y <ref>`
   removes a kernel (CLI 2.2.4); earlier CLI versions had no delete.
+  - **A running kernel shows nothing.** `logs` and the output listing are
+    empty until it finishes, and the Kaggle MCP may not cancel sessions
+    (`kernelSessions.cancel` was denied on 2026-10-19).
+  - **Deleting is the only way to stop one.** On 2026-10-19, o6b ran 3 h
+    against ~45 min expected. Deleting it stopped the session, and its GPU
+    hours were taken off the quota (19.57 h used before, 17.55 h after).
+  - **Bound every job.** Presets can set a per-job limit (`TIMEOUTS` in
+    `push_r2.py`); a job that exceeds it is killed and the lane moves on.
+- **Large inputs go in as datasets, not downloads.** O6's enwik9 token
+  caches (353M tokens, 706 MB) are the private dataset
+  `davidmiheev/jaxexp-bpe`, built on CPU by
+  `experiments/o6_scaling/run.py --studies tokenize`. `--cache-from
+  /kaggle/input` copies them into the job's cache directory.
 - **Credentials** live outside any repo, in `~/.kaggle/` (`access_token`,
   `kaggle.json`) with mode 600. Never commit them. If the session has none,
   ask the user.
