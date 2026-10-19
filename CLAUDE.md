@@ -110,6 +110,40 @@ reproduce. This file is the practical brief for picking it up.
     bandwidth floor 0.17–0.27 ms. The step is 157 kernels at ~3.6 µs each.
   - XLA command buffers (CUDA graphs) cut the Python-driven step 2.05 → 1.57
     ms but do not move the loop. Steps of ≥ ~300 MB reach 56–59% of 320 GB/s.
+- **N3 is done** (`docs/m7-hypergrad-diffusion-scaling.md`). `jaxexp.hypergrad`
+  differentiates the validation loss through K steps of ml-ladder's AdamW
+  (remat per step). Its square root needs a zero derivative at 0: the
+  attention key bias has exactly zero gradient, and that turns every
+  hypergradient into NaN.
+  - **The greedy LR (4M, T=256):** after warmup, the K-step-optimal constant
+    LR is 0.16–0.26× the tuned schedule's, and falls as K grows from 10 to
+    100.
+  - **The hypergradient has a trust region.** It matches the meta-loss curve
+    only up to 4e-3–8e-3 after warmup, and up to 5e-4–1e-3 from step 0. Above
+    that it disagrees, then explodes ($10^{13}$ to $10^{27}$).
+  - **Clip hypergradients before Adam.** One huge value fills Adam's second
+    moment and freezes the LR for the rest of the run.
+  - **Online, the method gains nothing.** Hypergradient descent of the LR
+    (K=30) anneals greedily and ends at a constant 1e-3's loss (1.80 bits/byte;
+    the tuned schedule reaches 1.634, a constant 2e-3 1.76).
+- **N8 is done** (same writeup). `jaxexp.diffusion`: E3's DDPM U-Net (245k)
+  as pure functions, matching E3's PyTorch net on loaded weights. It supports
+  ε / $x_0$ / v targets, and DDPM / DDIM samplers (optionally $x_0$-clipped),
+  each run as one `lax.scan`.
+  - **Reproduces E3 within seed noise** (fd 2.22 linear against an in-job
+    PyTorch control's 2.43).
+  - **Seed noise is large.** One configuration often spans 2–5× in fd across
+    seeds. Seed 2's E3 model is bad on every run, including CPU: its final
+    weights (constant LR, no averaging) are a bad draw. Compare samplers
+    within one trained model.
+  - **Cosine + ε collapses at few steps** ($\bar\alpha_T = 2.4 \times 10^{-9}$
+    amplifies the first step's error about 3,500× at 10 steps). Clipping
+    $\hat x_0$ fixes it. $x_0$-prediction with DDIM converges in 10–20 steps.
+  - **Cost:** 28 ms per sampling step for 500 images, 1.4× E3's PyTorch loop
+    on the T4.
+  - **`jaxexp.data` downloads atomically now** (per-process `.part`, then
+    `os.replace`). Two lanes once fetched MNIST into one directory and one
+    read the other's partial file.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
