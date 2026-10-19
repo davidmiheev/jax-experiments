@@ -51,6 +51,10 @@ Presets (each is two job lists, one per GPU):
 - ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
   associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
   memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``o6c`` / ``o6d``: O6's IsoFLOP study: C = 3e13, 1e14, 3e14, 1e15, 3e15 and 1e16 FLOPs
+  (6ND), seeds 0-2, each size at its tuned LR (``docs/data/o6/lr-table.json``) where
+  2e6 <= D <= the corpus. Also N3's constant-LR controls (1e-3 and 2e-3, seeds 0-2) for its
+  online runs.
 - ``o6b``: O6's LR grid extended upward (s0-s4 were best at 8e-3, the grid's top): 1.6e-2 for
   s0-s4 and 3.2e-2 for s0-s2; s8 (512 wide, 8 layers, for C = 1e16) at 1e-3..4e-3 (lane 0).
   N8's seed 0 again, with the MNIST download fixed (lane 1).
@@ -173,7 +177,27 @@ N8 = "@experiments/n8_diffusion/run.py"
 O6 = "@experiments/o6_scaling/run.py"
 O6_DATA = ["--cache-dir", "/kaggle/temp/bpe"]
 
+def _iso(budget: str, seed: int) -> list[str]:
+    """One IsoFLOP contour for one seed: every size whose D = C / (6N) is in [2e6, corpus]."""
+    return [O6, "--studies", "isoflop", *O6_DATA, "--budgets", budget, "--seeds", str(seed),
+            "--sizes", *[f"s{i}" for i in range(9)], "--lr-table", "docs/data/o6/lr-table.json",
+            "--out", f"o6-iso-{budget}-s{seed}.json"]
+
+
+def _n3const(lr: str, seed: int) -> list[str]:
+    return [N3, "--studies", "reference", "--constant-lr", lr, "--seed", str(seed), "--out", f"n3-const-{lr}-s{seed}.json"]
+
+
 PRESETS = {
+    # lanes balanced by the o6a / o6b throughputs (~3 h each); N3's constant-LR controls first
+    "o6c": [
+        [_n3const("1e-3", 0), _n3const("2e-3", 0), _iso("1e16", 2), _iso("3e15", 0), _iso("3e13", 1)],
+        [_n3const("1e-3", 1), _iso("1e16", 1), _iso("1e15", 2), _iso("3e14", 2), _iso("1e14", 2), _iso("1e14", 0)],
+    ],
+    "o6d": [
+        [_n3const("2e-3", 1), _iso("1e16", 0), _iso("1e15", 1), _iso("3e14", 1), _iso("1e14", 1), _iso("3e13", 2), _iso("3e13", 0)],
+        [_n3const("1e-3", 2), _n3const("2e-3", 2), _iso("3e15", 2), _iso("3e15", 1), _iso("1e15", 0), _iso("3e14", 0)],
+    ],
     "o6b": [
         [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
          [O6, "--studies", "lr", *O6_DATA, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
