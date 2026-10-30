@@ -1,0 +1,97 @@
+% writeupstyle.sty
+% Visual style for the jax-experiments writeups (docs/m<N>-*.md -> docs/pdf/).
+% Adapted from the same author's atcoder_lectures repository
+% (tex/lecturestyle.sty): its fonts, title band, section headings, tinted
+% boxes, code boxes and footer, fitted to pandoc's LaTeX output, with a teal
+% accent instead of the lectures' blue.
+% tools/build_pdf.py loads it after pandoc's own preamble and defines
+% \writeupseries, \writeupmilestone and \writeupsource before it.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{writeupstyle}[2026/10/30 jax-experiments writeup style]
+
+% ---- fonts (pandoc's template already loads fontspec and unicode-math) ----
+% DejaVu Serif ships no italic face, so emphasis uses a slanted upright.
+\setmainfont{DejaVu Serif}[
+  ItalicFont={DejaVu Serif}, ItalicFeatures={FakeSlant=0.2},
+  BoldItalicFont={DejaVu Serif Bold}, BoldItalicFeatures={FakeSlant=0.2}]
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}[Scale=0.88]
+\setmathfont{TeX Gyre Termes Math}
+
+\RequirePackage[a4paper,margin=2.2cm]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\RequirePackage{fancyhdr}
+\RequirePackage{titlesec}
+\RequirePackage{graphicx}
+\RequirePackage{float}
+\RequirePackage[font={small,sf},labelfont=bf,labelsep=period,margin=1em]{caption}
+\RequirePackage{xurl}
+
+% ---- palette: the lecture notes' ink and code greys, with a deep teal accent
+% in place of their blue, so the two series are told apart at a glance ----
+\definecolor{writeupink}{HTML}{1B2733}
+\definecolor{writeupaccent}{HTML}{1F6B66}
+\definecolor{writeupbg}{HTML}{F1F7F6}
+\definecolor{writeupwarn}{HTML}{8A4B2C}
+\definecolor{codebg}{HTML}{F7F7F9}
+\definecolor{coderule}{HTML}{D8DEE4}
+
+% pandoc loads hyperref after this file, so set the link colours at \begin{document}.
+\AtBeginDocument{\hypersetup{colorlinks=true, linkcolor=writeupaccent,
+  urlcolor=writeupaccent, citecolor=writeupaccent, filecolor=writeupaccent}}
+
+% ---- title band: \maketitle as the lectures' band ----
+\makeatletter
+\renewcommand{\maketitle}{%
+  \thispagestyle{fancy}%
+  \begin{tcolorbox}[colback=writeupaccent,colframe=writeupaccent,
+      sharp corners,boxrule=0pt,left=10pt,right=10pt,top=8pt,bottom=8pt]
+    {\color{white}\small\sffamily \writeupseries \hfill Milestone \writeupmilestone}\\[4pt]
+    {\color{white}\LARGE\sffamily\bfseries\raggedright \@title\par}
+  \end{tcolorbox}
+  \vspace{2pt}
+  {\small\color{writeupink!70} A writeup in the jax-experiments series, built
+   on \@date{} from \texttt{\writeupsource}. Its data, scripts and the work
+   order (\texttt{PLAN.md}) are in the same repository.\par}
+  \vspace{6pt}
+  \hrule
+  \vspace{10pt}%
+}
+\makeatother
+
+% ---- header and footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.2pt}
+\fancyhead[R]{\small\sffamily\color{writeupink!60}\writeupmilestone}
+\fancyfoot[C]{\thepage}
+\fancyfoot[L]{\small\color{writeupink!60}\writeupseries}
+
+% ---- headings (pandoc's "## X" is a \section after the heading shift) ----
+\titleformat{\section}{\Large\sffamily\bfseries\color{writeupaccent}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\sffamily\bfseries\color{writeupink}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\sffamily\bfseries\color{writeupink}}{\thesubsubsection}{0.6em}{}
+
+% ---- the status blockquote at the top of every writeup ----
+\renewenvironment{quote}{%
+  \begin{tcolorbox}[enhanced,breakable,colback=writeupbg,colframe=writeupaccent,
+    boxrule=0.6pt,left=8pt,right=8pt,top=6pt,bottom=6pt,
+    fonttitle=\sffamily\bfseries,title={At a glance}]\small\raggedright}
+  {\end{tcolorbox}}
+
+% ---- code blocks (pandoc's highlighted Shaded environment) ----
+% pandoc defines Shaded only when the writeup has a code block.
+\makeatletter\@ifundefined{Shaded}{\newenvironment{Shaded}{}{}}{}\makeatother
+\renewenvironment{Shaded}{%
+  \begin{tcolorbox}[enhanced,breakable,colback=codebg,colframe=coderule,
+    boxrule=0.6pt,sharp corners,left=6pt,right=6pt,top=3pt,bottom=3pt]\footnotesize}
+  {\end{tcolorbox}}
+
+% ---- tables: a little air between booktabs rows ----
+\renewcommand{\arraystretch}{1.15}
+
+\endinput
