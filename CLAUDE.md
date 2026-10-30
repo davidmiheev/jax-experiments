@@ -338,11 +338,18 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   What we measure and why, What I built, Results, What surprised me, Open
   threads.
 - **PDF of every writeup.** Writeups are `docs/m<N>-*.md`. Build them with
-  `uv run python tools/build_pdf.py --all` (pandoc + XeLaTeX, ported from
-  ml-ladder), and commit `docs/pdf/*.pdf` beside the markdown. In a fresh
-  container, first run `apt-get install pandoc texlive-xetex texlive-latex-extra
-  texlive-fonts-recommended fonts-texgyre`. The builder refuses glyphs the font
-  lacks, so write powers as `$10^{-6}$`, not `10⁻⁶`.
+  `uv run python tools/build_pdf.py --all` (pandoc + XeLaTeX), and commit
+  `docs/pdf/*.pdf` beside the markdown. In a fresh container, first run
+  `apt-get install pandoc texlive-xetex texlive-latex-extra
+  texlive-fonts-recommended fonts-texgyre fonts-texgyre-math fonts-dejavu`.
+  The builder refuses glyphs the font lacks, so write powers as `$10^{-6}$`,
+  not `10⁻⁶`.
+  - **The look** is `tools/tex/writeupstyle.sty`, adapted on 2026-10-30 from
+    the atcoder_lectures repo's `tex/lecturestyle.sty`, with a teal accent
+    instead of its blue.
+  - **What it gives:** DejaVu fonts, TeX Gyre Termes Math, the title band
+    (series and milestone), sans-serif headings, the status blockquote as an
+    "At a glance" box, and boxed code.
 - **Verified vs not.** Say explicitly what was run and what was not.
   Numbers quoted from someone else's commit or paper are labelled as such.
 - **Arithmetic.** Check every number in prose against the JSON before
