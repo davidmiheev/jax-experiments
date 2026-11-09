@@ -1,0 +1,11 @@
+[online] step     0 lr 1.00e-03 meta 2.8302 (55s)
+[online] step   300 lr 1.19e-03 meta 2.1001 (265s)
+[online] step   600 lr 1.08e-03 meta 1.7529 (484s)
+[online] step   900 lr 9.07e-04 meta 1.6212 (703s)
+[online] step  1200 lr 7.48e-04 meta 1.4465 (921s)
+[online] step  1500 lr 6.08e-04 meta 1.3892 (1139s)
+[online] step  1800 lr 4.98e-04 meta 1.3670 (1357s)
+[online] step  2100 lr 4.13e-04 meta 1.3033 (1575s)
+[online] step  2400 lr 3.48e-04 meta 1.3313 (1794s)
+[online] step  2700 lr 2.98e-04 meta 1.2635 (2013s)
+[online] s1 K=30 init 0.001 clip 1.0: 1.8031 bits/byte
