@@ -55,7 +55,7 @@ reproduce. This file is the practical brief for picking it up.
     `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
     dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
     scores it against ml-ladder's JSON.
-- **M3: N1 is done** (`docs/m3-sweeps-optimisers-noise.md`); O3 and N2 not started.
+- **M3: N1 and O3 are done** (`docs/m3-sweeps-optimisers-noise.md`); N2 not started.
   - `jaxexp.sweep.train_many` trains K copies (own LR, loss scale and batch
     stream) as one `jit(vmap(step))`. It equals sequential runs to 1e-6 on CPU.
   - It reproduces ml-ladder's §7 sweep: best LR 2e-3 (1.824 against 1.825),
@@ -67,6 +67,15 @@ reproduce. This file is the practical brief for picking it up.
     at 4e-3 (1.84) did not reproduce in two PyTorch reruns (2.01, 2.04); four
     JAX runs gave 2.05–2.06. Kernels can run ml-ladder's own scripts (job
     `"@../ml-ladder/..."`) for such controls.
+  - O3 tuned AdamW, Lion and Muon on the 4M at T=256 (3,000 steps; LR and,
+    for Lion, weight decay):
+    - Muon reaches 1.6190 against AdamW's 1.6335 (seeds disjoint), but at
+      0.72× the throughput;
+    - Lion reaches 1.7056 (wd 1.0 at lr 3.2e-3; less decay is worse or
+      unstable).
+  - `jaxexp.train.optimizer(kind=adamw|lion|muon)`. Don't use
+    `optax.contrib.muon` directly: its `nesterov=True` turns its AdamW branch
+    into NAdam.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB

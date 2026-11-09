@@ -1,9 +1,9 @@
 # M3 — Sweeps as one program, optimisers, gradient noise (N1, O3, N2)
 
-> **Status:** N1 done; O3 and N2 not started ·
+> **Status:** N1 and O3 done; N2 not started ·
 > **Hardware:** Kaggle T4 ×2 (sm_75, one job per GPU), JAX 0.11.1; CPU (4 cores) for the equivalence tests ·
-> **Data:** [`data/n1-summary.json`](data/n1-summary.json) (every number below) and [`data/n1/`](data/n1/) (one JSON and log per job); ml-ladder's references from its `docs/writeups/data/c-gpu-lr.json` and `c-gpu-lr2-1024.json` ·
-> **Reproduce:** `uv run python tools/kaggle/push_r2.py <preset> --push` for `n1-calibrate`, `n1`, `n1-fork` and `n1-fork-torch`, then `uv run python experiments/n1_vmap_sweep/analyze.py`. CPU equivalence: `uv run pytest tests/test_n1_sweep.py`
+> **Data:** N1: [`data/n1-summary.json`](data/n1-summary.json) and [`data/n1/`](data/n1/) (one JSON and log per job); O3: [`data/o3-summary.json`](data/o3-summary.json) and [`data/o3/`](data/o3/); ml-ladder's references from its `docs/writeups/data/c-gpu-lr.json` and `c-gpu-lr2-1024.json` ·
+> **Reproduce:** `uv run python tools/kaggle/push_r2.py <preset> --push` for `n1-calibrate`, `n1`, `n1-fork` and `n1-fork-torch`, then `uv run python experiments/n1_vmap_sweep/analyze.py`; O3: presets `o3-stage1` to `o3-stage4`, then `uv run python experiments/o3_optimizers/analyze.py`. CPU tests: `uv run pytest tests/test_n1_sweep.py tests/test_o3_optimizers.py`
 
 ## N1 — Hyperparameter sweeps as one program
 
@@ -203,7 +203,173 @@ A single run per configuration in this regime is a draw, not a measurement.
 
 ## O3 — Optimisers beyond Adam
 
-Not started. See `PLAN.md`.
+### Question
+
+ml-ladder's B5 thread asks about Lion and Shampoo, and whether second-moment
+scaling is the right primitive at all. On R2's 4M transformer, with every
+optimiser at its own tuned learning rate, does anything beat AdamW?
+
+### The idea
+
+**Three answers to "how should a step be shaped?"**
+- **AdamW** divides each coordinate's momentum by a running RMS of its
+  gradient: second-moment scaling.
+- **Lion** keeps only the *sign* of an interpolated momentum, so every
+  coordinate moves by exactly the learning rate. It has no second moment at
+  all.
+- **Muon** orthogonalises the momentum of each weight matrix. It replaces
+  $M = U\Sigma V^\top$ by roughly $UV^\top$, so every direction in the
+  matrix's row and column spaces moves equally. That is Shampoo's
+  preconditioner $(GG^\top)^{-1/4}\,G\,(G^\top G)^{-1/4}$ without its running
+  accumulation: second-moment scaling of a whole matrix, rather than of each
+  coordinate.
+
+**Tune every arm** (ml-ladder §7, and CLAUDE.md). An untuned baseline
+produces a fake winner. Each optimiser gets its own learning-rate sweep on
+seed 0, extended until the best value is interior. Seeds 1–2 then run at
+that value.
+
+**N1's sweep tool makes this cheap to run:** each grid is one or two vmapped
+programs.
+
+### The math
+
+With momentum $m_t$, gradient $g_t$ and peak LR $\eta$ (on ml-ladder's
+schedule), and decoupled weight decay $\lambda$:
+
+- **AdamW:** $\theta \mathrel{-}= \eta\,(\hat m_t/(\sqrt{\hat v_t}+\epsilon) + \lambda\theta)$,
+  with $\beta = (0.9, 0.95)$ and $\lambda = 0.1$ (the protocol).
+- **Lion:** $\theta \mathrel{-}= \eta\,(\operatorname{sign}(\beta_1 m_{t-1} + (1-\beta_1) g_t) + \lambda\theta)$,
+  $m_t = \beta_2 m_{t-1} + (1-\beta_2) g_t$, with $\beta = (0.9, 0.99)$. Since
+  $|\text{update}| = \eta$, Lion's good learning rates are 3–10× smaller than
+  AdamW's. So $\lambda = 1.0$, ten times AdamW's, to keep $\eta\lambda$
+  comparable, as the Lion paper recommends.
+- **Muon** on each hidden matrix $W \in \mathbb{R}^{n_\text{in} \times n_\text{out}}$:
+  $W \mathrel{-}= \eta\,(\sqrt{\max(1, n_\text{out}/n_\text{in})}\;\mathrm{NS}_5(\tilde m_t) + \lambda W)$.
+  - $\tilde m_t$ is Nesterov momentum with $\beta = 0.95$.
+  - $\mathrm{NS}_5$ is five steps of the quintic Newton–Schulz iteration that
+    pushes the singular values towards 1.
+  - $\lambda = 0.1$.
+
+  Embeddings, the output head, biases and LayerNorm stay on the protocol's
+  AdamW, at AdamW's tuned peak, on the same schedule.
+
+### What we measure and why
+
+- **Setting:** the 4M transformer (learned positions) at T=256, batch 64
+  (16,384 tokens per step), 3,000 steps, fp16 with fused attention.
+  Every run starts from ml-ladder's initial weights.
+- **Anchor:** the AdamW arm at 2e-3, 4e-3 and 8e-3 must match ml-ladder's own
+  runs at this setting (`c-gpu-lr2-256.json`).
+- **Per optimiser:**
+  - the LR curve on seed 0;
+  - bits/byte at the best LR over seeds 0–2, as median (min–max);
+  - steps to reach AdamW's training loss, at two levels: its level at step
+    1,500, and its final level. The loss is smoothed as the mean of 8
+    consecutive logs (200 steps), placed at the window's centre step. With a
+    fixed-length cosine schedule, every
+    run reaches the final level only near the end, so the halfway level is
+    the informative one.
+
+### What I built
+
+- **`jaxexp.train.optimizer(kind=adamw|lion|muon)`.** The AdamW path is
+  unchanged: R2's parity tests pass.
+- **Muon is assembled from `optax.contrib.scale_by_muon` and the protocol's
+  AdamW, via `optax.partition`.** optax's ready-made `muon(nesterov=True)`
+  also applies Nesterov to its AdamW branch, which makes that branch NAdam,
+  with first steps 1.47× larger. A test caught it.
+
+  The AdamW part has its own peak. It follows the schedule through an
+  injected `schedule` multiplier, so one vmapped program can sweep Muon's LR
+  while the AdamW part holds still.
+- **`tests/test_o3_optimizers.py`:**
+  - Lion's first step is exactly ±η per element;
+  - Muon orthogonalises exactly the eight block matrices (singular values in
+    the Newton–Schulz band);
+  - everything else gets AdamW's exact first step;
+  - both optimisers give the same losses vmapped as sequentially.
+- **`n1_vmap_sweep/run.py`** gains `--optimizer`, `--weight-decay` and
+  `--adam-peak`; `experiments/o3_optimizers/analyze.py` scores the results.
+
+### Results
+
+**The AdamW arm lands on ml-ladder's runs** at this setting (seed 0): 1.7141
+against 1.7155 at 2e-3, 1.6462 against 1.6436 at 4e-3, and 1.6357 against
+1.6239 at 8e-3. ml-ladder's grid stopped at 8e-3, its best value. Extending
+it shows that 8e-3 really is the optimum: 1.6e-2 gives 1.6912, and 3.2e-2
+gives 1.7475.
+
+![Left: each optimiser's LR sweep on seed 0, with seeds 0-2 at its best LR (squares). Right: smoothed training loss at each optimiser's best LR, seeds 0-2; dotted and dashed lines are AdamW's halfway and final levels](figures/o3-optimizers.png)
+
+| optimiser (tuned) | peak LR | weight decay | bits/byte, seeds 0–2 | steps to AdamW's halfway loss | tokens/s (T4) |
+| --- | --- | --- | --- | --- | --- |
+| AdamW (protocol) | 8e-3 | 0.1 | 1.6335 (1.6333–1.6357) | 1,362–1,537 | 240k |
+| **Muon** (+ AdamW at 8e-3) | 2e-2 | 0.1 | **1.6190** (1.6186–1.6212) | **1,212–1,462** | 172k (0.72×) |
+| Lion | 3.2e-3 | 1.0 | 1.7056 (1.6976–1.7063) | 2,312–2,387 | 234k |
+
+- **Muon is best, by 0.0145 bits/byte.** Its three seeds (1.6186–1.6212) and
+  AdamW's (1.6333–1.6357) do not overlap. It reaches AdamW's halfway training
+  loss about 1.13× sooner in steps (median 1,312 against 1,487).
+- **But Muon costs more per step.** Five Newton–Schulz iterations on every
+  matrix make it run at 0.72× AdamW's throughput on the T4. Measured in time,
+  it reaches the halfway loss about 23% *later*: 1,312 steps at 1.40× the cost
+  per step is worth about 1,830 AdamW steps. Whether AdamW given 40% more
+  steps would close the 0.0145 gap was not measured.
+- **Lion is clearly worse here, after tuning both of its knobs.**
+  - Its LR curve is flat around its optimum: 1.7079, 1.7063 and 1.7096 at
+    2.4e-3, 3.2e-3 and 4.8e-3. It diverges from 1.28e-2.
+  - Weight decay matters, and 1.0 is an interior optimum. At 3.2e-3, wd 0.1
+    gives 3.68 (unstable), 0.3 gives 2.07, and 1.0 gives 1.71; at 1.6e-3,
+    wd 3.0 gives 1.79.
+  - The gap to AdamW is 0.072 bits/byte, and Lion needs about 1.6× as many
+    steps to reach AdamW's halfway loss.
+- **fp16 was healthy at every tuned setting:** no skipped steps. Steps were
+  skipped only in runs that diverged or nearly did (Lion at 1.28e-2 and above,
+  or with wd 0.1).
+- **Cost.** O3 took four kernels: 36 runs of 3,000 steps, as 14 vmapped
+  programs of 2–3 copies, totalling 2.33 GPU-hours of program time on T4s.
+
+### What surprised me
+
+**Lion needs its weight decay.** Lion's step has a fixed size, so without
+enough decay the weights grow until the sign updates are relatively too small
+to steer them. Lowering λ from 1.0 to 0.3 cost 0.37 bits/byte at 3.2e-3, and
+0.1 made the run unstable. The Lion paper's rule of thumb (λ 3–10× AdamW's) is
+not a nicety; here it is most of the tuning.
+
+**Lion loses at this batch size.** Lion's own paper reports its gains at
+large batches. Here a step is 64 sequences of 256 bytes, and the sign of a
+noisy momentum throws away the magnitude information that AdamW keeps. That
+is a hypothesis, not a measurement; the batch-size axis is N2's.
+
+**optax's Muon is not plain Muon.** `optax.contrib.muon(nesterov=True)` also
+turns the AdamW it applies to non-matrix parameters into NAdam: a 1.47×
+larger first step, and a different optimiser for embeddings and the head. It
+only showed up because the test computed AdamW's first step by hand. The
+first version of that test failed on gradient clipping and on Adam's ε before
+it was exact.
+
+**A step-count win can be a wall-clock loss.** Muon's 1.13× fewer steps
+become a 23% slower time on a T4, where five Newton–Schulz iterations per
+matrix are not hidden behind anything.
+
+### Open threads
+
+- **Equal-time comparison.** Give AdamW 1.4× the steps, so it has Muon's
+  wall-clock time, and see whether Muon's 0.0145 survives.
+- **Muon's details:**
+  - orthogonalise q, k and v separately rather than the fused 256×768 matrix;
+  - tune its AdamW part's LR jointly;
+  - try fewer Newton–Schulz steps, or bf16 iterations on hardware with fast
+    bf16.
+- **Lion at larger batches.** Use N2's critical batch size to choose where to
+  look.
+- **Longer runs and the 25M model.** 3,000 steps of a 4M model is a short
+  horizon; the ranking may not hold at R2's 12,000 steps.
+- **A Shampoo-family optimiser proper** (`distributed_shampoo`, SOAP or
+  PSGD-Kron), once one runs with optax 0.2.8. `psgd-jax` 0.2.9 imports
+  optax internals that no longer exist.
 
 ## N2 — Gradient noise scale and the critical batch size
 

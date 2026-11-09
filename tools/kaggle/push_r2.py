@@ -33,6 +33,15 @@ Presets (each is two job lists, one per GPU):
 - ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
   two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
   run-to-run nondeterminism at an unstable learning rate.
+- ``o3-stage1``: O3's LR sweeps for AdamW (ml-ladder's protocol) and Lion on seed 0: the 4M
+  transformer at T=256, 3,000 steps, six peak LRs each, vmapped in groups of 3. Muon follows
+  in stage 2, because its AdamW part uses AdamW's tuned peak.
+- ``o3-stage2``: Muon's LR sweep on seed 0 (its AdamW part at AdamW's tuned 8e-3); Lion's grid
+  extended upward (stage 1's best, 3.2e-3, was its top edge); AdamW seeds 1-2 at 8e-3.
+- ``o3-stage3``: Lion's weight decay (1.0 was a heuristic, not tuned): 0.3 and 0.1 at its two
+  best LRs; Muon seeds 1-2 at 2e-2; Lion seeds 1-2 at 3.2e-3 (wd 1.0).
+- ``o3-stage4``: Lion's weight decay was best at the largest value tried (1.0; 0.3 and 0.1
+  are worse): wd 3.0 at three LRs, and wd 1.0 at 2.4e-3 / 4.8e-3 around its optimum.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -90,7 +99,40 @@ def _torch4m(tag: str) -> list[str]:
             "--out", f"n1-fork-torch-{tag}.json"]
 
 
+def _o3(opt: str, lrs: list[str], seeds: list[str], tag: str, *extra: str) -> list[str]:
+    return [N1, "--studies", "sweep", "--context", "256", "--seeds", *seeds, "--lrs", *lrs, "--group", "3",
+            "--log-every", "25", "--optimizer", opt, *extra, "--out", f"o3-{tag}.json"]
+
+
+ADAMW_LRS = ["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2"]
+LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
+
 PRESETS = {
+    "o3-stage4": [
+        [_o3("lion", ["1.6e-3", "3.2e-3", "6.4e-3"], ["0"], "lion-s0-wd3", "--weight-decay", "3.0")],
+        [_o3("lion", ["2.4e-3", "4.8e-3"], ["0"], "lion-s0-fine", "--weight-decay", "1.0")],
+    ],
+    "o3-stage3": [
+        [
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.3", "--weight-decay", "0.3"),
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.1", "--weight-decay", "0.1"),
+        ],
+        [
+            _o3("muon", ["2e-2"], ["1", "2"], "muon-best-s12", "--adam-peak", "8e-3"),
+            _o3("lion", ["3.2e-3"], ["1", "2"], "lion-best-s12", "--weight-decay", "1.0"),
+        ],
+    ],
+    "o3-stage2": [
+        [_o3("muon", ["5e-3", "1e-2", "2e-2", "4e-2", "8e-2", "1.6e-1"], ["0"], "muon-s0", "--adam-peak", "8e-3")],
+        [
+            _o3("lion", ["6.4e-3", "1.28e-2", "2.56e-2"], ["0"], "lion-s0-high", "--weight-decay", "1.0"),
+            _o3("adamw", ["8e-3"], ["1", "2"], "adamw-best-s12"),
+        ],
+    ],
+    "o3-stage1": [
+        [_o3("adamw", ADAMW_LRS, ["0"], "adamw-s0")],
+        [_o3("lion", LION_LRS, ["0"], "lion-s0", "--weight-decay", "1.0")],
+    ],
     "n1-fork-torch": [[_torch4m("a")], [_torch4m("b")]],
     "n1-fork": [
         [_seq4m("a"), _seq4m("b")],

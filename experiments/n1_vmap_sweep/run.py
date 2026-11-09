@@ -138,6 +138,7 @@ def study_sweep(args, report) -> None:
     batch = args.tokens_per_step // args.context
     windows = text.validation_windows(val_ids, args.context, args.eval_tokens)
     rows = report.setdefault("enwik8", [])
+    weight_decay = args.weight_decay if args.weight_decay is not None else r2.MODELS[args.model][3]
     grid = [(seed, lr) for seed in args.seeds for lr in args.lrs]
     done = {(r["seed"], r["peak_lr"]) for r in rows}
     grid = [g for g in grid if g not in done]
@@ -154,7 +155,8 @@ def study_sweep(args, report) -> None:
             [samplers[s] for s, _ in group],
             steps=args.steps,
             peak_lrs=[lr for _, lr in group],
-            weight_decay=r2.MODELS[args.model][3],
+            weight_decay=weight_decay,
+            opt=TR.optimizer(weight_decay, args.optimizer, adam_peak=args.adam_peak),
             amp=args.amp,
             log_every=args.log_every,
             label=label,
@@ -190,6 +192,9 @@ def study_sweep(args, report) -> None:
                     "amp": args.amp,
                     "remat": args.remat,
                     "attention": args.attention,
+                    "optimizer": args.optimizer,
+                    "weight_decay": weight_decay,
+                    "adam_peak": args.adam_peak,
                 }
             )
             print(f"[sweep] s{seed} lr={lr:g}  {rows[-1]['bits_per_byte']:.4f} bits/byte  ({label})", flush=True)
@@ -219,6 +224,10 @@ def main() -> None:
     parser.add_argument("--log-every", type=int, default=250)
     parser.add_argument("--remat", choices=["none", "nothing", "dots"], default="none")
     parser.add_argument("--attention", choices=["explicit", "fused"], default="fused")
+    # O3: the sweep with another optimiser (jaxexp.train.optimizer); AdamW is ml-ladder's protocol.
+    parser.add_argument("--optimizer", choices=["adamw", "lion", "muon"], default="adamw")
+    parser.add_argument("--weight-decay", type=float, default=None, help="default: the model's (0.1)")
+    parser.add_argument("--adam-peak", type=float, default=None, help="muon: peak LR of its AdamW part")
     parser.add_argument("--no-amp", dest="amp", action="store_false")
     args = parser.parse_args()
     if args.size:  # smaller transformers, to find where one copy stops filling the GPU
