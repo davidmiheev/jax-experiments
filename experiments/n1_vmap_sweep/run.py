@@ -52,7 +52,7 @@ def _save(args, report) -> None:
 
 
 def _builder_args(args, remat: str):
-    return argparse.Namespace(amp=args.amp, attention=args.attention, remat=remat)
+    return argparse.Namespace(amp=args.amp, attention=args.attention, remat=remat, scan=args.scan)
 
 
 def study_memory(args, report) -> None:
@@ -224,6 +224,7 @@ def main() -> None:
     parser.add_argument("--log-every", type=int, default=250)
     parser.add_argument("--remat", choices=["none", "nothing", "dots"], default="none")
     parser.add_argument("--attention", choices=["explicit", "fused"], default="fused")
+    parser.add_argument("--scan", choices=["associative", "sequential"], default="associative", help="lru / mamba")
     # O3: the sweep with another optimiser (jaxexp.train.optimizer); AdamW is ml-ladder's protocol.
     parser.add_argument("--optimizer", choices=["adamw", "lion", "muon"], default="adamw")
     parser.add_argument("--weight-decay", type=float, default=None, help="default: the model's (0.1)")

@@ -1,0 +1,62 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/n4-copy-mamba2-lr4e-3-s0.json",
+  "data_dir": null,
+  "ml_ladder": "/content/src/ml-ladder",
+  "init": "torch",
+  "studies": [
+   "copy"
+  ],
+  "seeds": [
+   0
+  ],
+  "contexts": [
+   256,
+   1024
+  ],
+  "models": [
+   "gru",
+   "transformer-25M-rope"
+  ],
+  "copy_models": [
+   "mamba2"
+  ],
+  "tokens_per_step": 16384,
+  "enwik8_steps": 12000,
+  "eval_tokens": 262144,
+  "copy_lengths": [
+   32
+  ],
+  "copy_steps": 1500,
+  "copy_lr": 0.004,
+  "peak_lr": null,
+  "amp": false,
+  "remat": "none",
+  "attention": "fused",
+  "scan": "associative",
+  "log_every": 250
+ },
+ "copy": [
+  {
+   "seed": 0,
+   "model": "mamba2",
+   "n": 32,
+   "parameters": 3915584,
+   "peak_lr": 0.004,
+   "second_half_accuracy": 0.02880859375,
+   "first_half_accuracy": 0.029548891129032258,
+   "chance": 0.03125,
+   "train_seconds": 632.4111688137054,
+   "framework": "jax",
+   "init": "jax",
+   "amp": false
+  }
+ ],
+ "finished": "2026-10-18 16:03:10",
+ "wall_seconds": 640.1520090103149
+}
