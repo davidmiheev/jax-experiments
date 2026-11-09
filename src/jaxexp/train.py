@@ -30,12 +30,15 @@ import optax
 
 
 def lr_at(step: int, total: int, peak: float, schedule: str = "warmup-cosine", warmup_fraction: float = 0.05):
-    """ml-ladder's schedule, verbatim."""
+    """ml-ladder's schedule, verbatim; plus ``warmup-constant`` (N2: the same warmup, then flat, so
+    that steps-to-a-target-loss does not depend on the run's total length)."""
     if schedule == "constant":
         return peak
     warmup = max(1, int(total * warmup_fraction))
     if step < warmup:
         return peak * (step + 1) / warmup
+    if schedule == "warmup-constant":
+        return peak
     progress = (step - warmup) / max(1, total - warmup)
     return peak * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * progress)))
 
@@ -155,6 +158,7 @@ class TrainResult:
     compile_seconds: float = 0.0
     skipped_steps: int = 0
     final_scale: float = 1.0
+    measurements: list = field(default_factory=list)  # (step, on_log(step, params)) at logged steps
 
 
 def train(
@@ -170,14 +174,25 @@ def train(
     log_every: int = 250,
     label: str = "",
     opt: optax.GradientTransformation | None = None,
+    on_log: Callable | None = None,
+    measure_every: int | None = None,
 ) -> TrainResult:
+    """``on_log(step, params) -> dict``, if given, runs every ``measure_every`` steps (default:
+    ``log_every``) and at the last step, on the parameters before that step's update; its results
+    are kept in ``TrainResult.measurements`` and its time is excluded from ``train_seconds``."""
     opt = opt or optimizer(weight_decay)
     opt_state = opt.init(params)
     step_fn = make_step(apply, opt, amp)
     scale_state = LossScale(enabled=amp).state()
     result = TrainResult(params)
     started = time.time()
+    measure_every = measure_every or log_every
+    measuring = 0.0
     for i in range(steps):
+        if on_log is not None and (i % measure_every == 0 or i == steps - 1):
+            t0 = time.time()
+            result.measurements.append((i, on_log(i, params)))
+            measuring += time.time() - t0
         inputs, targets = sample_batch()
         lr = {"learning_rate": jnp.float32(lr_at(i, steps, peak_lr, schedule)),
               "schedule": jnp.float32(lr_at(i, steps, 1.0, schedule))}
@@ -186,7 +201,7 @@ def train(
         )
         if i == 0:
             jax.block_until_ready(loss)
-            result.compile_seconds = time.time() - started
+            result.compile_seconds = time.time() - started - measuring
         if not bool(finite):
             result.skipped_steps += 1
         if i % log_every == 0 or i == steps - 1:
@@ -195,7 +210,7 @@ def train(
                 print(f"  [{label}] step {i:5d} loss {float(loss):.4f} ({time.time() - started:.0f}s)", flush=True)
     jax.block_until_ready(params)
     result.params = params
-    result.train_seconds = time.time() - started
+    result.train_seconds = time.time() - started - measuring
     result.final_scale = float(scale_state[0])
     return result
 

@@ -55,7 +55,7 @@ reproduce. This file is the practical brief for picking it up.
     `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
     dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
     scores it against ml-ladder's JSON.
-- **M3: N1 and O3 are done** (`docs/m3-sweeps-optimisers-noise.md`); N2 not started.
+- **M3 is done** (N1, O3, N2; `docs/m3-sweeps-optimisers-noise.md`).
   - `jaxexp.sweep.train_many` trains K copies (own LR, loss scale and batch
     stream) as one `jit(vmap(step))`. It equals sequential runs to 1e-6 on CPU.
   - It reproduces ml-ladder's §7 sweep: best LR 2e-3 (1.824 against 1.825),
@@ -76,6 +76,13 @@ reproduce. This file is the practical brief for picking it up.
   - `jaxexp.train.optimizer(kind=adamw|lion|muon)`. Don't use
     `optax.contrib.muon` directly: its `nesterov=True` turns its AdamW branch
     into NAdam.
+  - N2: `jaxexp.noise` estimates B_simple from per-example gradients
+    (`vmap(grad)`). On the 4M at T=256 it rises from about 1 to about 45–60
+    sequences. Early in training B_crit ≈ 115 (about 2.7× B_simple); late,
+    B=64→256 still saves 2.9–3.3× the steps, so B_crit > 256 while B_simple is
+    about 45.
+  - **Smooth loss curves with a centred window when timing crossings.** A
+    trailing mean biased N2's and O3's steps-to-target.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
