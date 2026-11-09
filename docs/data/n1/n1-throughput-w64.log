@@ -1,0 +1,5 @@
+[throughput] transformer-w64d2 K=1   remat=none     436,284 tok/s total (1.00x K=1, i.e. 1.00x 1 sequential runs' rate)  compile 6.3s
+[throughput] transformer-w64d2 K=2   remat=none     455,742 tok/s total (1.04x K=1, i.e. 1.04x 2 sequential runs' rate)  compile 6.4s
+[throughput] transformer-w64d2 K=4   remat=none     473,143 tok/s total (1.08x K=1, i.e. 1.08x 4 sequential runs' rate)  compile 6.9s
+[throughput] transformer-w64d2 K=8   remat=none     484,452 tok/s total (1.11x K=1, i.e. 1.11x 8 sequential runs' rate)  compile 7.3s
+[throughput] K=16 remat=none: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 14.63GiB with allocator GPU_0_bfc on device 0. [tf-allocator-

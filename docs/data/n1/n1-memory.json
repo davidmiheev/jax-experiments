@@ -1,0 +1,222 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "studies": [
+   "memory"
+  ],
+  "out": "/kaggle/working/n1-memory.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "context": 1024,
+  "tokens_per_step": 16384,
+  "ks": [
+   1,
+   2,
+   4,
+   6,
+   8,
+   12,
+   18
+  ],
+  "remats": [
+   "none",
+   "dots"
+  ],
+  "throughput_steps": 200,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "lrs": [
+   0.0003,
+   0.0006,
+   0.001,
+   0.002,
+   0.004,
+   0.008
+  ],
+  "group": 6,
+  "steps": 3000,
+  "eval_tokens": 262144,
+  "log_every": 250,
+  "remat": "none",
+  "attention": "fused",
+  "amp": true
+ },
+ "memory": [
+  {
+   "k": 1,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 18675990528.0,
+   "peak_bytes": 3175192289,
+   "temp_bytes": 3079305080,
+   "argument_bytes": 52241448,
+   "output_bytes": 52112037,
+   "compile_s": 15.195051328000034
+  },
+  {
+   "k": 2,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 37451735040.0,
+   "peak_bytes": 6619698986,
+   "temp_bytes": 6411046008,
+   "argument_bytes": 104482896,
+   "output_bytes": 104222418,
+   "compile_s": 11.104388513000004
+  },
+  {
+   "k": 4,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 74338844672.0,
+   "peak_bytes": 13306505180,
+   "temp_bytes": 12889149048,
+   "argument_bytes": 208965792,
+   "output_bytes": 208443180,
+   "compile_s": 11.116721387999974
+  },
+  {
+   "k": 6,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 119552303104.0,
+   "peak_bytes": 16738531446,
+   "temp_bytes": 16112470392,
+   "argument_bytes": 313448688,
+   "output_bytes": 312663942,
+   "compile_s": 12.653739415000018
+  },
+  {
+   "k": 8,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 198518571008.0,
+   "peak_bytes": 18962598176,
+   "temp_bytes": 18127833976,
+   "argument_bytes": 417931584,
+   "output_bytes": 416884704,
+   "compile_s": 15.896549769999979
+  },
+  {
+   "k": 12,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 316586328064.0,
+   "peak_bytes": 28242569844,
+   "temp_bytes": 26990399352,
+   "argument_bytes": 626897376,
+   "output_bytes": 625326228,
+   "compile_s": 14.010257220000028
+  },
+  {
+   "k": 18,
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "flops": 357276844032.0,
+   "peak_bytes": 44779773042,
+   "temp_bytes": 42901492856,
+   "argument_bytes": 940346064,
+   "output_bytes": 937988514,
+   "compile_s": 16.106493043
+  },
+  {
+   "k": 1,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 28059906048.0,
+   "peak_bytes": 1480609505,
+   "temp_bytes": 1376335224,
+   "argument_bytes": 52241448,
+   "output_bytes": 52112037,
+   "compile_s": 10.057221242000026
+  },
+  {
+   "k": 2,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 55839178752.0,
+   "peak_bytes": 2911934250,
+   "temp_bytes": 2703284856,
+   "argument_bytes": 104482896,
+   "output_bytes": 104222418,
+   "compile_s": 10.112049345000003
+  },
+  {
+   "k": 4,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 111641690112.0,
+   "peak_bytes": 5823866844,
+   "temp_bytes": 5406513784,
+   "argument_bytes": 208965792,
+   "output_bytes": 208443180,
+   "compile_s": 14.518538134999972
+  },
+  {
+   "k": 6,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 167444185088.0,
+   "peak_bytes": 8735799438,
+   "temp_bytes": 8109742712,
+   "argument_bytes": 313448688,
+   "output_bytes": 312663942,
+   "compile_s": 11.365786044000004
+  },
+  {
+   "k": 8,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 223246680064.0,
+   "peak_bytes": 11647732032,
+   "temp_bytes": 10812971640,
+   "argument_bytes": 417931584,
+   "output_bytes": 416884704,
+   "compile_s": 10.426611508000008
+  },
+  {
+   "k": 12,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 334851735552.0,
+   "peak_bytes": 17471597172,
+   "temp_bytes": 16219429240,
+   "argument_bytes": 626897376,
+   "output_bytes": 625326228,
+   "compile_s": 10.19334572699995
+  },
+  {
+   "k": 18,
+   "remat": "dots",
+   "context": 1024,
+   "batch": 16,
+   "flops": 466467913728.0,
+   "peak_bytes": 26207394930,
+   "temp_bytes": 24329116792,
+   "argument_bytes": 940346064,
+   "output_bytes": 937988514,
+   "compile_s": 10.483477182000001
+  }
+ ],
+ "wall_seconds": 193.43551683425903
+}

@@ -1,0 +1,5 @@
+[throughput] transformer-w128d2 K=1   remat=none     385,193 tok/s total (1.00x K=1, i.e. 1.00x 1 sequential runs' rate)  compile 6.2s
+[throughput] transformer-w128d2 K=2   remat=none     370,358 tok/s total (0.96x K=1, i.e. 0.96x 2 sequential runs' rate)  compile 7.0s
+[throughput] transformer-w128d2 K=4   remat=none     402,337 tok/s total (1.04x K=1, i.e. 1.04x 4 sequential runs' rate)  compile 7.3s
+[throughput] transformer-w128d2 K=8   remat=none     400,000 tok/s total (1.04x K=1, i.e. 1.04x 8 sequential runs' rate)  compile 8.2s
+[throughput] K=16 remat=none: RESOURCE_EXHAUSTED: Out of memory while trying to allocate 15.13GiB with allocator GPU_0_bfc on device 0. [executable_na

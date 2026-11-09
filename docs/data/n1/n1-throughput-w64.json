@@ -1,0 +1,104 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "studies": [
+   "throughput"
+  ],
+  "out": "/kaggle/working/n1-throughput-w64.json",
+  "data_dir": "/kaggle/temp/data/text",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder",
+  "model": "transformer-w64d2",
+  "size": "64,2,4",
+  "context": 1024,
+  "tokens_per_step": 16384,
+  "ks": [
+   1,
+   2,
+   4,
+   8,
+   16,
+   32
+  ],
+  "remats": [
+   "none"
+  ],
+  "throughput_steps": 200,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "lrs": [
+   0.0003,
+   0.0006,
+   0.001,
+   0.002,
+   0.004,
+   0.008
+  ],
+  "group": 6,
+  "steps": 3000,
+  "eval_tokens": 262144,
+  "log_every": 250,
+  "remat": "none",
+  "attention": "fused",
+  "amp": true
+ },
+ "throughput": [
+  {
+   "model": "transformer-w64d2",
+   "parameters": 198400,
+   "k": 1,
+   "remat": "none",
+   "steps": 200,
+   "compile_seconds": 6.266127109527588,
+   "steady_seconds": 7.473151922225952,
+   "tokens_per_second": 436283.91794139426,
+   "peak_memory_mb": 1085.509033203125
+  },
+  {
+   "model": "transformer-w64d2",
+   "parameters": 198400,
+   "k": 2,
+   "remat": "none",
+   "steps": 200,
+   "compile_seconds": 6.406797409057617,
+   "steady_seconds": 14.308152437210083,
+   "tokens_per_second": 455742.41877950553,
+   "peak_memory_mb": 2190.408935546875
+  },
+  {
+   "model": "transformer-w64d2",
+   "parameters": 198400,
+   "k": 4,
+   "remat": "none",
+   "steps": 200,
+   "compile_seconds": 6.9410645961761475,
+   "steady_seconds": 27.563900470733643,
+   "tokens_per_second": 473142.90710950614,
+   "peak_memory_mb": 4378.661376953125
+  },
+  {
+   "model": "transformer-w64d2",
+   "parameters": 198400,
+   "k": 8,
+   "remat": "none",
+   "steps": 200,
+   "compile_seconds": 7.341368198394775,
+   "steady_seconds": 53.84093713760376,
+   "tokens_per_second": 484451.5973661015,
+   "peak_memory_mb": 8784.881103515625
+  },
+  {
+   "model": "transformer-w64d2",
+   "k": 16,
+   "remat": "none",
+   "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 14.63GiB with allocator GPU_0_bfc on device 0. [tf-allocator-allocation-error=''] [executable_name='jit_step']"
+  }
+ ],
+ "wall_seconds": 158.43383240699768
+}
