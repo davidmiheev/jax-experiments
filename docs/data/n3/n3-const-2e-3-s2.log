@@ -1,0 +1,7 @@
+[reference] step     0 loss 2.9930 (17s)
+[reference] step   500 loss 1.7297 (120s)
+[reference] step  1000 loss 1.4304 (222s)
+[reference] step  1500 loss 1.3284 (324s)
+[reference] step  2000 loss 1.2853 (426s)
+[reference] step  2500 loss 1.2455 (528s)
+[reference] s2 constant 0.002: 1.7604 bits/byte, 4.83 steps/s

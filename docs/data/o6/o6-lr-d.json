@@ -1,0 +1,184 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "studies": [
+   "lr"
+  ],
+  "out": "/kaggle/working/o6-lr-d.json",
+  "corpus": "enwik9",
+  "data_dir": "/kaggle/temp/data/text",
+  "cache_dir": "/kaggle/temp/bpe",
+  "cache_from": "/kaggle/input",
+  "sizes": [
+   "s3",
+   "s4"
+  ],
+  "lrs": [
+   0.016
+  ],
+  "tokens": 20000000.0,
+  "budgets": [
+   100000000000000.0,
+   300000000000000.0,
+   1000000000000000.0,
+   3000000000000000.0
+  ],
+  "min_tokens": 2000000.0,
+  "lr_table": null,
+  "seeds": [
+   0
+  ],
+  "attention": "fused",
+  "ml_ladder": "/kaggle/temp/src/ml-ladder"
+ },
+ "corpus": {
+  "vocab": 4096,
+  "fit_bytes": 20000000,
+  "corpus": "enwik9",
+  "train_tokens": 353060729,
+  "val_tokens": 692874,
+  "bytes_per_token_val": 2.8865277092227446,
+  "seconds": 0.44334983825683594,
+  "eval_windows": 321,
+  "eval_bytes": 262507
+ },
+ "lr": [
+  {
+   "size": "s3",
+   "width": 192,
+   "layers": 4,
+   "heads": 3,
+   "seed": 0,
+   "peak_lr": 0.016,
+   "steps": 1221,
+   "tokens": 20004864,
+   "parameters": 3352704,
+   "non_embedding": 1779456,
+   "embedding_and_head": 1573248,
+   "compute_6ND": 213586651643904.0,
+   "xla_flops_per_step_fwd_bwd": 7655013376.0,
+   "bits_per_byte": 1.6195213563571327,
+   "nats_per_token": 3.5859813904999016,
+   "train_history": [
+    [
+     0,
+     8.801891326904297
+    ],
+    [
+     122,
+     4.031499862670898
+    ],
+    [
+     244,
+     3.6758179664611816
+    ],
+    [
+     366,
+     3.549354076385498
+    ],
+    [
+     488,
+     3.744605302810669
+    ],
+    [
+     610,
+     3.283090353012085
+    ],
+    [
+     732,
+     3.2605628967285156
+    ],
+    [
+     854,
+     3.2390713691711426
+    ],
+    [
+     976,
+     2.9723238945007324
+    ],
+    [
+     1098,
+     3.0216026306152344
+    ],
+    [
+     1220,
+     2.8394641876220703
+    ]
+   ],
+   "skipped_steps": 0,
+   "train_seconds": 75.52498078346252,
+   "tokens_per_second": 297083.39745769434
+  },
+  {
+   "size": "s4",
+   "width": 256,
+   "layers": 4,
+   "heads": 4,
+   "seed": 0,
+   "peak_lr": 0.016,
+   "steps": 1221,
+   "tokens": 20004864,
+   "parameters": 5256704,
+   "non_embedding": 3159040,
+   "embedding_and_head": 2097664,
+   "compute_6ND": 379176993423360.0,
+   "xla_flops_per_step_fwd_bwd": 9947333632.0,
+   "bits_per_byte": 1.5839569925432313,
+   "nats_per_token": 3.5072339591671744,
+   "train_history": [
+    [
+     0,
+     8.834894180297852
+    ],
+    [
+     122,
+     4.104674339294434
+    ],
+    [
+     244,
+     3.709118604660034
+    ],
+    [
+     366,
+     3.577033042907715
+    ],
+    [
+     488,
+     3.745713710784912
+    ],
+    [
+     610,
+     3.233712673187256
+    ],
+    [
+     732,
+     3.1401002407073975
+    ],
+    [
+     854,
+     3.176954746246338
+    ],
+    [
+     976,
+     2.9088964462280273
+    ],
+    [
+     1098,
+     2.95156192779541
+    ],
+    [
+     1220,
+     2.7779130935668945
+    ]
+   ],
+   "skipped_steps": 0,
+   "train_seconds": 91.49283742904663,
+   "tokens_per_second": 238555.0805504192
+  }
+ ],
+ "wall_seconds": 196.84474444389343
+}

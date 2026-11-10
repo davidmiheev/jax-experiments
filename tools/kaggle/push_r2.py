@@ -33,6 +33,68 @@ Presets (each is two job lists, one per GPU):
 - ``n1-fork``: the sweep's largest gap (seed 2, lr 4e-3: 2.062 against ml-ladder's 1.843):
   two sequential runs (R2's runner) and a repeat of its vmapped group, to tell vmap from
   run-to-run nondeterminism at an unstable learning rate.
+- ``o3-stage1``: O3's LR sweeps for AdamW (ml-ladder's protocol) and Lion on seed 0: the 4M
+  transformer at T=256, 3,000 steps, six peak LRs each, vmapped in groups of 3. Muon follows
+  in stage 2, because its AdamW part uses AdamW's tuned peak.
+- ``o3-stage2``: Muon's LR sweep on seed 0 (its AdamW part at AdamW's tuned 8e-3); Lion's grid
+  extended upward (stage 1's best, 3.2e-3, was its top edge); AdamW seeds 1-2 at 8e-3.
+- ``o3-stage3``: Lion's weight decay (1.0 was a heuristic, not tuned): 0.3 and 0.1 at its two
+  best LRs; Muon seeds 1-2 at 2e-2; Lion seeds 1-2 at 3.2e-3 (wd 1.0).
+- ``o3-stage4``: Lion's weight decay was best at the largest value tried (1.0; 0.3 and 0.1
+  are worse): wd 3.0 at three LRs, and wd 1.0 at 2.4e-3 / 4.8e-3 around its optimum.
+- ``n2``: the gradient noise scale along a B=64 run, and steps to fixed losses at B = 16, 64,
+  256 (3 LRs each, warmup-constant): does B_simple predict the critical batch size?
+- ``n2-ext``: N2's LR grids extended downward (every batch size's best LR for losses <= 1.4 was
+  its lowest): B=16 at 5e-4, 1e-3; B=64 at 1e-3, 2e-3; B=256 at 2e-3, 4e-3.
+- ``n2-noise32``: the noise run again with 32 batches per measurement (8 in ``n2``; its points
+  scatter by ~2x), on seeds 0 and 1.
+- ``n4-calibrate``: N4's throughput and memory against sequence length (LRU / selective SSM,
+  associative vs sequential scan, against the GRU and the 4M transformer), and the compiled
+  memory of 1-3 vmapped LRU / Mamba copies at T=1024 (to size the sweeps).
+- ``o6c`` / ``o6d``: O6's IsoFLOP study: C = 3e13, 1e14, 3e14, 1e15, 3e15 and 1e16 FLOPs
+  (6ND), seeds 0-2, each size at its tuned LR (``docs/data/o6/lr-table.json``) where
+  2e6 <= D <= the corpus. The token caches come from the private dataset ``jaxexp-bpe`` (built on CPU
+  by ``run.py --studies tokenize``), so no kernel downloads or tokenizes enwik9.
+- ``n3e``: N3's constant-LR controls for its online runs: the same training stream at a
+  constant 1e-3 and 2e-3, seeds 0-2.
+- ``o6e``: ``o6b`` again (that kernel ran ~3 h against ~45 min expected, with no output, and
+  was deleted), with the token caches from ``jaxexp-bpe`` and a 1.5 h limit per job.
+- ``o6b``: O6's LR grid extended upward (s0-s4 were best at 8e-3, the grid's top): 1.6e-2 for
+  s0-s4 and 3.2e-2 for s0-s2; s8 (512 wide, 8 layers, for C = 1e16) at 1e-3..4e-3 (lane 0).
+  N8's seed 0 again, with the MNIST download fixed (lane 1).
+- ``o6a``: O6's tokenizer check and caches (enwik8 against ml-ladder's 31,095,000 tokens;
+  enwik9 without enwik8's validation bytes), then each model size's LR on 2e7 tokens, seed 0.
+- ``n8b``: as ``n8``, with E3's own PyTorch model trained in the same job and scored by the
+  same scorer (the control), and the x0-clipped DDPM / DDIM samplers at T=1000.
+- ``n8``: E3's DDPM in JAX, seeds 0-2: E3's own arm (T=400, eps, linear / cosine, DDPM at
+  10-400 steps) and T=1000 with eps / x0 / v x linear / cosine, DDPM and DDIM at 10-1000 steps;
+  fd by ml-ladder's own scorer.
+- ``n3d``: online runs again with each hypergradient clipped to [-1, 1] (in ``n3c`` one
+  exploding hypergradient filled the meta-Adam's second moment and froze the LR): from 1e-3 on
+  seeds 0-2 and from 8e-3 on seed 0.
+- ``n3b`` / ``n3c``: the landscape on a 9-point grid (2.5e-4 .. 6.4e-2; ``n3`` found the K-step
+  optimum at its 1e-3 edge from step 1500) with batches keyed by (seed, start, K), seeds 0-2;
+  online runs from the tuned 8e-3, from 3.2e-2 with the divergence guard, and from 1e-3 on
+  seeds 1-2. ``n3``'s own outputs are in ``docs/data/n3/first-run/``.
+- ``n3``: hypergradients of the LR on the 4M at T=256 (fp32): the tuned reference run with
+  checkpoints and the K-step meta-loss landscape from steps 0 / 500 / 1500 (lane 0); online
+  hypergradient descent of the LR from 1e-3 and from 3.2e-2 (lane 1).
+- ``o4``: KV-cached decoding three ways (recompute, jitted step from Python, fori_loop) for the
+  25M RoPE transformer at C = 256..4096 and the 4M (learned positions, so C <= 1024), batch 1
+  and 8, plus batch 32 at C=1024: ms/token, compile time, memory, bandwidth arithmetic.
+- ``n4-copy``: R3's copy task (n = 32/128/512, 1,500 steps) for the LRU, Mamba-2 and the GRU,
+  seeds 0-2, each at the model's default LR (2e-3) as in R3.
+- ``n4-mamba2-b``: Mamba-2's seeds 1-2 at T=1024's best LR (4e-3) and at T=256's 8e-3. 8e-3
+  was the edge of T=256's first grid; seed 0 at 1.6e-2 and 3.2e-2 confirmed it as the best.
+  On 2026-10-18 the kernel sat queued for 20+ minutes twice, so the extension and these seeds
+  ran on Colab with the same commands.
+- ``n4-copy-mamba2``: Mamba-2's copy task at n=32, seed 0: lr 2.5e-4 (the low edge of the
+  5e-4..8e-3 check), and 6,000 steps at 5e-4 (does it learn the copy if given longer?).
+- ``n4-mamba2-s0``: seed 0 at each context's best LR, repeated alone: it beat seeds 1-2 by
+  ~0.02 bits/byte at both contexts, and it is the seed the LRs were chosen on.
+- ``n4-mamba2``: the same LR sweep for Mamba-2 (SSD), two copies per vmapped program.
+- ``n4-lru``: the LRU's LR sweep on seed 0 at T=1024 and T=256 (3,000 steps, ml-ladder's
+  protocol otherwise), one vmapped group of 4 per context.
 - ``n1-fork-torch``: ml-ladder's own PyTorch script, rerun twice on that configuration
   (seed 2, lr 4e-3): is its 1.843 reproducible, or one side of a fork?
 - ``r3-s1``: the transformer's seed 1 at n=512 (0.273 in ``r3``, ml-ladder 1.000), repeated
@@ -90,7 +152,198 @@ def _torch4m(tag: str) -> list[str]:
             "--out", f"n1-fork-torch-{tag}.json"]
 
 
+def _o3(opt: str, lrs: list[str], seeds: list[str], tag: str, *extra: str) -> list[str]:
+    return [N1, "--studies", "sweep", "--context", "256", "--seeds", *seeds, "--lrs", *lrs, "--group", "3",
+            "--log-every", "25", "--optimizer", opt, *extra, "--out", f"o3-{tag}.json"]
+
+
+ADAMW_LRS = ["1e-3", "2e-3", "4e-3", "8e-3", "1.6e-2", "3.2e-2"]
+LION_LRS = ["1e-4", "2e-4", "4e-4", "8e-4", "1.6e-3", "3.2e-3"]
+
+N2 = "@experiments/n2_noise_scale/run.py"
+
+N4 = "@experiments/n4_scans/run.py"
+
+def _n4(model: str, context: str, lrs: list[str], seeds: list[str], tag: str, group: str = "4", *extra) -> list[str]:
+    return [N1, "--studies", "sweep", "--model", model, "--context", context, "--seeds", *seeds, "--lrs", *lrs,
+            "--group", group, *extra, "--out", f"n4-{tag}.json"]
+
+
+N4_LRS = ["1e-3", "2e-3", "4e-3", "8e-3"]
+
+def _n4copy(model: str, seed: str) -> list[str]:
+    return ["--studies", "copy", "--copy-models", model, "--seeds", seed, "--out", f"n4-copy-{model}-s{seed}.json"]
+
+
+O4 = "@experiments/o4_decode/run.py"
+N3 = "@experiments/n3_hypergrad/run.py"
+N8 = "@experiments/n8_diffusion/run.py"
+O6 = "@experiments/o6_scaling/run.py"
+O6_DATA = ["--cache-dir", "/kaggle/temp/bpe"]
+O6_CACHED = [*O6_DATA, "--cache-from", "/kaggle/input"]  # with the private dataset jaxexp-bpe mounted
+EXTRA_DATASETS = {"o6c": ["jaxexp-bpe"], "o6d": ["jaxexp-bpe"], "o6e": ["jaxexp-bpe"]}
+# Per-job wall-clock limits. o6b ran ~3 h against ~45 min expected, with no log to say why, and
+# was deleted; since then each O6 preset bounds every job (the longest IsoFLOP job is ~2 h).
+TIMEOUTS = {"o6c": 3 * 3600, "o6d": 3 * 3600, "o6e": 5400, "n3e": 2400}
+
+def _iso(budget: str, seed: int) -> list[str]:
+    """One IsoFLOP contour for one seed: every size whose D = C / (6N) is in [2e6, corpus]."""
+    return [O6, "--studies", "isoflop", *O6_CACHED, "--budgets", budget, "--seeds", str(seed),
+            "--sizes", *[f"s{i}" for i in range(9)], "--lr-table", "docs/data/o6/lr-table.json",
+            "--out", f"o6-iso-{budget}-s{seed}.json"]
+
+
+def _n3const(lr: str, seed: int) -> list[str]:
+    return [N3, "--studies", "reference", "--constant-lr", lr, "--seed", str(seed), "--out", f"n3-const-{lr}-s{seed}.json"]
+
+
 PRESETS = {
+    # lanes balanced by the o6a throughputs (~3 h each)
+    "n3e": [
+        [_n3const("1e-3", 0), _n3const("2e-3", 0), _n3const("1e-3", 1)],
+        [_n3const("2e-3", 1), _n3const("1e-3", 2), _n3const("2e-3", 2)],
+    ],
+    "o6c": [
+        [_iso("1e16", 2), _iso("3e15", 0), _iso("3e13", 1)],
+        [_iso("1e16", 1), _iso("1e15", 2), _iso("3e14", 2), _iso("1e14", 2), _iso("1e14", 0)],
+    ],
+    "o6d": [
+        [_iso("1e16", 0), _iso("1e15", 1), _iso("3e14", 1), _iso("1e14", 1), _iso("3e13", 2), _iso("3e13", 0)],
+        [_iso("3e15", 2), _iso("3e15", 1), _iso("1e15", 0), _iso("3e14", 0)],
+    ],
+    "o6e": [  # o6b again, with the token caches from jaxexp-bpe and a per-job limit
+        [[O6, "--studies", "lr", *O6_CACHED, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
+         [O6, "--studies", "lr", *O6_CACHED, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
+         [O6, "--studies", "lr", *O6_CACHED, "--sizes", "s8", "--lrs", "1e-3", "2e-3", "4e-3", "--out", "o6-lr-e.json"]],
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"]],
+    ],
+    "o6b": [
+        [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "--lrs", "1.6e-2", "3.2e-2", "--out", "o6-lr-c.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s3", "s4", "--lrs", "1.6e-2", "--out", "o6-lr-d.json"],
+         [O6, "--studies", "lr", *O6_DATA, "--sizes", "s8", "--lrs", "1e-3", "2e-3", "4e-3", "--out", "o6-lr-e.json"]],
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"]],
+    ],
+    "o6a": [
+        [[O6, "--studies", "tokenize", "lr", *O6_DATA, "--sizes", "s0", "s1", "s2", "s3", "s7",
+          "--lrs", "1e-3", "2e-3", "4e-3", "8e-3", "--out", "o6-lr-a.json"]],
+        [[O6, "--studies", "lr", *O6_DATA, "--sizes", "s4", "s5", "s6",
+          "--lrs", "1e-3", "2e-3", "4e-3", "8e-3", "--out", "o6-lr-b.json"]],
+    ],
+    "n8b": [
+        [[N8, "--seed", "0", "--out", "n8b-s0.json"], [N8, "--seed", "2", "--out", "n8b-s2.json"]],
+        [[N8, "--seed", "1", "--out", "n8b-s1.json"]],
+    ],
+    "n8": [
+        [[N8, "--seed", "0", "--out", "n8-s0.json"], [N8, "--seed", "2", "--out", "n8-s2.json"]],
+        [[N8, "--seed", "1", "--out", "n8-s1.json"]],
+    ],
+    "n3b": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
+        [[N3, "--studies", "reference", "landscape", "--seed", "1", "--out", "n3-landscape-s1.json"]],
+    ],
+    "n3d": [
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s0.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "8e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-tuned-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "1", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s1.json"],
+         [N3, "--studies", "online", "--seed", "2", "--online-init", "1e-3", "--clip-hypergrad", "1", "--out", "n3-online-clip-lo-s2.json"]],
+    ],
+    "n3c": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "2", "--out", "n3-landscape-s2.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "3.2e-2", "--out", "n3-online-hi-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "8e-3", "--out", "n3-online-tuned-s0.json"],
+         [N3, "--studies", "online", "--seed", "1", "--online-init", "1e-3", "--out", "n3-online-lo-s1.json"],
+         [N3, "--studies", "online", "--seed", "2", "--online-init", "1e-3", "--out", "n3-online-lo-s2.json"]],
+    ],
+    "n3": [
+        [[N3, "--studies", "reference", "landscape", "--seed", "0", "--out", "n3-landscape-s0.json"]],
+        [[N3, "--studies", "online", "--seed", "0", "--online-init", "1e-3", "--out", "n3-online-lo-s0.json"],
+         [N3, "--studies", "online", "--seed", "0", "--online-init", "3.2e-2", "--out", "n3-online-hi-s0.json"]],
+    ],
+    "o4": [
+        [[O4, "--models", "transformer-25M-rope", "--out", "o4-25m.json"]],
+        [[O4, "--models", "transformer-4M", "--contexts", "256", "512", "1024", "--out", "o4-4m.json"],
+         [O4, "--models", "transformer-25M-rope", "--contexts", "1024", "--batches", "32", "--modes", "cached", "loop",
+          "--out", "o4-25m-b32.json"]],
+    ],
+    "n4-copy": [
+        [_n4copy("mamba2", "0"), _n4copy("mamba2", "1"), _n4copy("gru", "0")],
+        [_n4copy("mamba2", "2"), *(_n4copy("lru", s) for s in "012"), _n4copy("gru", "1"), _n4copy("gru", "2")],
+    ],
+    "n4-copy-mamba2": [
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "2.5e-4",
+          "--out", "n4-copy-mamba2-lr2.5e-4-s0.json"]],
+        [["--studies", "copy", "--copy-models", "mamba2", "--copy-lengths", "32", "--seeds", "0", "--copy-lr", "5e-4",
+          "--copy-steps", "6000", "--out", "n4-copy-mamba2-long6000-lr5e-4-s0.json"]],
+    ],
+    "n4-mamba2-s0": [
+        [_n4("mamba2", "1024", ["4e-3"], ["0"], "mamba2-1024-s0-repeat", "1")],
+        [_n4("mamba2", "256", ["8e-3"], ["0"], "mamba2-256-s0-repeat", "1")],
+    ],
+    "n4-mamba2-b": [
+        [_n4("mamba2", "1024", ["4e-3"], ["1", "2"], "mamba2-1024-s12", "2")],
+        [_n4("mamba2", "256", ["8e-3"], ["1", "2"], "mamba2-256-s12-8e-3", "2"),
+         _n4("mamba2", "256", ["1.6e-2", "3.2e-2"], ["0"], "mamba2-256-s0-ext", "2")],
+    ],
+    "n4-mamba2": [
+        [_n4("mamba2", "1024", N4_LRS, ["0"], "mamba2-1024-s0", "2")],
+        [_n4("mamba2", "256", N4_LRS, ["0"], "mamba2-256-s0", "2")],
+    ],
+    "n4-lru": [
+        [_n4("lru", "1024", N4_LRS, ["0"], "lru-1024-s0")],
+        [_n4("lru", "256", N4_LRS, ["0"], "lru-256-s0")],
+    ],
+    "n4-calibrate": [
+        [[N4, "--out", "n4-throughput.json"]],
+        [
+            [N1, "--studies", "memory", "--model", "lru", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-lru.json"],
+            [N1, "--studies", "memory", "--model", "mamba", "--context", "1024", "--ks", "1", "2", "3",
+             "--remats", "none", "dots", "--out", "n4-memory-mamba.json"],
+        ],
+    ],
+    "n2-noise32": [
+        [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "0", "--out", "n2-noise32-s0.json"]],
+        [[N2, "--studies", "noise", "--noise-batches", "32", "--seed", "1", "--out", "n2-noise32-s1.json"]],
+    ],
+    "n2-ext": [
+        [[N2, "--studies", "batch", "--batches", "256", "--lrs", "2e-3", "4e-3", "--out", "n2-batch-256-low.json"]],
+        [
+            [N2, "--studies", "batch", "--batches", "16", "--lrs", "5e-4", "1e-3", "--out", "n2-batch-16-low.json"],
+            [N2, "--studies", "batch", "--batches", "64", "--lrs", "1e-3", "2e-3", "--out", "n2-batch-64-low.json"],
+        ],
+    ],
+    "n2": [
+        [[N2, "--studies", "batch", "--batches", "256", "--out", "n2-batch-256.json"]],
+        [
+            [N2, "--studies", "batch", "--batches", "16", "64", "--out", "n2-batch-16-64.json"],
+            [N2, "--studies", "noise", "--out", "n2-noise.json"],
+        ],
+    ],
+    "o3-stage4": [
+        [_o3("lion", ["1.6e-3", "3.2e-3", "6.4e-3"], ["0"], "lion-s0-wd3", "--weight-decay", "3.0")],
+        [_o3("lion", ["2.4e-3", "4.8e-3"], ["0"], "lion-s0-fine", "--weight-decay", "1.0")],
+    ],
+    "o3-stage3": [
+        [
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.3", "--weight-decay", "0.3"),
+            _o3("lion", ["1.6e-3", "3.2e-3"], ["0"], "lion-s0-wd0.1", "--weight-decay", "0.1"),
+        ],
+        [
+            _o3("muon", ["2e-2"], ["1", "2"], "muon-best-s12", "--adam-peak", "8e-3"),
+            _o3("lion", ["3.2e-3"], ["1", "2"], "lion-best-s12", "--weight-decay", "1.0"),
+        ],
+    ],
+    "o3-stage2": [
+        [_o3("muon", ["5e-3", "1e-2", "2e-2", "4e-2", "8e-2", "1.6e-1"], ["0"], "muon-s0", "--adam-peak", "8e-3")],
+        [
+            _o3("lion", ["6.4e-3", "1.28e-2", "2.56e-2"], ["0"], "lion-s0-high", "--weight-decay", "1.0"),
+            _o3("adamw", ["8e-3"], ["1", "2"], "adamw-best-s12"),
+        ],
+    ],
+    "o3-stage1": [
+        [_o3("adamw", ADAMW_LRS, ["0"], "adamw-s0")],
+        [_o3("lion", LION_LRS, ["0"], "lion-s0", "--weight-decay", "1.0")],
+    ],
     "n1-fork-torch": [[_torch4m("a")], [_torch4m("b")]],
     "n1-fork": [
         [_seq4m("a"), _seq4m("b")],
@@ -379,6 +632,7 @@ import os, subprocess, sys, tarfile, time, urllib.request, zipfile, io, json
 from pathlib import Path
 
 JOBS = {jobs}
+JOB_TIMEOUT = {timeout}  # seconds per job (None: no limit); a hung job must not hold the GPU for 12 h
 SRC, DATA, OUT = Path("/kaggle/temp/src"), Path("/kaggle/temp/data/text"), Path("/kaggle/working")
 SRC.mkdir(parents=True, exist_ok=True); DATA.mkdir(parents=True, exist_ok=True)
 import shutil
@@ -416,7 +670,11 @@ def run_lane(gpu, jobs):
         extra = common if not script.startswith("../") else common[:2]
         cmd = [sys.executable, str(SRC / "jax-experiments" / script)] + extra + args
         print(f"[gpu{{gpu}}]", " ".join(cmd), flush=True)
-        rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT).returncode
+        try:
+            rc = subprocess.run(cmd, cwd=SRC / "jax-experiments", env=env, stdout=log, stderr=subprocess.STDOUT,
+                                timeout=JOB_TIMEOUT).returncode
+        except subprocess.TimeoutExpired:
+            rc = f"timeout after {{JOB_TIMEOUT}} s"
         print(f"[gpu{{gpu}}] exit {{rc}} for {{out}}", flush=True)
 
 import threading
@@ -437,7 +695,8 @@ def main() -> None:
     out = ROOT / "runs" / f"kaggle-{args.preset}"
     out.mkdir(parents=True, exist_ok=True)
     (out / "kernel.py").write_text(
-        KERNEL.format(preset=args.preset, jobs=json.dumps(PRESETS[args.preset]), common=json.dumps(COMMON), run=RUN)
+        KERNEL.format(preset=args.preset, jobs=json.dumps(PRESETS[args.preset]), common=json.dumps(COMMON), run=RUN,
+                      timeout=TIMEOUTS.get(args.preset))
     )
     meta = {
         "id": f"{args.user}/{slug}",
@@ -450,7 +709,7 @@ def main() -> None:
         "enable_tpu": False,
         "machine_shape": "NvidiaTeslaT4",
         "enable_internet": True,
-        "dataset_sources": [f"{args.user}/jaxexp-source"],
+        "dataset_sources": [f"{args.user}/jaxexp-source", *(f"{args.user}/{d}" for d in EXTRA_DATASETS.get(args.preset, []))],
         "competition_sources": [],
         "kernel_sources": [],
     }

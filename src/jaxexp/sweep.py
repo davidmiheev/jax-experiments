@@ -49,16 +49,18 @@ def train_many(
     schedule: str = "warmup-cosine",
     log_every: int = 250,
     label: str = "",
+    opt=None,
 ) -> tuple[list[TR.TrainResult], dict]:
     """Train ``len(params_list)`` copies together. Copy k starts from ``params_list[k]``, draws
-    from ``samplers[k]`` and follows ml-ladder's schedule with peak ``peak_lrs[k]``.
+    from ``samplers[k]`` and follows ml-ladder's schedule with peak ``peak_lrs[k]``. ``opt``
+    (default: ml-ladder's AdamW) is shared; only its learning rate differs between copies.
 
     Returns one ``TrainResult`` per copy (its own loss history, skipped steps and final loss
     scale) and the shared timing: ``train_seconds`` and ``compile_seconds`` are for the whole
     program, which trains all K copies."""
     k = len(params_list)
     assert len(samplers) == k and len(peak_lrs) == k
-    opt = TR.optimizer(weight_decay)
+    opt = opt or TR.optimizer(weight_decay)
     params = stack(params_list)
     opt_state = jax.vmap(opt.init)(params)
     one = TR.LossScale(enabled=amp).state()
@@ -74,7 +76,10 @@ def train_many(
         drawn = [u() for u in unique]
         inputs = jnp.asarray(np.stack([drawn[j][0] for j in which]), jnp.int32)
         targets = jnp.asarray(np.stack([drawn[j][1] for j in which]), jnp.int32)
-        lr = jnp.asarray([TR.lr_at(i, steps, p, schedule) for p in peak_lrs], jnp.float32)
+        lr = {
+            "learning_rate": jnp.asarray([TR.lr_at(i, steps, p, schedule) for p in peak_lrs], jnp.float32),
+            "schedule": jnp.full((k,), TR.lr_at(i, steps, 1.0, schedule), jnp.float32),
+        }
         params, opt_state, scale_state, loss, finite = step_fn(params, opt_state, scale_state, inputs, targets, lr)
         if i == 0:
             jax.block_until_ready(loss)

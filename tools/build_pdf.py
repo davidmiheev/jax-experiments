@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 """Compile writeups to PDF: markdown -> LaTeX (pandoc) -> PDF (XeLaTeX).
 
-Ported from ml-ladder's ``tools/build_pdf.py`` (same preamble, fonts and
-markdown preparation); only the file discovery differs. Every ``docs/*.md``
-writeup becomes ``docs/pdf/<name>.pdf``.
+Ported from ml-ladder's ``tools/build_pdf.py`` (markdown preparation and file
+discovery). The look is the atcoder_lectures notes' (``tools/tex/writeupstyle.sty``:
+DejaVu fonts, the blue title band, sans-serif headings, tinted boxes for the
+status block and code). Every ``docs/m<N>-*.md`` writeup becomes
+``docs/pdf/<name>.pdf``.
 
     uv run python tools/build_pdf.py --all                 # every writeup
     uv run python tools/build_pdf.py docs/m0-r1-parity.md  # one
     uv run python tools/build_pdf.py --all --keep          # keep the .tex
 
 Requires pandoc and XeLaTeX on PATH (Debian/Ubuntu: pandoc texlive-xetex
-texlive-latex-extra texlive-fonts-recommended fonts-texgyre; the OpenType
-TeX Gyre fonts, not the Type 1 `tex-gyre`). The committed PDFs
+texlive-latex-extra texlive-fonts-recommended fonts-texgyre fonts-dejavu; the OpenType TeX Gyre
+fonts, not the Type 1 `tex-gyre`, for the math font). The committed PDFs
 mean readers never need either.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -29,18 +32,20 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 PDF_DIR = DOCS / "pdf"
 
-# Figure sizing, float placement and a caption style pandoc's default template
-# does not set. Included verbatim in the preamble.
+# The house style (tools/tex/writeupstyle.sty, adapted from the atcoder_lectures
+# notes: fonts, palette, title band, headings, boxes, footer), then figure sizing
+# and float placement, which pandoc's default template does not set.
 PREAMBLE = r"""
-\usepackage{graphicx}
+\newcommand{\writeupseries}{jax-experiments writeups}
+\newcommand{\writeupmilestone}{@MILESTONE@}
+\newcommand{\writeupsource}{\detokenize{@SOURCE@}}
+\usepackage{writeupstyle}
 \graphicspath{{@GRAPHICS@/}}
-\usepackage{float}
-\usepackage{caption}
-% Keep each rung's figures inside its own section instead of drifting forward.
+% Keep each section's figures inside it instead of drifting forward.
 \usepackage[section]{placeins}
-% Full width: this repo's figures are two-panel and wide (ml-ladder used 0.62).
+% Full width: this repo's figures are two-panel and wide.
 \setkeys{Gin}{width=\linewidth,keepaspectratio}
-\captionsetup{font=small,labelfont=bf,skip=4pt}
+\captionsetup{skip=4pt}
 \floatplacement{figure}{htbp}
 \renewcommand{\topfraction}{0.9}
 \renewcommand{\bottomfraction}{0.8}
@@ -50,32 +55,25 @@ PREAMBLE = r"""
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
-% Start the body on a fresh page after the table of contents.
-\usepackage{etoolbox}
-\pretocmd{\section}{}{}{}
+% The body follows the table of contents on the same page, under the band.
 \let\jaxexpoldtoc\tableofcontents
-\renewcommand{\tableofcontents}{\jaxexpoldtoc\clearpage}
-% Blockquotes (the status header) as a tinted, indented block.
-\usepackage{mdframed}
-\renewenvironment{quote}{\begin{mdframed}[leftmargin=0pt,innerleftmargin=8pt,
-  innerrightmargin=8pt,linewidth=0.8pt,linecolor=black!25,backgroundcolor=black!3]\small}
-  {\end{mdframed}}
+\renewcommand{\tableofcontents}{\jaxexpoldtoc\vspace{10pt}\hrule\vspace{6pt}}
 """
 
+# Fonts, geometry and colours come from writeupstyle.sty; pandoc's own \hypersetup
+# runs after it, so the link colours are passed here too (the palette is defined
+# by then).
 PANDOC_VARIABLES = {
     "documentclass": "article",
-    "geometry": "a4paper,margin=2.4cm",
     "fontsize": "11pt",
-    "linestretch": "1.05",
-    "mainfont": "TeX Gyre Pagella",
-    "sansfont": "TeX Gyre Heros",
-    "monofont": "DejaVu Sans Mono",
-    "monofontoptions": "Scale=0.85",
     "colorlinks": "true",
-    "linkcolor": "MidnightBlue",
-    "urlcolor": "MidnightBlue",
-    "toccolor": "black",
+    "linkcolor": "writeupaccent",
+    "urlcolor": "writeupaccent",
+    "citecolor": "writeupaccent",
+    "filecolor": "writeupaccent",
+    "toccolor": "writeupink",
 }
+STYLE_DIR = Path(__file__).resolve().parent / "tex"
 
 
 def require(tool: str) -> str:
@@ -147,7 +145,10 @@ def build(source: Path, *, keep_tex: bool) -> Path:
         work = Path(scratch)
         (work / "body.md").write_text(markdown)
         # xelatex runs in the scratch directory, so figures need an absolute root.
-        (work / "preamble.tex").write_text(PREAMBLE.replace("@GRAPHICS@", source.parent.as_posix()))
+        preamble = (PREAMBLE.replace("@GRAPHICS@", source.parent.as_posix())
+                    .replace("@MILESTONE@", milestone(source))
+                    .replace("@SOURCE@", source.relative_to(ROOT).as_posix()))
+        (work / "preamble.tex").write_text(preamble)
 
         command = [
             require("pandoc"),
@@ -166,8 +167,6 @@ def build(source: Path, *, keep_tex: bool) -> Path:
             "-M",
             f"title={title}",
             "-M",
-            f"subtitle=jax-experiments writeup · {milestone(source)}",
-            "-M",
             f"date={date.today().isoformat()}",
         ]
         for key, value in PANDOC_VARIABLES.items():
@@ -179,6 +178,7 @@ def build(source: Path, *, keep_tex: bool) -> Path:
             result = subprocess.run(
                 [require("xelatex"), "-interaction=nonstopmode", "-halt-on-error", "writeup.tex"],
                 cwd=work,
+                env={**os.environ, "TEXINPUTS": f"{STYLE_DIR}{os.pathsep}"},  # trailing separator: keep the defaults
                 capture_output=True,
                 text=True,
             )

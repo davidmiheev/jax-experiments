@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gzip
 import hashlib
+import os
 import urllib.request
 from pathlib import Path
 
@@ -31,7 +32,11 @@ def _fetch(name: str) -> Path:
     path = DATA / "mnist" / name
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
-        urllib.request.urlretrieve(MNIST_URL + name, path)
+        # Download beside the target and rename: two jobs on one machine (Kaggle's two lanes)
+        # otherwise read each other's half-written file (it happened: N8, 2026-10-19).
+        partial = path.with_name(f"{name}.{os.getpid()}.part")
+        urllib.request.urlretrieve(MNIST_URL + name, partial)
+        os.replace(partial, path)
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
     if digest != MNIST_FILES[name]:
         raise ValueError(f"{name}: sha256 {digest} does not match the recorded {MNIST_FILES[name]}")

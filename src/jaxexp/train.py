@@ -30,21 +30,76 @@ import optax
 
 
 def lr_at(step: int, total: int, peak: float, schedule: str = "warmup-cosine", warmup_fraction: float = 0.05):
-    """ml-ladder's schedule, verbatim."""
+    """ml-ladder's schedule, verbatim; plus ``warmup-constant`` (N2: the same warmup, then flat, so
+    that steps-to-a-target-loss does not depend on the run's total length)."""
     if schedule == "constant":
         return peak
     warmup = max(1, int(total * warmup_fraction))
     if step < warmup:
         return peak * (step + 1) / warmup
+    if schedule == "warmup-constant":
+        return peak
     progress = (step - warmup) / max(1, total - warmup)
     return peak * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * progress)))
 
 
-def optimizer(weight_decay: float) -> optax.GradientTransformation:
-    return optax.chain(
-        optax.clip_by_global_norm(1.0),
-        optax.inject_hyperparams(optax.adamw)(learning_rate=0.0, b1=0.9, b2=0.95, eps=1e-8, weight_decay=weight_decay),
+def muon_labels(params):
+    """"muon" for the hidden 2D weight matrices inside the transformer blocks (attention qkv and
+    projection, MLP up and down); "adam" for embeddings, the output head, biases and LayerNorm."""
+    import jax.tree_util as tu
+
+    def label(path, leaf):
+        key = tu.keystr(path)
+        return "muon" if ("blocks" in key and "kernel" in key and leaf.ndim == 2) else "adam"
+
+    return tu.tree_map_with_path(label, params)
+
+
+def _muon(learning_rate, schedule, adam_peak, weight_decay, adam_weight_decay):
+    # Assembled from parts rather than optax.contrib.muon, whose nesterov=True also turns its
+    # AdamW branch into NAdam (first step 1.47x larger): here the non-matrix parameters get
+    # exactly the protocol's AdamW, at their own peak on the same schedule.
+    from optax.contrib import MuonDimensionNumbers
+    from optax.transforms import MaskedNode
+
+    def dims(updates):  # every unmasked leaf is a (reduction, output) = (0, 1) matrix
+        masked = lambda x: isinstance(x, MaskedNode)  # noqa: E731
+        return jax.tree.map(lambda x: x if masked(x) else MuonDimensionNumbers(), updates, is_leaf=masked)
+
+    muon = optax.chain(
+        optax.contrib.scale_by_muon(beta=0.95, nesterov=True, weight_dimension_numbers=dims),  # 5 NS steps
+        optax.add_decayed_weights(weight_decay),
+        optax.scale_by_learning_rate(learning_rate),
     )
+    adam = optax.adamw(adam_peak * schedule, b1=0.9, b2=0.95, eps=1e-8, weight_decay=adam_weight_decay)
+    return optax.partition({"muon": muon, "adam": adam}, muon_labels)
+
+
+def optimizer(weight_decay: float, kind: str = "adamw", adam_peak: float | None = None) -> optax.GradientTransformation:
+    """Clipping at global norm 1.0, then one of:
+
+    - ``adamw``: ml-ladder's AdamW, betas (0.9, 0.95), eps 1e-8 (R2's protocol, unchanged);
+    - ``lion``: Lion, betas (0.9, 0.99), decoupled weight decay ``weight_decay`` (times the LR);
+    - ``muon``: Muon (Nesterov momentum 0.95, 5 Newton-Schulz steps, optax's width scaling
+      sqrt(max(1, fan_out / fan_in)), decoupled weight decay ``weight_decay`` times the LR) on the
+      blocks' 2D matrices; ml-ladder's AdamW (0.9, 0.95; wd 0.1) at peak ``adam_peak`` on the rest.
+
+    The peak LR is injected per step as the hyperparameter ``learning_rate``; Muon's AdamW part
+    follows the same schedule through the injected multiplier ``schedule``."""
+    if kind == "adamw":
+        inner = optax.inject_hyperparams(optax.adamw)(
+            learning_rate=0.0, b1=0.9, b2=0.95, eps=1e-8, weight_decay=weight_decay
+        )
+    elif kind == "lion":
+        inner = optax.inject_hyperparams(optax.lion)(learning_rate=0.0, b1=0.9, b2=0.99, weight_decay=weight_decay)
+    elif kind == "muon":
+        assert adam_peak is not None, "muon needs adam_peak for its AdamW part"
+        inner = optax.inject_hyperparams(_muon, static_args=("adam_peak", "weight_decay", "adam_weight_decay"))(
+            learning_rate=0.0, schedule=0.0, adam_peak=adam_peak, weight_decay=weight_decay, adam_weight_decay=0.1
+        )
+    else:
+        raise ValueError(f"unknown optimizer {kind!r}")
+    return optax.chain(optax.clip_by_global_norm(1.0), inner)
 
 
 def cross_entropy(logits: jax.Array, targets: jax.Array) -> jax.Array:
@@ -78,7 +133,10 @@ def make_step(apply: Callable, opt: optax.GradientTransformation, amp: bool):
         grads = jax.tree.map(lambda g: g / scale, grads)
         finite = jnp.all(jnp.asarray([jnp.all(jnp.isfinite(g)) for g in jax.tree.leaves(grads)]))
         inject = opt_state[1]
-        opt_state = (opt_state[0], inject._replace(hyperparams={**inject.hyperparams, "learning_rate": lr}))
+        # ``lr`` is the learning rate, or a dict of injected hyperparameters (e.g. Muon's ``schedule``).
+        values = lr if isinstance(lr, dict) else {"learning_rate": lr}
+        hyper = {**inject.hyperparams, **{k: v for k, v in values.items() if k in inject.hyperparams}}
+        opt_state = (opt_state[0], inject._replace(hyperparams=hyper))
         updates, new_opt_state = opt.update(grads, opt_state, params)
         new_params = optax.apply_updates(params, updates)
         keep = lambda new, old: jax.tree.map(lambda a, b: jnp.where(finite, a, b), new, old)  # noqa: E731
@@ -100,6 +158,7 @@ class TrainResult:
     compile_seconds: float = 0.0
     skipped_steps: int = 0
     final_scale: float = 1.0
+    measurements: list = field(default_factory=list)  # (step, on_log(step, params)) at logged steps
 
 
 def train(
@@ -114,22 +173,35 @@ def train(
     schedule: str = "warmup-cosine",
     log_every: int = 250,
     label: str = "",
+    opt: optax.GradientTransformation | None = None,
+    on_log: Callable | None = None,
+    measure_every: int | None = None,
 ) -> TrainResult:
-    opt = optimizer(weight_decay)
+    """``on_log(step, params) -> dict``, if given, runs every ``measure_every`` steps (default:
+    ``log_every``) and at the last step, on the parameters before that step's update; its results
+    are kept in ``TrainResult.measurements`` and its time is excluded from ``train_seconds``."""
+    opt = opt or optimizer(weight_decay)
     opt_state = opt.init(params)
     step_fn = make_step(apply, opt, amp)
     scale_state = LossScale(enabled=amp).state()
     result = TrainResult(params)
     started = time.time()
+    measure_every = measure_every or log_every
+    measuring = 0.0
     for i in range(steps):
+        if on_log is not None and (i % measure_every == 0 or i == steps - 1):
+            t0 = time.time()
+            result.measurements.append((i, on_log(i, params)))
+            measuring += time.time() - t0
         inputs, targets = sample_batch()
-        lr = jnp.float32(lr_at(i, steps, peak_lr, schedule))
+        lr = {"learning_rate": jnp.float32(lr_at(i, steps, peak_lr, schedule)),
+              "schedule": jnp.float32(lr_at(i, steps, 1.0, schedule))}
         params, opt_state, scale_state, loss, finite = step_fn(
             params, opt_state, scale_state, jnp.asarray(inputs, jnp.int32), jnp.asarray(targets, jnp.int32), lr
         )
         if i == 0:
             jax.block_until_ready(loss)
-            result.compile_seconds = time.time() - started
+            result.compile_seconds = time.time() - started - measuring
         if not bool(finite):
             result.skipped_steps += 1
         if i % log_every == 0 or i == steps - 1:
@@ -138,7 +210,7 @@ def train(
                 print(f"  [{label}] step {i:5d} loss {float(loss):.4f} ({time.time() - started:.0f}s)", flush=True)
     jax.block_until_ready(params)
     result.params = params
-    result.train_seconds = time.time() - started
+    result.train_seconds = time.time() - started - measuring
     result.final_scale = float(scale_state[0])
     return result
 
