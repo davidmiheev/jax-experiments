@@ -1,0 +1,19 @@
+[{"stream_name":"stdout","time":4.556792655,"data":"source: ['jax-experiments', 'ml-ladder'] jax-experiments eca018d5b7181261e72d070b60b566b6bfe73a39\n"}
+,{"stream_name":"stdout","time":4.556833861,"data":"ml-ladder 42489dede3959c3f784fb73b929b9369ccaeb53a\n"}
+,{"stream_name":"stdout","time":4.556839266,"data":"\n"}
+,{"stream_name":"stdout","time":20.604818927,"data":"[gpu1][gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies lr --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --sizes s0 s1 s2 --lrs 1.6e-2 3.2e-2 --out /kaggle/working/o6-lr-c.json\n"}
+,{"stream_name":"stdout","time":20.605222441,"data":" /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/n8_diffusion/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --seed 0 --out /kaggle/working/n8b-s0.json\n"}
+,{"stream_name":"stdout","time":368.156542965,"data":"[gpu0] exit 0 for o6-lr-c.json\n"}
+,{"stream_name":"stdout","time":368.156903152,"data":"[gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies lr --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --sizes s3 s4 --lrs 1.6e-2 --out /kaggle/working/o6-lr-d.json\n"}
+,{"stream_name":"stdout","time":568.300443541,"data":"[gpu0] exit 0 for o6-lr-d.json\n"}
+,{"stream_name":"stdout","time":568.301111588,"data":"[gpu0] /usr/bin/python3 /kaggle/temp/src/jax-experiments/experiments/o6_scaling/run.py --data-dir /kaggle/temp/data/text --ml-ladder /kaggle/temp/src/ml-ladder --studies lr --cache-dir /kaggle/temp/bpe --cache-from /kaggle/input --sizes s8 --lrs 1e-3 2e-3 4e-3 --out /kaggle/working/o6-lr-e.json\n"}
+,{"stream_name":"stdout","time":1813.482474853,"data":"[gpu0] exit 0 for o6-lr-e.json\n"}
+,{"stream_name":"stdout","time":2725.136176025,"data":"[gpu1] exit 0 for n8b-s0.json\n"}
+,{"stream_name":"stdout","time":2725.136362905,"data":"all done in 2705 s\n"}
+,{"stream_name":"stderr","time":2727.114812926,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":2727.114847142,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":2727.330588067,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":2727.330615832,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":2728.055167089,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":2728.55097812,"data":"[NbConvertApp] Writing 294886 bytes to __results__.html\n"}
+]

@@ -1,0 +1,10 @@
+[online] step     0 lr 8.00e-03 meta 3.0882 (52s)
+[online] step   600 lr 2.26e-03 meta 2.4776 (533s)
+[online] step   900 lr 2.26e-03 meta 2.4011 (774s)
+[online] step  1200 lr 2.26e-03 meta 2.1045 (1015s)
+[online] step  1500 lr 2.26e-03 meta 1.9439 (1256s)
+[online] step  1800 lr 2.26e-03 meta 1.8828 (1498s)
+[online] step  2100 lr 2.26e-03 meta 1.7513 (1740s)
+[online] step  2400 lr 2.26e-03 meta 1.7062 (1981s)
+[online] step  2700 lr 2.26e-03 meta 1.6751 (2223s)
+[online] s0 K=30 init 0.008: 2.2609 bits/byte

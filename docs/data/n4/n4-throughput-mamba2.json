@@ -1,0 +1,97 @@
+{
+ "device": "cuda:0",
+ "environment": {
+  "python": "3.13.15",
+  "jax": "0.11.1"
+ },
+ "settings": {
+  "out": "/content/out/n4-throughput-mamba2.json",
+  "contexts": [
+   256,
+   1024,
+   4096
+  ],
+  "tokens_per_step": 16384,
+  "steps": 30,
+  "arms": [
+   "mamba2:chunked:none",
+   "mamba2:sequential:none"
+  ],
+  "amp": true
+ },
+ "rows": [
+  {
+   "model": "mamba2",
+   "scan": "chunked",
+   "remat": "none",
+   "context": 256,
+   "batch": 64,
+   "parameters": 4030496,
+   "temp_gib": 3.3882108107209206,
+   "compile_only_seconds": 9.76742709600012,
+   "compile_seconds": 13.55433988571167,
+   "tokens_per_second": 79568.23837881554,
+   "ms_per_step": 205.9113074993265
+  },
+  {
+   "model": "mamba2",
+   "scan": "sequential",
+   "remat": "none",
+   "context": 256,
+   "batch": 64,
+   "parameters": 4030496,
+   "temp_gib": 38.136415138840675,
+   "compile_only_seconds": 8.837165894999998,
+   "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 38.16GiB"
+  },
+  {
+   "model": "mamba2",
+   "scan": "chunked",
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "parameters": 4030496,
+   "temp_gib": 3.3364291563630104,
+   "compile_only_seconds": 9.116648940999994,
+   "compile_seconds": 14.190534353256226,
+   "tokens_per_second": 70318.04845337434,
+   "ms_per_step": 232.9985026655526
+  },
+  {
+   "model": "mamba2",
+   "scan": "sequential",
+   "remat": "none",
+   "context": 1024,
+   "batch": 16,
+   "parameters": 4030496,
+   "temp_gib": 38.07524265348911,
+   "compile_only_seconds": 9.304319656000189,
+   "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 38.09GiB"
+  },
+  {
+   "model": "mamba2",
+   "scan": "chunked",
+   "remat": "none",
+   "context": 4096,
+   "batch": 4,
+   "parameters": 4030496,
+   "temp_gib": 3.3262431994080544,
+   "compile_only_seconds": 9.745193939000046,
+   "compile_seconds": 14.649707794189453,
+   "tokens_per_second": 67249.88585114907,
+   "ms_per_step": 243.62866631869613
+  },
+  {
+   "model": "mamba2",
+   "scan": "sequential",
+   "remat": "none",
+   "context": 4096,
+   "batch": 4,
+   "parameters": 4030496,
+   "temp_gib": 38.05589832365513,
+   "compile_only_seconds": 11.633821576000173,
+   "error": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 38.06GiB"
+  }
+ ],
+ "provider": "Google Colab T4 (JAX 0.11.1, flax 0.12.10 pinned); Kaggle kernel queued 16+ min"
+}

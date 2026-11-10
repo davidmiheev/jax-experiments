@@ -55,7 +55,7 @@ reproduce. This file is the practical brief for picking it up.
     `tools/kaggle/push_r2.py` presets and `package_source.sh` (a private
     dataset, which Kaggle unpacks) run it; `experiments/r2_enwik8/analyze.py`
     scores it against ml-ladder's JSON.
-- **M3: N1 is done** (`docs/m3-sweeps-optimisers-noise.md`); O3 and N2 not started.
+- **M3 is done** (N1, O3, N2; `docs/m3-sweeps-optimisers-noise.md`).
   - `jaxexp.sweep.train_many` trains K copies (own LR, loss scale and batch
     stream) as one `jit(vmap(step))`. It equals sequential runs to 1e-6 on CPU.
   - It reproduces ml-ladder's §7 sweep: best LR 2e-3 (1.824 against 1.825),
@@ -67,6 +67,97 @@ reproduce. This file is the practical brief for picking it up.
     at 4e-3 (1.84) did not reproduce in two PyTorch reruns (2.01, 2.04); four
     JAX runs gave 2.05–2.06. Kernels can run ml-ladder's own scripts (job
     `"@../ml-ladder/..."`) for such controls.
+  - O3 tuned AdamW, Lion and Muon on the 4M at T=256 (3,000 steps; LR and,
+    for Lion, weight decay):
+    - Muon reaches 1.6190 against AdamW's 1.6335 (seeds disjoint), but at
+      0.72× the throughput;
+    - Lion reaches 1.7056 (wd 1.0 at lr 3.2e-3; less decay is worse or
+      unstable).
+  - `jaxexp.train.optimizer(kind=adamw|lion|muon)`. Don't use
+    `optax.contrib.muon` directly: its `nesterov=True` turns its AdamW branch
+    into NAdam.
+  - N2: `jaxexp.noise` estimates B_simple from per-example gradients
+    (`vmap(grad)`). On the 4M at T=256 it rises from about 1 to about 45–60
+    sequences. Early in training B_crit ≈ 115 (about 2.7× B_simple); late,
+    B=64→256 still saves 2.9–3.3× the steps, so B_crit > 256 while B_simple is
+    about 45.
+  - **Smooth loss curves with a centred window when timing crossings.** A
+    trailing mean biased N2's and O3's steps-to-target.
+- **N4 is done** (`docs/m4-scans-and-decode.md`; Colab and Kaggle T4s).
+  - `jaxexp.ssm`: LRU, Mamba-1 (S6) and Mamba-2 (chunked SSD), ~4.08M each,
+    as pure functions; `linear_scan` runs any diagonal recurrence as
+    `lax.associative_scan` or `lax.scan`. `run.py --model lru|mamba|mamba2`.
+  - **Speed:** the associative LRU trains at 277k tokens/s at T = 256, 1024
+    and 4096 (1.19 GiB); sequential, it falls to 23k at 4096, like the GRU.
+    Mamba-2 is flat at 67–80k. Mamba-1 without a fused kernel runs at 13.7k
+    and needs remat (12.4 GiB → 2 GiB); sequential selective scans OOM.
+  - **enwik8 (3,000 steps, tuned):** LRU ≈ GRU (1.686 / 1.698 at T=256 /
+    1024); Mamba-2 1.578 / 1.567, the best 4M model, 0.12 under the GRU at
+    T=1024. Seed 0 (the LR-picking seed) beat seeds 1–2 by ~0.02.
+  - **Copying:** the LRU copies n=128 perfectly (GRU 0.20, LSTM chance), 0.15
+    at 512; Mamba-2 barely learns n=32 in 1,500 steps at any LR tried, but
+    copies it (0.979) given 6,000.
+  - **Run-to-run noise:** the same Mamba-2 run gave 1.567 on Colab and 1.580
+    on Kaggle.
+  - **Colab files are lost if the session's worker restarts:** the Colab MCP
+    keeps its runtime handle in memory only. Copy results out as each job
+    finishes (`tar | xz | base64` printed and checked with md5).
+- **O4 is done** (same writeup). `jaxexp.decode`: KV-cached decoding of
+  `CharTransformer` three ways (recompute, jitted step from Python,
+  `fori_loop`), all emitting the same greedy tokens.
+  - **At batch 1 decode is launch-bound, not bandwidth-bound.** 25M model:
+    cached step from Python ≈ 1.6 ms/token at any C, loop 0.74–0.88 ms, the
+    bandwidth floor 0.17–0.27 ms. The step is 157 kernels at ~3.6 µs each.
+  - XLA command buffers (CUDA graphs) cut the Python-driven step 2.05 → 1.57
+    ms but do not move the loop. Steps of ≥ ~300 MB reach 56–59% of 320 GB/s.
+- **N3 is done** (`docs/m7-hypergrad-diffusion-scaling.md`). `jaxexp.hypergrad`
+  differentiates the validation loss through K steps of ml-ladder's AdamW
+  (remat per step). Its square root needs a zero derivative at 0: the
+  attention key bias has exactly zero gradient, and that turns every
+  hypergradient into NaN.
+  - **The greedy LR (4M, T=256):** after warmup, the K-step-optimal constant
+    LR is 0.16–0.26× the tuned schedule's, and falls as K grows from 10 to
+    100.
+  - **The hypergradient has a trust region.** It matches the meta-loss curve
+    only up to 4e-3–8e-3 after warmup, and up to 5e-4–1e-3 from step 0. Above
+    that it disagrees, then explodes ($10^{13}$ to $10^{27}$).
+  - **Clip hypergradients before Adam.** One huge value fills Adam's second
+    moment and freezes the LR for the rest of the run.
+  - **Online, the method gains nothing.** Hypergradient descent of the LR
+    (K=30) anneals greedily and ends at a constant 1e-3's loss (1.80 bits/byte;
+    the tuned schedule reaches 1.634, a constant 2e-3 1.76).
+- **N8 is done** (same writeup). `jaxexp.diffusion`: E3's DDPM U-Net (245k)
+  as pure functions, matching E3's PyTorch net on loaded weights. It supports
+  ε / $x_0$ / v targets, and DDPM / DDIM samplers (optionally $x_0$-clipped),
+  each run as one `lax.scan`.
+  - **Reproduces E3 within seed noise** (fd 2.22 linear against an in-job
+    PyTorch control's 2.43).
+  - **Seed noise is large.** One configuration often spans 2–5× in fd across
+    seeds. Seed 2's E3 model is bad on every run, including CPU: its final
+    weights (constant LR, no averaging) are a bad draw. Compare samplers
+    within one trained model.
+  - **Cosine + ε collapses at few steps** ($\bar\alpha_T = 2.4 \times 10^{-9}$
+    amplifies the first step's error about 3,500× at 10 steps). Clipping
+    $\hat x_0$ fixes it. $x_0$-prediction with DDIM converges in 10–20 steps.
+  - **Cost:** 28 ms per sampling step for 500 images, 1.4× E3's PyTorch loop
+    on the T4.
+  - **`jaxexp.data` downloads atomically now** (per-process `.part`, then
+    `os.replace`). Two lanes once fetched MNIST into one directory and one
+    read the other's partial file.
+- **O6 is done** (same writeup). `jaxexp.bpe` holds ml-ladder's BPE-4096
+  (exact: 31,095,000 enwik8 tokens) and a 353M-token stream: enwik9 without
+  enwik8's held-out bytes.
+  - **Sizes and LRs.** Nine RoPE sizes, s0–s8, from 0.22M to 25.2M
+    non-embedding parameters; the best LR halves every 3–5× in N
+    (`docs/data/o6/lr-table.json`).
+  - **IsoFLOP:** $3 \times 10^{13}$–$10^{16}$, 105 runs. Five contours are
+    interior.
+  - **The exponent depends on what N counts.** $N^* \propto C^{0.69}$
+    (IsoFLOP; parametric 0.63) with non-embedding N. Counting the
+    4096-way output layer gives 0.51 (0.475–0.569): Kaplan versus Chinchilla
+    from the same runs.
+  - **Counting compute doesn't matter much.** The true FLOPs are 1.17–3.2× the
+    nominal 6ND, but correcting for it moves the exponent by only 0.03.
 - **Two O1 findings that shaped R2:**
   - **R2 does not need remat on the T4 (corrected 2026-10-16).** On CPU the 25M
     RoPE step (16 × 1024 tokens, fp32, explicit attention) compiles to 19.7 GiB
@@ -133,6 +224,9 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
     the same as the reference (a T4) when comparing against ml-ladder.
     2026-10-17: R3's fused rerun sat queued on Kaggle for 20+ minutes (no
     other kernels of this account running) and ran on Colab instead.
+    2026-10-18: four N4/O4 kernels sat queued 20 minutes to 2 hours (quota
+    free, no kernel of this account running), while others started at once.
+    Treat a Kaggle start as likely, not guaranteed.
 - **Weekly quota** (`kaggle quota`): **30 h GPU and 20 h TPU**, resetting each
   week (the 2026-10-17 00:00 UTC refresh was the next one at handover). Other
   sessions of this account share it, and use GPU heavily.
@@ -155,12 +249,30 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   `kaggle kernels status`, and download with `kaggle kernels output`.
   `kaggle kernels logs` is available too. `kaggle kernels delete -y <ref>`
   removes a kernel (CLI 2.2.4); earlier CLI versions had no delete.
+  - **A running kernel shows nothing.** `logs` and the output listing are
+    empty until it finishes, and the Kaggle MCP may not cancel sessions
+    (`kernelSessions.cancel` was denied on 2026-10-19).
+  - **Deleting is the only way to stop one.** On 2026-10-19, o6b ran 3 h
+    against ~45 min expected. Deleting it stopped the session, and its GPU
+    hours were taken off the quota (19.57 h used before, 17.55 h after).
+  - **Bound every job.** Presets can set a per-job limit (`TIMEOUTS` in
+    `push_r2.py`); a job that exceeds it is killed and the lane moves on.
+- **Large inputs go in as datasets, not downloads.** O6's enwik9 token
+  caches (353M tokens, 706 MB) are the private dataset
+  `davidmiheev/jaxexp-bpe`, built on CPU by
+  `experiments/o6_scaling/run.py --studies tokenize`. `--cache-from
+  /kaggle/input` copies them into the job's cache directory.
 - **Credentials** live outside any repo, in `~/.kaggle/` (`access_token`,
   `kaggle.json`) with mode 600. Never commit them. If the session has none,
   ask the user.
 - **Getting the code in.** The repos are private, so ml-ladder delivered its
   source as a private Kaggle *dataset*: a `git archive` tarball,
   `kaggle datasets version`, and `dataset_sources` in the kernel metadata.
+  **"ready" does not mean the new version is served.** On 2026-10-18 a kernel
+  pushed right after `kaggle datasets status` said "ready" mounted the
+  previous version and failed on a missing file. Before pushing, check the
+  served `COMMITS`:
+  `kaggle datasets download davidmiheev/jaxexp-source -f COMMITS -p <dir>`.
 - **Where files go.**
   - Copy the source to `/kaggle/temp` and keep scratch files there.
   - Write only result JSON and logs to `/kaggle/working`, which gets
@@ -226,11 +338,18 @@ Checked from this account on 2026-10-11 with Kaggle CLI 2.2.4.
   What we measure and why, What I built, Results, What surprised me, Open
   threads.
 - **PDF of every writeup.** Writeups are `docs/m<N>-*.md`. Build them with
-  `uv run python tools/build_pdf.py --all` (pandoc + XeLaTeX, ported from
-  ml-ladder), and commit `docs/pdf/*.pdf` beside the markdown. In a fresh
-  container, first run `apt-get install pandoc texlive-xetex texlive-latex-extra
-  texlive-fonts-recommended fonts-texgyre`. The builder refuses glyphs the font
-  lacks, so write powers as `$10^{-6}$`, not `10⁻⁶`.
+  `uv run python tools/build_pdf.py --all` (pandoc + XeLaTeX), and commit
+  `docs/pdf/*.pdf` beside the markdown. In a fresh container, first run
+  `apt-get install pandoc texlive-xetex texlive-latex-extra
+  texlive-fonts-recommended fonts-texgyre fonts-texgyre-math fonts-dejavu`.
+  The builder refuses glyphs the font lacks, so write powers as `$10^{-6}$`,
+  not `10⁻⁶`.
+  - **The look** is `tools/tex/writeupstyle.sty`, adapted on 2026-10-30 from
+    the atcoder_lectures repo's `tex/lecturestyle.sty`, with a teal accent
+    instead of its blue.
+  - **What it gives:** DejaVu fonts, TeX Gyre Termes Math, the title band
+    (series and milestone), sans-serif headings, the status blockquote as an
+    "At a glance" box, and boxed code.
 - **Verified vs not.** Say explicitly what was run and what was not.
   Numbers quoted from someone else's commit or paper are labelled as such.
 - **Arithmetic.** Check every number in prose against the JSON before

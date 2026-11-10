@@ -1,0 +1,6 @@
+  [copy mamba2 n=32 s0] step     0 loss 3.6335 (15s)
+  [copy mamba2 n=32 s0] step   375 loss 3.4610 (155s)
+  [copy mamba2 n=32 s0] step   750 loss 3.2546 (309s)
+  [copy mamba2 n=32 s0] step  1125 loss 3.0823 (463s)
+  [copy mamba2 n=32 s0] step  1499 loss 2.9938 (617s)
+[copy] s0 n=32   mamba2          second-half acc 0.137
